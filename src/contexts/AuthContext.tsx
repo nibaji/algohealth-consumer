@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const profile = await authService.getMyProfile();
         setUser(profile);
-      } catch (e) {}
+      } catch (_error) {}
     }
     return response;
   }, []);

@@ -22,7 +22,7 @@ function InitialLayout() {
       // Redirect away from the login page.
       router.replace('/');
     }
-  }, [user, isLoading, segments]);
+  }, [user, isLoading, segments, router]);
 
   if (isLoading) {
     return (

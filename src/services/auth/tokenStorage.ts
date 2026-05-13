@@ -7,7 +7,7 @@ export const tokenStorage = {
   async getRefreshToken(): Promise<string | null> {
     try {
       return await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
-    } catch (error) {
+    } catch (_error) {
       // Intentionally not logging full error to avoid exposing secrets
       console.error('Failed to get refresh token');
       return null;
@@ -17,7 +17,7 @@ export const tokenStorage = {
   async setRefreshToken(token: string): Promise<void> {
     try {
       await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, token);
-    } catch (error) {
+    } catch (_error) {
       console.error('Failed to save refresh token');
     }
   },
@@ -26,7 +26,7 @@ export const tokenStorage = {
     inMemoryAccessToken = null;
     try {
       await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
-    } catch (error) {
+    } catch (_error) {
       console.error('Failed to delete refresh token');
     }
   },

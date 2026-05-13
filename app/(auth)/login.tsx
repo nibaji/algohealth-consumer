@@ -75,7 +75,7 @@ export default function LoginScreen() {
           />
           
           <View style={styles.footer}>
-            <Typography.Label>Don't have an account? </Typography.Label>
+            <Typography.Label>Don&apos;t have an account? </Typography.Label>
             <Link href="/(auth)/register" asChild>
               <Button.Secondary 
                 title="Register" 
