@@ -1,8 +1,2 @@
-# Upcoming Changelog
-
-This file stores all unreleased changes since the last git tag.
-
-When a release tag is created (format `YYYYMMDD.N`), move relevant content from this file into `changelog/<release>.md`, then reset it to this template.
-
-## (next release)
-
+## Unreleased
+- 2026-05-13: Implemented complete authentication flow (Login, Register, Forgot Password, Reset Password) with automatic token refresh via `expo-secure-store`. Added `AuthContext` for global session state and route guarding.

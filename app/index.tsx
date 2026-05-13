@@ -2,10 +2,12 @@ import React from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
-import { TextInput } from '@/components/ui/TextInput';
 import { theme } from '@/constants/theme';
+import { useAuth } from '@/src/contexts/AuthContext';
 
 export default function Index() {
+  const { user, logout } = useAuth();
+
   return (
     <ScrollView 
       style={styles.container}
@@ -17,16 +19,11 @@ export default function Index() {
       </Typography.Heading>
       
       <Typography.Paragraph style={styles.description}>
-        This is a clean slate. The default Expo boilerplate has been removed and the custom theme system is applied!
+        Hello, {user?.full_name || user?.email}! You are successfully authenticated.
       </Typography.Paragraph>
 
       <View style={styles.section}>
-        <TextInput 
-          label="Email Address" 
-          placeholder="user@example.com"
-        />
-        <Button.Primary title="Get Started" onPress={() => {}} />
-        <Button.Secondary title="Learn More" onPress={() => {}} />
+        <Button.Secondary title="Logout" onPress={logout} />
       </View>
     </ScrollView>
   );
