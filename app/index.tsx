@@ -11,6 +11,7 @@ import Animated, { FadeInDown, LayoutAnimationConfig } from 'react-native-reanim
 import * as Clipboard from 'expo-clipboard';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
+import { MemberAccordion } from '@/components/medical-records/member-accordion';
 
 export default function Index() {
   const { user } = useAuth();
@@ -197,107 +198,15 @@ export default function Index() {
                         );
 
                         return (
-                          <View 
-                            key={member.id} 
-                            style={[
-                              styles.accordionCard, 
-                              isExpanded ? styles.accordionCardExpanded : null,
-                              { borderCurve: 'continuous' }
-                            ]}
-                          >
-                            {/* Accordion Header */}
-                            <Pressable 
-                              onPress={() => toggleExpand(member.id)}
-                              style={styles.accordionHeader}
-                            >
-                              <View style={styles.avatar}>
-                                <Typography.Label style={styles.avatarText}>
-                                  {member.name.charAt(0).toUpperCase()}
-                                </Typography.Label>
-                              </View>
-                              <View style={styles.memberInfo}>
-                                <Typography.Paragraph style={styles.memberName}>
-                                  {member.name}
-                                </Typography.Paragraph>
-                                <Typography.Label style={styles.memberRelation}>
-                                  {member.relation} • {memberRecords.length} {memberRecords.length === 1 ? 'Record' : 'Records'}
-                                </Typography.Label>
-                              </View>
-                              <Image 
-                                source={isExpanded ? "sf:chevron.up" : "sf:chevron.down"} 
-                                style={[styles.chevronIcon, { tintColor: theme.colors.text.tertiary }]} 
-                              />
-                            </Pressable>
-
-                            {/* Accordion Content */}
-                            {isExpanded ? (
-                              <Animated.View entering={FadeInDown.duration(300)} style={styles.accordionContent}>
-                                <View style={styles.accordionDivider} />
-                                
-                                {memberRecords.length > 0 ? (
-                                  <View style={styles.recordsList}>
-                                    {memberRecords.map((recordItem) => (
-                                      <Pressable
-                                        key={recordItem.id}
-                                        onPress={() => handleNavigateRecordDetails(recordItem.id)}
-                                        style={({ pressed }) => [
-                                          styles.recordItemCard,
-                                          pressed ? styles.recordItemCardPressed : null,
-                                          { borderCurve: 'continuous' }
-                                        ]}
-                                      >
-                                        <View style={styles.recordRow}>
-                                          <View style={styles.recordLeft}>
-                                            <Typography.Paragraph style={styles.recordComplaint}>
-                                              {recordItem.chief_complaint || 'General Checkup'}
-                                            </Typography.Paragraph>
-                                            <Typography.Label style={styles.recordContext}>
-                                              {recordItem.primary_context || 'Location not specified'}
-                                            </Typography.Label>
-                                          </View>
-                                          <View style={styles.recordRight}>
-                                            <Typography.Label style={styles.recordDate}>
-                                              {recordItem.visit_date}
-                                            </Typography.Label>
-                                            <Image source="sf:chevron.right" style={styles.arrowRightIcon} />
-                                          </View>
-                                        </View>
-                                        {recordItem.ai_summary ? (
-                                          <View style={styles.aiBadgeContainer}>
-                                            <Image source="sf:sparkles" style={styles.sparklesMini} />
-                                            <Typography.Label numberOfLines={1} style={styles.aiBadgeText}>
-                                              {recordItem.ai_summary}
-                                            </Typography.Label>
-                                          </View>
-                                        ) : null}
-                                      </Pressable>
-                                    ))}
-                                  </View>
-                                ) : (
-                                  <View style={styles.emptyRecords}>
-                                    <Typography.Paragraph style={styles.emptyRecordsText}>
-                                      No medical records logged yet.
-                                    </Typography.Paragraph>
-                                  </View>
-                                )}
-
-                                {/* Add record for this member shortcut */}
-                                <Pressable
-                                  onPress={() => handleNavigateCreateRecord(member.id)}
-                                  style={({ pressed }) => [
-                                    styles.addRecordShortcutButton,
-                                    pressed ? styles.addRecordShortcutButtonPressed : null,
-                                    { borderCurve: 'continuous' }
-                                  ]}
-                                >
-                                  <Image source="sf:plus" style={styles.plusMini} />
-                                  <Typography.Label style={styles.addRecordShortcutText}>
-                                    Add Medical Record
-                                  </Typography.Label>
-                                </Pressable>
-                              </Animated.View>
-                            ) : null}
-                          </View>
+                          <MemberAccordion
+                            key={member.id}
+                            member={member}
+                            records={memberRecords}
+                            isExpanded={isExpanded}
+                            onToggleExpand={() => toggleExpand(member.id)}
+                            onNavigateCreateRecord={() => handleNavigateCreateRecord(member.id)}
+                            onNavigateRecordDetails={handleNavigateRecordDetails}
+                          />
                         );
                       })}
                     </View>
@@ -490,163 +399,6 @@ const styles = StyleSheet.create({
   },
   accordionsList: {
     gap: theme.spacing.md,
-  },
-  accordionCard: {
-    backgroundColor: theme.colors.background.default,
-    borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-    overflow: 'hidden',
-  },
-  accordionCardExpanded: {
-    backgroundColor: theme.colors.background.surface,
-    borderColor: theme.colors.border.default,
-  },
-  accordionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: theme.spacing.md,
-    gap: theme.spacing.md,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: theme.radius.full,
-    backgroundColor: '#EEF2FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarText: {
-    fontWeight: '700',
-    color: theme.colors.primary.DEFAULT,
-  },
-  memberInfo: {
-    flex: 1,
-  },
-  memberName: {
-    fontWeight: '600',
-    color: theme.colors.text.primary,
-  },
-  memberRelation: {
-    fontSize: theme.fontSize.xs,
-    color: theme.colors.text.secondary,
-  },
-  chevronIcon: {
-    width: 16,
-    height: 16,
-  },
-  accordionContent: {
-    padding: theme.spacing.md,
-    paddingTop: 0,
-    gap: theme.spacing.md,
-  },
-  accordionDivider: {
-    height: 1,
-    backgroundColor: theme.colors.border.light,
-    marginBottom: theme.spacing.xs,
-  },
-  recordsList: {
-    gap: theme.spacing.sm,
-  },
-  recordItemCard: {
-    backgroundColor: theme.colors.background.surface,
-    padding: theme.spacing.md,
-    borderRadius: theme.radius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-    gap: theme.spacing.xs,
-    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.02)",
-  },
-  recordItemCardPressed: {
-    backgroundColor: theme.colors.background.default,
-    borderColor: theme.colors.border.default,
-  },
-  recordRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: theme.spacing.md,
-  },
-  recordLeft: {
-    flex: 1,
-    gap: 2,
-  },
-  recordComplaint: {
-    fontWeight: '600',
-    color: theme.colors.text.primary,
-  },
-  recordContext: {
-    fontSize: theme.fontSize.xs,
-    color: theme.colors.text.secondary,
-  },
-  recordRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.xs,
-  },
-  recordDate: {
-    fontSize: theme.fontSize.xs,
-    color: theme.colors.text.tertiary,
-  },
-  arrowRightIcon: {
-    width: 14,
-    height: 14,
-    tintColor: theme.colors.text.tertiary,
-  },
-  aiBadgeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FAF5FF',
-    borderWidth: 1,
-    borderColor: '#E9D5FF',
-    borderRadius: theme.radius.sm,
-    paddingVertical: 2,
-    paddingHorizontal: theme.spacing.xs,
-    marginTop: theme.spacing.xs,
-    gap: 4,
-  },
-  sparklesMini: {
-    width: 10,
-    height: 10,
-    tintColor: theme.colors.primary.DEFAULT,
-  },
-  aiBadgeText: {
-    fontSize: 10,
-    color: theme.colors.primary.DEFAULT,
-    flex: 1,
-  },
-  emptyRecords: {
-    alignItems: 'center',
-    paddingVertical: theme.spacing.md,
-  },
-  emptyRecordsText: {
-    color: theme.colors.text.tertiary,
-    fontSize: theme.fontSize.sm,
-  },
-  addRecordShortcutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.background.default,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-    borderRadius: theme.radius.md,
-    paddingVertical: theme.spacing.sm,
-    gap: theme.spacing.xs,
-    marginTop: theme.spacing.xs,
-  },
-  addRecordShortcutButtonPressed: {
-    backgroundColor: theme.colors.border.light,
-  },
-  plusMini: {
-    width: 12,
-    height: 12,
-    tintColor: theme.colors.text.primary,
-  },
-  addRecordShortcutText: {
-    fontSize: theme.fontSize.sm,
-    fontWeight: '600',
-    color: theme.colors.text.primary,
   },
   emptyState: {
     alignItems: 'center',
