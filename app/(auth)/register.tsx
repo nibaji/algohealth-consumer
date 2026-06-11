@@ -52,7 +52,7 @@ export default function RegisterScreen() {
         <View style={styles.header}>
           <Typography.Heading>Create Account</Typography.Heading>
           <Typography.Paragraph style={styles.subtitle}>
-            Join AlgoHealth today
+            Join AlgoHealth Plus today
           </Typography.Paragraph>
         </View>
 

@@ -158,7 +158,7 @@ export default function Index() {
       {/* Header bar */}
       <View style={styles.headerBar}>
         <Typography.Subheading style={styles.headerTitle}>
-          AlgoHealth
+          AlgoHealth Plus
         </Typography.Subheading>
         
         {/* Profile icon top right */}
