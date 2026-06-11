@@ -2,6 +2,10 @@
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
+## Features
+
+- Profile users can update their name, request a password reset code for their account email, and reset their password with the received token.
+
 ## Get started
 
 1. Install dependencies

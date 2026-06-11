@@ -1,50 +1,29 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { StyleSheet, View, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { theme } from '@/constants/theme';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
-import { TextInput } from '@/components/ui/TextInput';
+import { PasswordResetCard } from '@/components/profile/password-reset-card';
+import { ProfileDetailsCard } from '@/components/profile/profile-details-card';
 import { useAuth } from '@/src/contexts/AuthContext';
-import { authService } from '@/src/services/auth/authService';
+import { useProfileDetails } from '@/src/features/auth/use-profile-details';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Image } from 'expo-image';
 
-export default function Profile() {
+export default function Profile(): React.JSX.Element {
   const router = useRouter();
   const { user, refreshProfile, logout } = useAuth();
+  const {
+    fullName,
+    loading,
+    error,
+    success,
+    setFullName,
+    saveProfile,
+  } = useProfileDetails(user?.full_name, refreshProfile);
 
-  const [fullName, setFullName] = useState(user?.full_name || '');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-
-  const handleSave = useCallback(async () => {
-    if (!fullName.trim()) {
-      setError('Full name is required');
-      return;
-    }
-
-    setError(null);
-    setLoading(true);
-    setSuccess(false);
-
-    try {
-      await authService.updateMyProfile({
-        full_name: fullName.trim(),
-      });
-      await refreshProfile();
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to update profile';
-      setError(message);
-    } finally {
-      setLoading(false);
-    }
-  }, [fullName, refreshProfile]);
-
-  const handleBack = useCallback(() => {
+  const handleBack = useCallback((): void => {
     if (router.canGoBack()) {
       router.back();
     } else {
@@ -99,48 +78,17 @@ export default function Profile() {
             </Typography.Paragraph>
           </View>
 
-          {/* Form */}
-          <View style={styles.cardForm}>
-            <Typography.Subheading style={styles.formSectionTitle}>
-              Personal Details
-            </Typography.Subheading>
+          <ProfileDetailsCard
+            email={user?.email}
+            fullName={fullName}
+            loading={loading}
+            error={error}
+            success={success}
+            onFullNameChange={setFullName}
+            onSave={saveProfile}
+          />
 
-            {success ? (
-              <View style={styles.successBanner}>
-                <Typography.Label style={styles.successBannerText}>
-                  Profile updated successfully!
-                </Typography.Label>
-              </View>
-            ) : null}
-
-            {error ? (
-              <Typography.Label style={styles.errorBannerText}>
-                {error}
-              </Typography.Label>
-            ) : null}
-
-            <TextInput
-              label="Email Address"
-              value={user?.email || ''}
-              editable={false}
-              selectTextOnFocus={false}
-              style={styles.readOnlyInput}
-            />
-
-            <TextInput
-              label="Full Name"
-              placeholder="e.g. John Doe"
-              value={fullName}
-              onChangeText={setFullName}
-            />
-
-            <Button.Primary
-              title="Save Changes"
-              onPress={handleSave}
-              loading={loading}
-              style={styles.saveButton}
-            />
-          </View>
+          <PasswordResetCard email={user?.email} />
 
           {/* Actions */}
           <View style={styles.actionsContainer}>
@@ -231,47 +179,6 @@ const styles = StyleSheet.create({
   userEmail: {
     fontSize: theme.fontSize.sm,
     color: theme.colors.text.secondary,
-  },
-  cardForm: {
-    backgroundColor: theme.colors.background.surface,
-    padding: theme.spacing.lg,
-    borderRadius: theme.radius.xl,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-    gap: theme.spacing.md,
-    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
-  },
-  formSectionTitle: {
-    fontSize: theme.fontSize.lg,
-    color: theme.colors.text.primary,
-    fontWeight: '700',
-    marginBottom: theme.spacing.xs,
-  },
-  readOnlyInput: {
-    backgroundColor: theme.colors.background.default,
-    color: theme.colors.text.secondary,
-    borderColor: theme.colors.border.light,
-  },
-  saveButton: {
-    marginTop: theme.spacing.md,
-  },
-  successBanner: {
-    backgroundColor: '#ECFDF5',
-    borderWidth: 1,
-    borderColor: theme.colors.status.success,
-    borderRadius: theme.radius.md,
-    padding: theme.spacing.md,
-    alignItems: 'center',
-  },
-  successBannerText: {
-    color: theme.colors.text.success,
-    fontWeight: '600',
-  },
-  errorBannerText: {
-    color: theme.colors.text.error,
-    fontWeight: '600',
-    fontSize: theme.fontSize.xs,
-    textAlign: 'center',
   },
   actionsContainer: {
     marginTop: theme.spacing.lg,
