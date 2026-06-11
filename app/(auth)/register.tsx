@@ -15,17 +15,29 @@ export default function RegisterScreen() {
   const { register } = useAuth();
 
   const handleRegister = async () => {
-    if (!email || !password || !fullName) {
+    if (!email.trim() || !password || !fullName.trim()) {
       Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters long');
       return;
     }
     
     setLoading(true);
     try {
-      await register({ email, password, full_name: fullName });
+      await register({ email: email.trim(), password, full_name: fullName.trim() });
       // Navigation is handled by layout route guard
-    } catch (error: any) {
-      Alert.alert('Registration Failed', error.message || 'An error occurred');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
+      Alert.alert('Registration Failed', message);
     } finally {
       setLoading(false);
     }

@@ -14,19 +14,25 @@ export default function ResetPasswordScreen() {
   const router = useRouter();
 
   const handleReset = async () => {
-    if (!token || !newPassword) {
+    if (!token.trim() || !newPassword) {
       Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters long');
       return;
     }
     
     setLoading(true);
     try {
-      await authService.resetPassword({ token, new_password: newPassword });
+      await authService.resetPassword({ token: token.trim(), new_password: newPassword });
       Alert.alert('Success', 'Your password has been reset successfully.', [
         { text: 'Login', onPress: () => router.replace('/(auth)/login') }
       ]);
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'An error occurred');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
+      Alert.alert('Error', message);
     } finally {
       setLoading(false);
     }

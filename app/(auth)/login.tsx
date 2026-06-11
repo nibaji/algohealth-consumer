@@ -14,17 +14,24 @@ export default function LoginScreen() {
   const { login } = useAuth();
 
   const handleLogin = async () => {
-    if (!email || !password) {
+    if (!email.trim() || !password) {
       Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      Alert.alert('Error', 'Please enter a valid email address');
       return;
     }
     
     setLoading(true);
     try {
-      await login({ email, password });
+      await login({ email: email.trim(), password });
       // Navigation is handled by layout route guard
-    } catch (error: any) {
-      Alert.alert('Login Failed', error.message || 'An error occurred');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
+      Alert.alert('Login Failed', message);
     } finally {
       setLoading(false);
     }

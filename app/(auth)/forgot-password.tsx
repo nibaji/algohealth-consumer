@@ -13,19 +13,26 @@ export default function ForgotPasswordScreen() {
   const router = useRouter();
 
   const handleForgot = async () => {
-    if (!email) {
+    if (!email.trim()) {
       Alert.alert('Error', 'Please enter your email');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      Alert.alert('Error', 'Please enter a valid email address');
       return;
     }
     
     setLoading(true);
     try {
-      await authService.forgotPassword({ email });
+      await authService.forgotPassword({ email: email.trim() });
       Alert.alert('Success', 'If an account exists, a reset link has been sent.', [
         { text: 'OK', onPress: () => router.push('/(auth)/reset-password') }
       ]);
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'An error occurred');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
+      Alert.alert('Error', message);
     } finally {
       setLoading(false);
     }
