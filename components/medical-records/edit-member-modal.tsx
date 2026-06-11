@@ -310,31 +310,42 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
   const handleDeleteMember = useCallback(() => {
     if (!member) return;
 
-    Alert.alert(
-      'Delete Family Member',
-      `Are you sure you want to delete ${member.name}? All of their medical records will be deleted permanently. This action cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
-          style: 'destructive',
-          onPress: async () => {
-            setError(null);
-            setDeleting(true);
-            try {
-              await familyService.deleteFamilyMember(member.id);
-              onUpdateSuccess();
-              onClose();
-            } catch (err: unknown) {
-              const msg = err instanceof Error ? err.message : 'Failed to delete member';
-              setError(msg);
-            } finally {
-              setDeleting(false);
-            }
+    const performDelete = async () => {
+      setError(null);
+      setDeleting(true);
+      try {
+        await familyService.deleteFamilyMember(member.id);
+        onUpdateSuccess();
+        onClose();
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Failed to delete member';
+        setError(msg);
+      } finally {
+        setDeleting(false);
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm(
+        `Are you sure you want to delete ${member.name}? All of their medical records will be deleted permanently. This action cannot be undone.`
+      );
+      if (confirmed) {
+        performDelete();
+      }
+    } else {
+      Alert.alert(
+        'Delete Family Member',
+        `Are you sure you want to delete ${member.name}? All of their medical records will be deleted permanently. This action cannot be undone.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'Delete', 
+            style: 'destructive',
+            onPress: performDelete
           }
-        }
-      ]
-    );
+        ]
+      );
+    }
   }, [member, onUpdateSuccess, onClose]);
 
   return (

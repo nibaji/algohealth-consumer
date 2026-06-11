@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, View, ScrollView, Pressable, ActivityIndicator, Alert } from 'react-native';
+import { StyleSheet, View, ScrollView, Pressable, ActivityIndicator, Alert, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { theme } from '@/constants/theme';
 import { Typography } from '@/components/ui/Typography';
@@ -133,31 +133,47 @@ export default function MedicalRecordDetail() {
   // Deletion logic
   const handleDelete = useCallback(() => {
     if (!record) return;
-    Alert.alert(
-      'Delete Record',
-      'Are you sure you want to delete this medical record? This action is permanent and cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
-          style: 'destructive',
-          onPress: async () => {
-            setLoading(true);
-            try {
-              await medicalRecordService.deleteMedicalRecord(record.id);
-              setDeleteSuccess(true);
-              setTimeout(() => {
-                router.replace('/');
-              }, 1500);
-            } catch (err: unknown) {
-              const message = err instanceof Error ? err.message : 'Failed to delete record';
-              Alert.alert('Error', message);
-              setLoading(false);
-            }
-          }
+
+    const performDelete = async () => {
+      setLoading(true);
+      try {
+        await medicalRecordService.deleteMedicalRecord(record.id);
+        setDeleteSuccess(true);
+        setTimeout(() => {
+          router.replace('/');
+        }, 1500);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Failed to delete record';
+        if (Platform.OS === 'web') {
+          window.alert(message);
+        } else {
+          Alert.alert('Error', message);
         }
-      ]
-    );
+        setLoading(false);
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm(
+        'Are you sure you want to delete this medical record? This action is permanent and cannot be undone.'
+      );
+      if (confirmed) {
+        performDelete();
+      }
+    } else {
+      Alert.alert(
+        'Delete Record',
+        'Are you sure you want to delete this medical record? This action is permanent and cannot be undone.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'Delete', 
+            style: 'destructive',
+            onPress: performDelete
+          }
+        ]
+      );
+    }
   }, [record, router]);
 
   const handleBack = useCallback(() => {
