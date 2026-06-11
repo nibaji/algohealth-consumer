@@ -29,14 +29,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (...args: Parameters<typeof authService.login>) => {
     const response = await authService.login(...args);
-    setUser(response.user);
+    if (response.user) {
+      setUser({
+        ...response.user,
+        family_id: response.user.family_id || response.family_id || null,
+      });
+    }
     return response;
   }, []);
 
   const register = useCallback(async (...args: Parameters<typeof authService.register>) => {
     const response = await authService.register(...args);
     if (response.user) {
-      setUser(response.user);
+      setUser({
+        ...response.user,
+        family_id: response.user.family_id || response.family_id || null,
+      });
     } else {
       // Fetch user explicitly if register endpoint doesn't return user schema
       try {

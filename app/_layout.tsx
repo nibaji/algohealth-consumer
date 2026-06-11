@@ -30,8 +30,8 @@ function InitialLayout() {
         }
       } else {
         // User is in a family.
-        // Redirect away from auth and onboarding landing screens, but allow accessing family pages post-login.
-        if (inAuthGroup || segments[0] === 'onboarding') {
+        // Redirect away from auth and onboarding landing screens (and family setup/creation screens).
+        if (inAuthGroup || segments[0] === 'onboarding' || segments[0] === 'family') {
           router.replace('/');
         }
       }

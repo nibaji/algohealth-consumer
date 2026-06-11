@@ -54,7 +54,13 @@ export const authService = {
       const refreshResponse = await apiClient.post<AuthResponse>('/auth/refresh', { refresh_token: refreshToken }, { requiresAuth: false });
       tokenStorage.setAccessToken(refreshResponse.access_token);
       await tokenStorage.setRefreshToken(refreshResponse.refresh_token);
-      return refreshResponse.user;
+      if (refreshResponse.user) {
+        return {
+          ...refreshResponse.user,
+          family_id: refreshResponse.user.family_id || refreshResponse.family_id || null,
+        };
+      }
+      return null;
     } catch {
       await tokenStorage.clearTokens();
       return null;
