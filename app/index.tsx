@@ -119,6 +119,10 @@ export default function Index() {
     router.push('/family/join');
   }, [router]);
 
+  const handleNavigateAddMember = useCallback(() => {
+    router.push('/family/add-member');
+  }, [router]);
+
   return (
     <View style={styles.container}>
       {/* Header bar */}
@@ -234,6 +238,24 @@ export default function Index() {
                       </Typography.Paragraph>
                     </View>
                   )}
+
+                  {/* Add Family Member CTA */}
+                  <Pressable
+                    onPress={handleNavigateAddMember}
+                    style={({ pressed }) => [
+                      styles.addMemberButton,
+                      pressed ? styles.addMemberButtonPressed : null,
+                      { borderCurve: 'continuous' }
+                    ]}
+                  >
+                    <Image 
+                      source="sf:person.badge.plus" 
+                      style={[styles.addMemberIcon, { tintColor: theme.colors.primary.DEFAULT }]} 
+                    />
+                    <Typography.Label style={styles.addMemberText}>
+                      Add Family Member
+                    </Typography.Label>
+                  </Pressable>
                 </View>
               ) : (
                 <View style={[styles.card, { borderCurve: 'continuous' }]}>
@@ -435,6 +457,29 @@ const styles = StyleSheet.create({
   errorText: {
     color: theme.colors.status.error,
     textAlign: 'center',
+  },
+  addMemberButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.background.default,
+    paddingVertical: theme.spacing.md,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
+    gap: theme.spacing.xs,
+    marginTop: theme.spacing.lg,
+  },
+  addMemberButtonPressed: {
+    backgroundColor: theme.colors.border.light,
+  },
+  addMemberIcon: {
+    width: 18,
+    height: 18,
+  },
+  addMemberText: {
+    fontWeight: '600',
+    color: theme.colors.text.primary,
   },
   
   // Switch actions card styles

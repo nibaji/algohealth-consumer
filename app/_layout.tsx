@@ -14,7 +14,9 @@ function InitialLayout() {
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === '(auth)';
-    const inOnboardingGroup = segments[0] === 'onboarding' || segments[0] === 'family';
+    const inOnboardingGroup = 
+      segments[0] === 'onboarding' || 
+      (segments[0] === 'family' && (segments[1] === 'create' || segments[1] === 'join'));
 
     if (!user) {
       if (!inAuthGroup) {
@@ -31,7 +33,7 @@ function InitialLayout() {
       } else {
         // User is in a family.
         // Redirect away from auth and onboarding landing screens (and family setup/creation screens).
-        if (inAuthGroup || segments[0] === 'onboarding' || segments[0] === 'family') {
+        if (inAuthGroup || inOnboardingGroup) {
           router.replace('/');
         }
       }
@@ -57,6 +59,7 @@ function InitialLayout() {
       <Stack.Screen name="onboarding" />
       <Stack.Screen name="family/create" />
       <Stack.Screen name="family/join" />
+      <Stack.Screen name="family/add-member" />
       <Stack.Screen name="profile" />
       <Stack.Screen name="medical-records/create" />
       <Stack.Screen name="medical-records/[id]" />
