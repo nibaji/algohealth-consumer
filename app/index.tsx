@@ -244,43 +244,45 @@ export default function Index() {
               )}
 
               {/* Circle Actions (Switch/Create/Join post-onboarding) */}
-              <View style={[styles.actionsCard, { borderCurve: 'continuous' }]}>
-                <Typography.Subheading style={styles.actionsTitle}>
-                  Circle Settings
-                </Typography.Subheading>
-                <Typography.Paragraph style={styles.actionsDesc}>
-                  Need to switch circles? Start a new family circle or join another circle using a different invite code.
-                </Typography.Paragraph>
-                <View style={styles.actionsRow}>
-                  <Pressable 
-                    onPress={handleNavigateCreateFamily}
-                    style={({ pressed }) => [
-                      styles.actionButton,
-                      pressed ? styles.actionButtonPressed : null,
-                      { borderCurve: 'continuous' }
-                    ]}
-                  >
-                    <Image source="sf:plus.circle.fill" style={[styles.actionIcon, { tintColor: theme.colors.primary.DEFAULT }]} />
-                    <Typography.Label style={styles.actionButtonText}>
-                      New Family
-                    </Typography.Label>
-                  </Pressable>
+              {user?.family_id ? null : (
+                <View style={[styles.actionsCard, { borderCurve: 'continuous' }]}>
+                  <Typography.Subheading style={styles.actionsTitle}>
+                    Circle Settings
+                  </Typography.Subheading>
+                  <Typography.Paragraph style={styles.actionsDesc}>
+                    Need to switch circles? Start a new family circle or join another circle using a different invite code.
+                  </Typography.Paragraph>
+                  <View style={styles.actionsRow}>
+                    <Pressable 
+                      onPress={handleNavigateCreateFamily}
+                      style={({ pressed }) => [
+                        styles.actionButton,
+                        pressed ? styles.actionButtonPressed : null,
+                        { borderCurve: 'continuous' }
+                      ]}
+                    >
+                      <Image source="sf:plus.circle.fill" style={[styles.actionIcon, { tintColor: theme.colors.primary.DEFAULT }]} />
+                      <Typography.Label style={styles.actionButtonText}>
+                        New Family
+                      </Typography.Label>
+                    </Pressable>
 
-                  <Pressable 
-                    onPress={handleNavigateJoinFamily}
-                    style={({ pressed }) => [
-                      styles.actionButton,
-                      pressed ? styles.actionButtonPressed : null,
-                      { borderCurve: 'continuous' }
-                    ]}
-                  >
-                    <Image source="sf:arrow.right.to.line.cycle" style={[styles.actionIcon, { tintColor: theme.colors.status.success }]} />
-                    <Typography.Label style={styles.actionButtonText}>
-                      Join Circle
-                    </Typography.Label>
-                  </Pressable>
+                    <Pressable 
+                      onPress={handleNavigateJoinFamily}
+                      style={({ pressed }) => [
+                        styles.actionButton,
+                        pressed ? styles.actionButtonPressed : null,
+                        { borderCurve: 'continuous' }
+                      ]}
+                    >
+                      <Image source="sf:arrow.right.to.line.cycle" style={[styles.actionIcon, { tintColor: theme.colors.status.success }]} />
+                      <Typography.Label style={styles.actionButtonText}>
+                        Join Circle
+                      </Typography.Label>
+                    </Pressable>
+                  </View>
                 </View>
-              </View>
+              )}
 
             </Animated.View>
           </LayoutAnimationConfig>
