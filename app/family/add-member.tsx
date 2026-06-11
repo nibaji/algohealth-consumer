@@ -26,76 +26,146 @@ export default function AddMember() {
   const [memberEmail, setMemberEmail] = useState('');
   const [memberMobile, setMemberMobile] = useState('');
   const [customRelation, setCustomRelation] = useState('');
+  const [errors, setErrors] = useState<{
+    name?: string;
+    dob?: string;
+    email?: string;
+    mobile?: string;
+  }>({});
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // DOB formatting handler
+  // Form field validation handler (runs on blur & submission)
+  const validateField = useCallback((field: 'name' | 'dob' | 'email' | 'mobile', value: string) => {
+    let errorMsg = '';
+    
+    if (field === 'name') {
+      if (!value.trim()) {
+        errorMsg = 'Full name is required';
+      }
+    } else if (field === 'dob') {
+      if (!value.trim()) {
+        errorMsg = 'Date of birth is required';
+      } else {
+        const dobRegex = /^\d{2}-\d{2}-\d{4}$/;
+        if (!dobRegex.test(value)) {
+          errorMsg = 'Date of birth must be in DD-MM-YYYY format';
+        } else {
+          const dateParts = value.split('-');
+          const day = parseInt(dateParts[0], 10);
+          const month = parseInt(dateParts[1], 10);
+          const year = parseInt(dateParts[2], 10);
+          const dateObj = new Date(year, month - 1, day);
+          const today = new Date();
+
+          if (
+            dateObj.getFullYear() !== year ||
+            dateObj.getMonth() !== month - 1 ||
+            dateObj.getDate() !== day
+          ) {
+            errorMsg = 'Please enter a valid calendar date';
+          } else if (dateObj > today) {
+            errorMsg = 'Date of birth cannot be in the future';
+          }
+        }
+      }
+    } else if (field === 'email') {
+      if (value.trim()) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value.trim())) {
+          errorMsg = 'Please enter a valid email address';
+        }
+      }
+    } else if (field === 'mobile') {
+      if (value.trim()) {
+        const phoneRegex = /^\+?[0-9]{7,15}$/;
+        if (!phoneRegex.test(value.trim())) {
+          errorMsg = 'Please enter a valid mobile number (7 to 15 digits)';
+        }
+      }
+    }
+
+    setErrors(prev => ({
+      ...prev,
+      [field]: errorMsg ? errorMsg : undefined
+    }));
+
+    return !errorMsg;
+  }, []);
+
+  // DOB formatting & inline segment validation handler
   const handleDobChange = useCallback((text: string) => {
     const cleaned = text.replace(/[^0-9]/g, '');
     let formatted = cleaned;
+    
+    // Auto-insert hyphens
     if (cleaned.length > 2 && cleaned.length <= 4) {
       formatted = `${cleaned.slice(0, 2)}-${cleaned.slice(2)}`;
     } else if (cleaned.length > 4) {
       formatted = `${cleaned.slice(0, 2)}-${cleaned.slice(2, 4)}-${cleaned.slice(4, 8)}`;
     }
+    
     setMemberDob(formatted);
+
+    // Segment validation (on change)
+    let localError = '';
+    
+    if (cleaned.length >= 1) {
+      const d1 = parseInt(cleaned[0], 10);
+      if (d1 > 3) {
+        localError = 'Day must start with 0, 1, 2, or 3';
+      }
+    }
+    if (cleaned.length >= 2 && !localError) {
+      const dd = parseInt(cleaned.slice(0, 2), 10);
+      if (dd < 1 || dd > 31) {
+        localError = 'Day must be between 01 and 31';
+      }
+    }
+    
+    if (cleaned.length >= 3 && !localError) {
+      const m1 = parseInt(cleaned[2], 10);
+      if (m1 > 1) {
+        localError = 'Month must start with 0 or 1';
+      }
+    }
+    if (cleaned.length >= 4 && !localError) {
+      const mm = parseInt(cleaned.slice(2, 4), 10);
+      if (mm < 1 || mm > 12) {
+        localError = 'Month must be between 01 and 12';
+      }
+    }
+    
+    if (cleaned.length >= 8 && !localError) {
+      const yyyy = parseInt(cleaned.slice(4, 8), 10);
+      const currentYear = new Date().getFullYear();
+      if (yyyy < 1900 || yyyy > currentYear) {
+        localError = `Year must be between 1900 and ${currentYear}`;
+      }
+    }
+
+    setErrors(prev => ({
+      ...prev,
+      dob: localError ? localError : undefined
+    }));
+  }, []);
+
+  const handleRelationChange = useCallback((relation: RelationType) => {
+    setMemberRelation(relation);
   }, []);
 
   // Form submission handler
   const handleAddMember = useCallback(async () => {
-    if (!memberName.trim()) {
-      setError('Member name is required');
+    const isNameValid = validateField('name', memberName);
+    const isDobValid = validateField('dob', memberDob);
+    const isEmailValid = validateField('email', memberEmail);
+    const isMobileValid = validateField('mobile', memberMobile);
+
+    if (!isNameValid || !isDobValid || !isEmailValid || !isMobileValid) {
+      setError('Please correct the validation errors in the form');
       return;
-    }
-    if (!memberDob.trim()) {
-      setError('Date of birth is required');
-      return;
-    }
-
-    // Basic date validation DD-MM-YYYY
-    const dobRegex = /^\d{2}-\d{2}-\d{4}$/;
-    if (!dobRegex.test(memberDob)) {
-      setError('Date of birth must be in DD-MM-YYYY format');
-      return;
-    }
-
-    const dateParts = memberDob.split('-');
-    const day = parseInt(dateParts[0], 10);
-    const month = parseInt(dateParts[1], 10);
-    const year = parseInt(dateParts[2], 10);
-    const dateObj = new Date(year, month - 1, day);
-    const today = new Date();
-
-    if (
-      dateObj.getFullYear() !== year ||
-      dateObj.getMonth() !== month - 1 ||
-      dateObj.getDate() !== day
-    ) {
-      setError('Please enter a valid calendar date');
-      return;
-    }
-
-    if (dateObj > today) {
-      setError('Date of birth cannot be in the future');
-      return;
-    }
-
-    if (memberEmail.trim()) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(memberEmail.trim())) {
-        setError('Please enter a valid email address');
-        return;
-      }
-    }
-
-    if (memberMobile.trim()) {
-      const phoneRegex = /^\+?[0-9]{7,15}$/;
-      if (!phoneRegex.test(memberMobile.trim())) {
-        setError('Please enter a valid mobile number (7 to 15 digits)');
-        return;
-      }
     }
 
     setError(null);
@@ -103,6 +173,7 @@ export default function AddMember() {
     setSuccess(false);
 
     try {
+      const dateParts = memberDob.split('-');
       const apiDob = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
       const payload: FamilyMemberCreate = {
         name: memberName,
@@ -134,7 +205,7 @@ export default function AddMember() {
     } finally {
       setLoading(false);
     }
-  }, [memberName, memberRelation, memberGender, memberDob, memberEmail, memberMobile, customRelation, refreshProfile, router]);
+  }, [memberName, memberRelation, memberGender, memberDob, memberEmail, memberMobile, customRelation, refreshProfile, router, validateField]);
 
   const handleBack = useCallback(() => {
     if (router.canGoBack()) {
@@ -207,7 +278,12 @@ export default function AddMember() {
                 label="Full Name"
                 placeholder="e.g. Jane Smith"
                 value={memberName}
-                onChangeText={setMemberName}
+                onChangeText={(text) => {
+                  setMemberName(text);
+                  if (errors.name) validateField('name', text);
+                }}
+                onBlur={() => validateField('name', memberName)}
+                error={errors.name}
                 autoFocus
               />
 
@@ -219,6 +295,8 @@ export default function AddMember() {
                     placeholder="DD-MM-YYYY"
                     value={memberDob}
                     onChangeText={handleDobChange}
+                    onBlur={() => validateField('dob', memberDob)}
+                    error={errors.dob}
                     maxLength={10}
                     keyboardType="numeric"
                   />
@@ -268,7 +346,7 @@ export default function AddMember() {
                     return (
                       <Pressable
                         key={relationOption}
-                        onPress={() => setMemberRelation(relationOption)}
+                        onPress={() => handleRelationChange(relationOption)}
                         style={[
                           styles.relationChip,
                           isSelected ? styles.relationChipSelected : null,
@@ -303,7 +381,12 @@ export default function AddMember() {
                 label="Email ID (Optional)"
                 placeholder="jane.smith@example.com"
                 value={memberEmail}
-                onChangeText={setMemberEmail}
+                onChangeText={(text) => {
+                  setMemberEmail(text);
+                  if (errors.email) validateField('email', text);
+                }}
+                onBlur={() => validateField('email', memberEmail)}
+                error={errors.email}
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
@@ -312,7 +395,12 @@ export default function AddMember() {
                 label="Mobile Number (Optional)"
                 placeholder="e.g. 9876543210"
                 value={memberMobile}
-                onChangeText={setMemberMobile}
+                onChangeText={(text) => {
+                  setMemberMobile(text);
+                  if (errors.mobile) validateField('mobile', text);
+                }}
+                onBlur={() => validateField('mobile', memberMobile)}
+                error={errors.mobile}
                 keyboardType="phone-pad"
               />
 
