@@ -15,6 +15,7 @@ interface MemberAccordionProps {
   onToggleExpand: () => void;
   onNavigateCreateRecord: () => void;
   onNavigateRecordDetails: (recordId: string) => void;
+  onConsult: () => void;
 }
 
 export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
@@ -24,6 +25,7 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
   onToggleExpand,
   onNavigateCreateRecord,
   onNavigateRecordDetails,
+  onConsult,
 }) => {
   return (
     <View 
@@ -34,28 +36,53 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
       ]}
     >
       {/* Accordion Header */}
-      <Pressable 
-        onPress={onToggleExpand}
-        style={styles.accordionHeader}
-      >
-        <View style={styles.avatar}>
-          <Typography.Label style={styles.avatarText}>
-            {member.name.charAt(0).toUpperCase()}
+      <View style={styles.accordionHeader}>
+        <Pressable 
+          onPress={onToggleExpand}
+          style={styles.headerPressable}
+        >
+          <View style={styles.avatar}>
+            <Typography.Label style={styles.avatarText}>
+              {member.name.charAt(0).toUpperCase()}
+            </Typography.Label>
+          </View>
+          <View style={styles.memberInfo}>
+            <Typography.Paragraph style={styles.memberName}>
+              {member.name}
+            </Typography.Paragraph>
+            <Typography.Label style={styles.memberRelation}>
+              {member.relation} • {records.length} {records.length === 1 ? 'Record' : 'Records'}
+            </Typography.Label>
+          </View>
+        </Pressable>
+
+        <Pressable
+          onPress={onConsult}
+          style={({ pressed }) => [
+            styles.consultButton,
+            pressed ? styles.consultButtonPressed : null,
+            { borderCurve: 'continuous' }
+          ]}
+        >
+          <Image source="sf:sparkles" style={styles.consultIcon} />
+          <Typography.Label style={styles.consultText}>
+            Consult
           </Typography.Label>
-        </View>
-        <View style={styles.memberInfo}>
-          <Typography.Paragraph style={styles.memberName}>
-            {member.name}
-          </Typography.Paragraph>
-          <Typography.Label style={styles.memberRelation}>
-            {member.relation} • {records.length} {records.length === 1 ? 'Record' : 'Records'}
-          </Typography.Label>
-        </View>
-        <Image 
-          source={isExpanded ? "sf:chevron.up" : "sf:chevron.down"} 
-          style={[styles.chevronIcon, { tintColor: theme.colors.text.tertiary }]} 
-        />
-      </Pressable>
+        </Pressable>
+
+        <Pressable 
+          onPress={onToggleExpand}
+          style={({ pressed }) => [
+            styles.chevronPressable,
+            pressed ? styles.chevronPressablePressed : null
+          ]}
+        >
+          <Image 
+            source={isExpanded ? "sf:chevron.up" : "sf:chevron.down"} 
+            style={[styles.chevronIcon, { tintColor: theme.colors.text.tertiary }]} 
+          />
+        </Pressable>
+      </View>
 
       {/* Accordion Content */}
       {isExpanded ? (
@@ -122,7 +149,46 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: theme.spacing.md,
+    gap: theme.spacing.sm,
+  },
+  headerPressable: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.md,
+  },
+  consultButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.background.default,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
+    marginRight: theme.spacing.xs,
+  },
+  consultButtonPressed: {
+    backgroundColor: theme.colors.border.light,
+  },
+  consultText: {
+    color: theme.colors.primary.DEFAULT,
+    fontWeight: '600',
+    fontSize: theme.fontSize.xs,
+  },
+  consultIcon: {
+    width: 12,
+    height: 12,
+    tintColor: theme.colors.primary.DEFAULT,
+  },
+  chevronPressable: {
+    padding: theme.spacing.xs,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  chevronPressablePressed: {
+    opacity: 0.7,
   },
   avatar: {
     width: 40,

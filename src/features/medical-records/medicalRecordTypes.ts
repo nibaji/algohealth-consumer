@@ -100,3 +100,16 @@ export interface MedicalRecordResponse {
   diagnoses?: DiagnosisResponse[];
   medications?: MedicationResponse[];
 }
+
+export interface AskBenishRequest {
+  question: string;
+  family_member_id: string | null;
+}
+
+export interface AskBenishResponse {
+  response?: string;
+  response_text?: string;
+  text?: string;
+  answer?: string;
+}
+

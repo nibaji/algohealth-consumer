@@ -1,7 +1,8 @@
 import { apiClient } from '@/src/services/api/apiClient';
 import { 
   MedicalRecordResponse, 
-  MedicalRecordUpdate 
+  MedicalRecordUpdate,
+  AskBenishResponse
 } from '@/src/features/medical-records/medicalRecordTypes';
 
 export const medicalRecordService = {
@@ -24,5 +25,12 @@ export const medicalRecordService = {
 
   async deleteMedicalRecord(id: string): Promise<void> {
     return apiClient.delete<void>(`/medical-records/${id}`);
+  },
+
+  async askBenish(familyMemberId: string | null, question: string): Promise<AskBenishResponse> {
+    return apiClient.post<AskBenishResponse>('/medical-records/ask-benish', {
+      family_member_id: familyMemberId,
+      question,
+    });
   }
 };

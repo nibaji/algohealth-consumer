@@ -5,8 +5,9 @@ import { theme } from '@/constants/theme';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { familyService } from '@/src/services/family/familyService';
 import { medicalRecordService } from '@/src/services/medical-records/medicalRecordService';
-import { FamilyOut } from '@/src/features/family/familyTypes';
+import { FamilyOut, FamilyMemberOut } from '@/src/features/family/familyTypes';
 import { MedicalRecordResponse } from '@/src/features/medical-records/medicalRecordTypes';
+import { ConsultModal } from '@/components/medical-records/consult-modal';
 import Animated, { FadeInDown, LayoutAnimationConfig } from 'react-native-reanimated';
 import * as Clipboard from 'expo-clipboard';
 import { Image } from 'expo-image';
@@ -26,6 +27,10 @@ export default function Index() {
   // Accordion open/close states
   const [expandedMembers, setExpandedMembers] = useState<Record<string, boolean>>({});
   const [copied, setCopied] = useState(false);
+
+  // Consult modal states
+  const [isConsultVisible, setIsConsultVisible] = useState(false);
+  const [activeConsultMember, setActiveConsultMember] = useState<FamilyMemberOut | null>(null);
 
   // Fetch Family details and Medical Records
   const loadDashboardData = useCallback(async () => {
@@ -69,6 +74,17 @@ export default function Index() {
       ...prev,
       [memberId]: prev[memberId] ? false : true,
     }));
+  }, []);
+
+  // Consult modal handlers
+  const handleOpenConsult = useCallback((member: FamilyMemberOut) => {
+    setActiveConsultMember(member);
+    setIsConsultVisible(true);
+  }, []);
+
+  const handleCloseConsult = useCallback(() => {
+    setIsConsultVisible(false);
+    setActiveConsultMember(null);
   }, []);
 
   // Copy Invite Code handler
@@ -206,6 +222,7 @@ export default function Index() {
                             onToggleExpand={() => toggleExpand(member.id)}
                             onNavigateCreateRecord={() => handleNavigateCreateRecord(member.id)}
                             onNavigateRecordDetails={handleNavigateRecordDetails}
+                            onConsult={() => handleOpenConsult(member)}
                           />
                         );
                       })}
@@ -269,6 +286,12 @@ export default function Index() {
           </LayoutAnimationConfig>
         )}
       </ScrollView>
+
+      <ConsultModal
+        visible={isConsultVisible}
+        member={activeConsultMember}
+        onClose={handleCloseConsult}
+      />
     </View>
   );
 }
