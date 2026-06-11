@@ -1,5 +1,6 @@
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Image } from 'expo-image';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
 import { Typography } from '@/components/ui/Typography';
@@ -25,6 +26,17 @@ export const PasswordResetCard = ({ email }: PasswordResetCardProps): React.JSX.
     sendResetEmail,
     resetPassword,
   } = useProfilePasswordReset(email);
+
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const toggleNewPassword = useCallback((): void => {
+    setShowNewPassword((prev) => !prev);
+  }, []);
+
+  const toggleConfirmPassword = useCallback((): void => {
+    setShowConfirmPassword((prev) => !prev);
+  }, []);
 
   return (
     <View style={styles.cardForm}>
@@ -65,23 +77,59 @@ export const PasswordResetCard = ({ email }: PasswordResetCardProps): React.JSX.
         autoCorrect={false}
       />
 
-      <TextInput
-        label="New Password"
-        placeholder="Enter new password"
-        value={newPassword}
-        onChangeText={setNewPassword}
-        secureTextEntry
-        textContentType="newPassword"
-      />
+      <View style={styles.passwordFieldWrapper}>
+        <TextInput
+          label="New Password"
+          placeholder="Enter new password"
+          value={newPassword}
+          onChangeText={setNewPassword}
+          secureTextEntry={!showNewPassword}
+          textContentType="newPassword"
+          style={styles.passwordInput}
+        />
+        <Pressable
+          onPress={toggleNewPassword}
+          style={({ pressed }) => [
+            styles.eyeButton,
+            pressed ? styles.eyeButtonPressed : null,
+          ]}
+          hitSlop={8}
+          accessibilityLabel={showNewPassword ? 'Hide new password' : 'Show new password'}
+          accessibilityRole="button"
+        >
+          <Image
+            source={showNewPassword ? 'sf:eye.slash' : 'sf:eye'}
+            style={[styles.eyeIcon, { tintColor: theme.colors.text.tertiary }]}
+          />
+        </Pressable>
+      </View>
 
-      <TextInput
-        label="Confirm Password"
-        placeholder="Re-enter new password"
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        secureTextEntry
-        textContentType="newPassword"
-      />
+      <View style={styles.passwordFieldWrapper}>
+        <TextInput
+          label="Confirm Password"
+          placeholder="Re-enter new password"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          secureTextEntry={!showConfirmPassword}
+          textContentType="newPassword"
+          style={styles.passwordInput}
+        />
+        <Pressable
+          onPress={toggleConfirmPassword}
+          style={({ pressed }) => [
+            styles.eyeButton,
+            pressed ? styles.eyeButtonPressed : null,
+          ]}
+          hitSlop={8}
+          accessibilityLabel={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+          accessibilityRole="button"
+        >
+          <Image
+            source={showConfirmPassword ? 'sf:eye.slash' : 'sf:eye'}
+            style={[styles.eyeIcon, { tintColor: theme.colors.text.tertiary }]}
+          />
+        </Pressable>
+      </View>
 
       <Button.Primary
         title="Reset Password"
@@ -114,6 +162,29 @@ const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
     fontSize: theme.fontSize.sm,
   },
+  passwordFieldWrapper: {
+    position: 'relative',
+  },
+  passwordInput: {
+    paddingRight: 48,
+  },
+  eyeButton: {
+    position: 'absolute',
+    right: theme.spacing.sm,
+    bottom: theme.spacing.sm,
+    width: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: theme.radius.full,
+  },
+  eyeButtonPressed: {
+    opacity: 0.5,
+  },
+  eyeIcon: {
+    width: 20,
+    height: 20,
+  },
   saveButton: {
     marginTop: theme.spacing.md,
   },
@@ -136,3 +207,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
