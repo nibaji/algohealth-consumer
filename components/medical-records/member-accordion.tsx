@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View, Pressable } from 'react-native';
-import { Image } from 'expo-image';
+import { Icon } from '@/components/ui/icon';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
@@ -66,7 +66,7 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
             { borderCurve: 'continuous' }
           ]}
         >
-          <Image source="sf:sparkles" style={styles.consultIcon} />
+          <Icon name="sparkles" size={12} tintColor={theme.colors.primary.DEFAULT} />
           <Typography.Label style={styles.consultText}>
             Consult
           </Typography.Label>
@@ -79,9 +79,10 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
             pressed ? styles.chevronPressablePressed : null
           ]}
         >
-          <Image 
-            source={isExpanded ? "sf:chevron.up" : "sf:chevron.down"} 
-            style={[styles.chevronIcon, { tintColor: theme.colors.text.tertiary }]} 
+          <Icon 
+            name={isExpanded ? "chevron.up" : "chevron.down"} 
+            size={16}
+            tintColor={theme.colors.text.tertiary}
           />
         </Pressable>
       </View>
@@ -123,7 +124,7 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
                 { borderCurve: 'continuous' }
               ]}
             >
-              <Image source="sf:plus" style={styles.plusMini} />
+              <Icon name="plus" size={12} tintColor={theme.colors.text.primary} />
               <Typography.Label style={styles.addRecordShortcutText}>
                 Add Record
               </Typography.Label>
@@ -137,7 +138,7 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
                 { borderCurve: 'continuous' }
               ]}
             >
-              <Image source="sf:pencil" style={styles.pencilMini} />
+              <Icon name="pencil" size={12} tintColor={theme.colors.primary.DEFAULT} />
               <Typography.Label style={styles.editMemberShortcutText}>
                 Edit Member
               </Typography.Label>

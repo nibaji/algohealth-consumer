@@ -10,7 +10,7 @@ import { MedicalRecordResponse } from '@/src/features/medical-records/medicalRec
 import { ConsultModal } from '@/components/medical-records/consult-modal';
 import Animated, { FadeInDown, LayoutAnimationConfig } from 'react-native-reanimated';
 import * as Clipboard from 'expo-clipboard';
-import { Image } from 'expo-image';
+import { Icon } from '@/components/ui/icon';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { MemberAccordion } from '@/components/medical-records/member-accordion';
 import { EditMemberModal } from '@/components/medical-records/edit-member-modal';
@@ -170,9 +170,10 @@ export default function Index() {
             { borderCurve: 'continuous' }
           ]}
         >
-          <Image 
-            source="sf:person.crop.circle.fill" 
-            style={[styles.profileIcon, { tintColor: theme.colors.primary.DEFAULT }]} 
+          <Icon 
+            name="person.crop.circle.fill" 
+            size={20}
+            tintColor={theme.colors.primary.DEFAULT}
           />
           <Typography.Label style={styles.profileText}>
             Profile
@@ -224,9 +225,10 @@ export default function Index() {
                         { borderCurve: 'continuous' }
                       ]}
                     >
-                      <Image 
-                        source={copied ? "sf:checkmark" : "sf:square.and.arrow.up"} 
-                        style={[styles.badgeIcon, { tintColor: copied ? theme.colors.status.success : theme.colors.primary.DEFAULT }]} 
+                      <Icon 
+                        name={copied ? "checkmark" : "square.and.arrow.up"} 
+                        size={14}
+                        tintColor={copied ? theme.colors.status.success : theme.colors.primary.DEFAULT}
                       />
                       <Typography.Label style={[styles.badgeText, copied ? styles.badgeTextSuccess : null]}>
                         {copied ? 'Copied' : `Invite: ${family.invite_code}`}
@@ -279,9 +281,10 @@ export default function Index() {
                       { borderCurve: 'continuous' }
                     ]}
                   >
-                    <Image 
-                      source="sf:person.badge.plus" 
-                      style={[styles.addMemberIcon, { tintColor: theme.colors.primary.DEFAULT }]} 
+                    <Icon 
+                      name="person.badge.plus" 
+                      size={18}
+                      tintColor={theme.colors.primary.DEFAULT}
                     />
                     <Typography.Label style={styles.addMemberText}>
                       Add Family Member
@@ -314,7 +317,7 @@ export default function Index() {
                         { borderCurve: 'continuous' }
                       ]}
                     >
-                      <Image source="sf:plus.circle.fill" style={[styles.actionIcon, { tintColor: theme.colors.primary.DEFAULT }]} />
+                      <Icon name="plus.circle.fill" size={20} tintColor={theme.colors.primary.DEFAULT} />
                       <Typography.Label style={styles.actionButtonText}>
                         New Family
                       </Typography.Label>
@@ -328,7 +331,7 @@ export default function Index() {
                         { borderCurve: 'continuous' }
                       ]}
                     >
-                      <Image source="sf:arrow.right.to.line.cycle" style={[styles.actionIcon, { tintColor: theme.colors.status.success }]} />
+                      <Icon name="arrow.right.to.line.cycle" size={20} tintColor={theme.colors.status.success} />
                       <Typography.Label style={styles.actionButtonText}>
                         Join Circle
                       </Typography.Label>

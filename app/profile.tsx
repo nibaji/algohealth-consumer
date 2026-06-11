@@ -9,7 +9,7 @@ import { ProfileDetailsCard } from '@/components/profile/profile-details-card';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useProfileDetails } from '@/src/features/auth/use-profile-details';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Image } from 'expo-image';
+import { Icon } from '@/components/ui/icon';
 
 export default function Profile(): React.JSX.Element {
   const router = useRouter();
@@ -42,9 +42,10 @@ export default function Profile(): React.JSX.Element {
             pressed ? styles.backButtonPressed : null,
           ]}
         >
-          <Image 
-            source="sf:chevron.left" 
-            style={[styles.backIcon, { tintColor: theme.colors.text.primary }]} 
+          <Icon 
+            name="chevron.left" 
+            size={20}
+            tintColor={theme.colors.text.primary}
           />
         </Pressable>
         <Typography.Subheading style={styles.headerTitle}>

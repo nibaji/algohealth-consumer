@@ -6,7 +6,7 @@ import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/src/contexts/AuthContext';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
-import { Image } from 'expo-image';
+import { Icon } from '@/components/ui/icon';
 
 export default function Onboarding() {
   const router = useRouter();
@@ -54,9 +54,10 @@ export default function Onboarding() {
           >
             <View style={styles.cardHeader}>
               <View style={[styles.iconContainer, { backgroundColor: '#EEF2FF' }]}>
-                <Image 
-                  source="sf:person.3.fill" 
-                  style={[styles.icon, { tintColor: theme.colors.primary.DEFAULT }]} 
+                <Icon 
+                  name="person.3.fill" 
+                  size={24}
+                  tintColor={theme.colors.primary.DEFAULT}
                 />
               </View>
               <View style={styles.cardTextContainer}>
@@ -86,9 +87,10 @@ export default function Onboarding() {
           >
             <View style={styles.cardHeader}>
               <View style={[styles.iconContainer, { backgroundColor: '#ECFDF5' }]}>
-                <Image 
-                  source="sf:key.fill" 
-                  style={[styles.icon, { tintColor: theme.colors.status.success }]} 
+                <Icon 
+                  name="key.fill" 
+                  size={24}
+                  tintColor={theme.colors.status.success}
                 />
               </View>
               <View style={styles.cardTextContainer}>

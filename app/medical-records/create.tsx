@@ -9,7 +9,7 @@ import { familyService } from '@/src/services/family/familyService';
 import { medicalRecordService } from '@/src/services/medical-records/medicalRecordService';
 import { FamilyMemberOut } from '@/src/features/family/familyTypes';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Image } from 'expo-image';
+import { Icon } from '@/components/ui/icon';
 
 export default function CreateMedicalRecord() {
   const router = useRouter();
@@ -155,9 +155,10 @@ export default function CreateMedicalRecord() {
             pressed ? styles.backButtonPressed : null,
           ]}
         >
-          <Image 
-            source="sf:chevron.left" 
-            style={[styles.backIcon, { tintColor: theme.colors.text.primary }]} 
+          <Icon 
+            name="chevron.left" 
+            size={20}
+            tintColor={theme.colors.text.primary}
           />
         </Pressable>
         <Typography.Subheading style={styles.headerTitle}>
@@ -176,9 +177,10 @@ export default function CreateMedicalRecord() {
           // Success State
           <Animated.View entering={FadeInDown.duration(500)} style={styles.successContainer}>
             <View style={[styles.successIconCircle, { backgroundColor: '#ECFDF5', borderCurve: 'continuous' }]}>
-              <Image 
-                source="sf:checkmark.seal.fill" 
-                style={[styles.successIcon, { tintColor: theme.colors.status.success }]} 
+              <Icon 
+                name="checkmark.seal.fill" 
+                size={40}
+                tintColor={theme.colors.status.success}
               />
             </View>
             <Typography.Heading style={styles.successTitle}>

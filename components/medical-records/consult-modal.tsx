@@ -9,7 +9,7 @@ import {
   KeyboardAvoidingView, 
   Platform 
 } from 'react-native';
-import { Image } from 'expo-image';
+import { Icon } from '@/components/ui/icon';
 import { FlashList, FlashListRef } from '@shopify/flash-list';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
@@ -114,7 +114,7 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
       <View style={[styles.messageBubbleRow, isUser ? styles.rowUser : styles.rowBot]}>
         {isUser ? null : (
           <View style={[styles.botAvatarCircle, { borderCurve: 'continuous' }]}>
-            <Image source="sf:sparkles" style={styles.botAvatarIcon} />
+            <Icon name="sparkles" size={12} tintColor={theme.colors.primary.DEFAULT} />
           </View>
         )}
         <View 
@@ -177,7 +177,7 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
               { borderCurve: 'continuous' }
             ]}
           >
-            <Image source="sf:xmark" style={styles.closeIcon} />
+            <Icon name="xmark" size={16} tintColor={theme.colors.text.primary} />
           </Pressable>
         </View>
 
@@ -195,7 +195,7 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
           {isProcessing ? (
             <View style={styles.loadingBubbleRow}>
               <View style={[styles.botAvatarCircle, { borderCurve: 'continuous' }]}>
-                <Image source="sf:sparkles" style={styles.botAvatarIcon} />
+                <Icon name="sparkles" size={12} tintColor={theme.colors.primary.DEFAULT} />
               </View>
               <View style={[styles.loadingBubble, { borderCurve: 'continuous' }]}>
                 <ActivityIndicator size="small" color={theme.colors.primary.DEFAULT} />
@@ -226,12 +226,10 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
               { borderCurve: 'continuous' }
             ]}
           >
-            <Image 
-              source="sf:paperplane.fill" 
-              style={[
-                styles.sendIcon, 
-                { tintColor: !inputText.trim() || isProcessing ? theme.colors.text.tertiary : theme.colors.primary.content }
-              ]} 
+            <Icon 
+              name="paperplane.fill" 
+              size={16}
+              tintColor={!inputText.trim() || isProcessing ? theme.colors.text.tertiary : theme.colors.primary.content}
             />
           </Pressable>
         </View>

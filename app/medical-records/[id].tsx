@@ -9,7 +9,7 @@ import { familyService } from '@/src/services/family/familyService';
 import { medicalRecordService } from '@/src/services/medical-records/medicalRecordService';
 import { MedicalRecordResponse } from '@/src/features/medical-records/medicalRecordTypes';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Image } from 'expo-image';
+import { Icon } from '@/components/ui/icon';
 
 export default function MedicalRecordDetail() {
   const router = useRouter();
@@ -207,9 +207,10 @@ export default function MedicalRecordDetail() {
             pressed ? styles.backButtonPressed : null,
           ]}
         >
-          <Image 
-            source="sf:chevron.left" 
-            style={[styles.backIcon, { tintColor: theme.colors.text.primary }]} 
+          <Icon 
+            name="chevron.left" 
+            size={20}
+            tintColor={theme.colors.text.primary}
           />
         </Pressable>
         <Typography.Subheading style={styles.headerTitle}>
@@ -232,9 +233,10 @@ export default function MedicalRecordDetail() {
           // Success Deleted Screen
           <Animated.View entering={FadeInDown.duration(500)} style={styles.successContainer}>
             <View style={[styles.successIconCircle, { backgroundColor: '#FEE2E2', borderCurve: 'continuous' }]}>
-              <Image 
-                source="sf:trash.fill" 
-                style={[styles.successIcon, { tintColor: theme.colors.status.error }]} 
+              <Icon 
+                name="trash.fill" 
+                size={40}
+                tintColor={theme.colors.status.error}
               />
             </View>
             <Typography.Heading style={[styles.successTitle, { color: theme.colors.status.error }]}>
@@ -369,7 +371,7 @@ export default function MedicalRecordDetail() {
               {record.ai_summary ? (
                 <View style={[styles.aiSummaryCard, { borderCurve: 'continuous' }]}>
                   <View style={styles.aiHeader}>
-                    <Image source="sf:sparkles" style={styles.sparkleIcon} />
+                    <Icon name="sparkles" size={16} tintColor={theme.colors.primary.DEFAULT} />
                     <Typography.Label style={styles.aiTitle}>
                       AI Clinical Summary
                     </Typography.Label>

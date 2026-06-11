@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert, Pressable } from 'react-native';
-import { Image } from 'expo-image';
+import { Icon } from '@/components/ui/icon';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
@@ -84,9 +84,10 @@ export default function LoginScreen(): React.JSX.Element {
               accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
               accessibilityRole="button"
             >
-              <Image
-                source={showPassword ? 'sf:eye.slash' : 'sf:eye'}
-                style={[styles.eyeIcon, { tintColor: theme.colors.text.tertiary }]}
+              <Icon
+                name={showPassword ? 'eye.slash' : 'eye'}
+                size={20}
+                tintColor={theme.colors.text.tertiary}
               />
             </Pressable>
           </View>

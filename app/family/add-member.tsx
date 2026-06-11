@@ -9,7 +9,7 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import { familyService } from '@/src/services/family/familyService';
 import { FamilyMemberCreate } from '@/src/features/family/familyTypes';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Image } from 'expo-image';
+import { Icon } from '@/components/ui/icon';
 
 type GenderType = 'Male' | 'Female' | 'Other' | 'Unknown';
 type RelationType = 'Spouse' | 'Child' | 'Parent' | 'Sibling' | 'Grandparent' | 'Other';
@@ -266,9 +266,10 @@ export default function AddMember() {
             pressed ? styles.backButtonPressed : null,
           ]}
         >
-          <Image 
-            source="sf:chevron.left" 
-            style={[styles.backIcon, { tintColor: theme.colors.text.primary }]} 
+          <Icon 
+            name="chevron.left" 
+            size={20}
+            tintColor={theme.colors.text.primary}
           />
         </Pressable>
         <Typography.Subheading style={styles.headerTitle}>
@@ -290,9 +291,10 @@ export default function AddMember() {
             style={styles.successContainer}
           >
             <View style={[styles.successIconCircle, { backgroundColor: '#ECFDF5', borderCurve: 'continuous' }]}>
-              <Image 
-                source="sf:checkmark.seal.fill" 
-                style={[styles.successIcon, { tintColor: theme.colors.status.success }]} 
+              <Icon 
+                name="checkmark.seal.fill" 
+                size={40}
+                tintColor={theme.colors.status.success}
               />
             </View>
             <Typography.Heading style={styles.successTitle}>

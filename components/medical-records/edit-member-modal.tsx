@@ -10,7 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform
 } from 'react-native';
-import { Image } from 'expo-image';
+import { Icon } from '@/components/ui/icon';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
@@ -365,9 +365,10 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
               pressed ? styles.closeButtonPressed : null,
             ]}
           >
-            <Image 
-              source="sf:xmark" 
-              style={[styles.closeIcon, { tintColor: theme.colors.text.primary }]} 
+            <Icon 
+              name="xmark" 
+              size={20}
+              tintColor={theme.colors.text.primary}
             />
           </Pressable>
           <Typography.Subheading style={styles.headerTitle}>

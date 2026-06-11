@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { Image } from 'expo-image';
+import { Icon } from '@/components/ui/icon';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
 import { Typography } from '@/components/ui/Typography';
@@ -93,9 +93,10 @@ export const PasswordResetCard = ({ email }: PasswordResetCardProps): React.JSX.
           accessibilityLabel={showNewPassword ? 'Hide new password' : 'Show new password'}
           accessibilityRole="button"
         >
-          <Image
-            source={showNewPassword ? 'sf:eye.slash' : 'sf:eye'}
-            style={[styles.eyeIcon, { tintColor: theme.colors.text.tertiary }]}
+          <Icon
+            name={showNewPassword ? 'eye.slash' : 'eye'}
+            size={20}
+            tintColor={theme.colors.text.tertiary}
           />
         </Pressable>
       </View>

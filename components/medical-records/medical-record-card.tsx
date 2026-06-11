@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View, Pressable } from 'react-native';
-import { Image } from 'expo-image';
+import { Icon } from '@/components/ui/icon';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
 import { MedicalRecordResponse } from '@/src/features/medical-records/medicalRecordTypes';
@@ -33,12 +33,12 @@ export const MedicalRecordCard: React.FC<MedicalRecordCardProps> = React.memo(({
           <Typography.Label style={styles.recordDate}>
             {record.visit_date}
           </Typography.Label>
-          <Image source="sf:chevron.right" style={styles.arrowRightIcon} />
+          <Icon name="chevron.right" size={14} tintColor={theme.colors.text.tertiary} />
         </View>
       </View>
       {record.ai_summary ? (
         <View style={styles.aiBadgeContainer}>
-          <Image source="sf:sparkles" style={styles.sparklesMini} />
+          <Icon name="sparkles" size={10} tintColor={theme.colors.primary.DEFAULT} />
           <Typography.Label numberOfLines={1} style={styles.aiBadgeText}>
             {record.ai_summary}
           </Typography.Label>

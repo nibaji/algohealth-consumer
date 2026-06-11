@@ -10,7 +10,7 @@ import { familyService } from '@/src/services/family/familyService';
 import { FamilyOut, FamilyMemberCreate } from '@/src/features/family/familyTypes';
 import Animated, { FadeInDown, FadeInUp, LayoutAnimationConfig } from 'react-native-reanimated';
 import * as Clipboard from 'expo-clipboard';
-import { Image } from 'expo-image';
+import { Icon } from '@/components/ui/icon';
 
 type GenderType = 'Male' | 'Female' | 'Other' | 'Unknown';
 type RelationType = 'Spouse' | 'Child' | 'Parent' | 'Sibling' | 'Grandparent' | 'Other';
@@ -192,9 +192,10 @@ export default function CreateFamily() {
             pressed ? styles.backButtonPressed : null,
           ]}
         >
-          <Image 
-            source="sf:chevron.left" 
-            style={[styles.backIcon, { tintColor: theme.colors.text.primary }]} 
+          <Icon 
+            name="chevron.left" 
+            size={20}
+            tintColor={theme.colors.text.primary}
           />
         </Pressable>
         <Typography.Subheading style={styles.headerTitle}>
@@ -265,9 +266,10 @@ export default function CreateFamily() {
                     { borderCurve: 'continuous' }
                   ]}
                 >
-                  <Image 
-                    source={copied ? "sf:checkmark" : "sf:doc.on.doc.fill"} 
-                    style={[styles.copyIcon, { tintColor: copied ? theme.colors.status.success : theme.colors.primary.content }]} 
+                  <Icon 
+                    name={copied ? "checkmark" : "doc.on.doc.fill"} 
+                    size={16}
+                    tintColor={copied ? theme.colors.status.success : theme.colors.primary.content}
                   />
                   <Typography.Label style={[styles.copyButtonText, copied ? styles.copyTextSuccess : null]}>
                     {copied ? 'Copied' : 'Copy'}
