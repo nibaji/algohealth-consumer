@@ -4,33 +4,54 @@ import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { familyService } from '@/src/services/family/familyService';
+import { medicalRecordService } from '@/src/services/medical-records/medicalRecordService';
 import { FamilyOut } from '@/src/features/family/familyTypes';
+import { MedicalRecordResponse } from '@/src/features/medical-records/medicalRecordTypes';
 import Animated, { FadeInDown, LayoutAnimationConfig } from 'react-native-reanimated';
 import * as Clipboard from 'expo-clipboard';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 
 export default function Index() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
 
+  // Active Family & Records state
   const [family, setFamily] = useState<FamilyOut | null>(null);
+  const [records, setRecords] = useState<MedicalRecordResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Accordion open/close states
+  const [expandedMembers, setExpandedMembers] = useState<Record<string, boolean>>({});
   const [copied, setCopied] = useState(false);
 
-  // Fetch Family details
-  const fetchFamily = useCallback(async () => {
+  // Fetch Family details and Medical Records
+  const loadDashboardData = useCallback(async () => {
     if (!user?.family_id) {
       setLoading(false);
       return;
     }
     setError(null);
     try {
-      const data = await familyService.getMyFamily();
-      setFamily(data);
+      const [familyData, recordsData] = await Promise.all([
+        familyService.getMyFamily(),
+        medicalRecordService.listMedicalRecords(),
+      ]);
+      
+      setFamily(familyData);
+      setRecords(recordsData);
+
+      // Expand the first member who has records by default, or the owner
+      if (familyData.members.length > 0) {
+        const defaultExpandedId = familyData.members[0].id;
+        setExpandedMembers(prev => ({
+          [defaultExpandedId]: true,
+          ...prev
+        }));
+      }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to fetch family circle';
+      const message = err instanceof Error ? err.message : 'Failed to load health records';
       setError(message);
     } finally {
       setLoading(false);
@@ -38,8 +59,16 @@ export default function Index() {
   }, [user?.family_id]);
 
   useEffect(() => {
-    fetchFamily();
-  }, [fetchFamily]);
+    loadDashboardData();
+  }, [loadDashboardData]);
+
+  // Toggle Accordion
+  const toggleExpand = useCallback((memberId: string) => {
+    setExpandedMembers((prev) => ({
+      ...prev,
+      [memberId]: prev[memberId] ? false : true,
+    }));
+  }, []);
 
   // Copy Invite Code handler
   const handleCopyCode = useCallback(async () => {
@@ -49,11 +78,27 @@ export default function Index() {
     setTimeout(() => setCopied(false), 2000);
   }, [family]);
 
-  const handleNavigateCreate = useCallback(() => {
+  // Navigation handlers
+  const handleNavigateProfile = useCallback(() => {
+    router.push('/profile');
+  }, [router]);
+
+  const handleNavigateCreateRecord = useCallback((memberId: string) => {
+    router.push({
+      pathname: '/medical-records/create',
+      params: { memberId },
+    });
+  }, [router]);
+
+  const handleNavigateRecordDetails = useCallback((recordId: string) => {
+    router.push(`/medical-records/${recordId}`);
+  }, [router]);
+
+  const handleNavigateCreateFamily = useCallback(() => {
     router.push('/family/create');
   }, [router]);
 
-  const handleNavigateJoin = useCallback(() => {
+  const handleNavigateJoinFamily = useCallback(() => {
     router.push('/family/join');
   }, [router]);
 
@@ -62,17 +107,24 @@ export default function Index() {
       {/* Header bar */}
       <View style={styles.headerBar}>
         <Typography.Subheading style={styles.headerTitle}>
-          AlgoHealth Dashboard
+          AlgoHealth
         </Typography.Subheading>
+        
+        {/* Profile icon top right */}
         <Pressable 
-          onPress={logout}
+          onPress={handleNavigateProfile}
           style={({ pressed }) => [
-            styles.logoutButton,
-            pressed ? styles.logoutButtonPressed : null
+            styles.profileButton,
+            pressed ? styles.profileButtonPressed : null,
+            { borderCurve: 'continuous' }
           ]}
         >
-          <Typography.Label style={styles.logoutText}>
-            Sign Out
+          <Image 
+            source="sf:person.crop.circle.fill" 
+            style={[styles.profileIcon, { tintColor: theme.colors.primary.DEFAULT }]} 
+          />
+          <Typography.Label style={styles.profileText}>
+            Profile
           </Typography.Label>
         </Pressable>
       </View>
@@ -84,10 +136,10 @@ export default function Index() {
       >
         <Animated.View entering={FadeInDown.duration(500)} style={styles.welcomeSection}>
           <Typography.Heading style={styles.title}>
-            Welcome back!
+            Health Circle
           </Typography.Heading>
           <Typography.Paragraph style={styles.description}>
-            {user?.full_name ? `Hello, ${user.full_name}` : `Hello, ${user?.email}`}
+            View and manage medical history for your circle.
           </Typography.Paragraph>
         </Animated.View>
 
@@ -99,7 +151,7 @@ export default function Index() {
           <LayoutAnimationConfig>
             <Animated.View entering={FadeInDown.duration(500).delay(100)} style={styles.dashboardBody}>
               
-              {/* Active Family Circle Details */}
+              {/* Active Family Circle Card */}
               {family ? (
                 <View style={[styles.card, { borderCurve: 'continuous' }]}>
                   <View style={styles.cardHeader}>
@@ -108,7 +160,7 @@ export default function Index() {
                         {family.name}
                       </Typography.Subheading>
                       <Typography.Paragraph style={styles.cardSubtitle}>
-                        Active Health Circle
+                        Tap a family member to view their medical records.
                       </Typography.Paragraph>
                     </View>
                     
@@ -126,54 +178,128 @@ export default function Index() {
                         style={[styles.badgeIcon, { tintColor: copied ? theme.colors.status.success : theme.colors.primary.DEFAULT }]} 
                       />
                       <Typography.Label style={[styles.badgeText, copied ? styles.badgeTextSuccess : null]}>
-                        {copied ? 'Copied' : `Code: ${family.invite_code}`}
+                        {copied ? 'Copied' : `Invite: ${family.invite_code}`}
                       </Typography.Label>
                     </Pressable>
                   </View>
 
                   <View style={styles.divider} />
 
-                  <Typography.Label style={styles.sectionHeader}>
-                    MEMBERS ({family.members.length})
-                  </Typography.Label>
-
+                  {/* ACCORDION SECTION GROUPED BY FAMILY MEMBER */}
                   {family.members.length > 0 ? (
-                    <View style={styles.membersList}>
-                      {family.members.map((member) => (
-                        <View key={member.id} style={styles.memberRow}>
-                          <View style={styles.avatar}>
-                            <Typography.Label style={styles.avatarText}>
-                              {member.name.charAt(0).toUpperCase()}
-                            </Typography.Label>
-                          </View>
-                          <View style={styles.memberInfo}>
-                            <Typography.Paragraph style={styles.memberName}>
-                              {member.name}
-                            </Typography.Paragraph>
-                            <Typography.Label style={styles.memberRelation}>
-                              {member.relation}
-                            </Typography.Label>
-                          </View>
-                          {member.invite_status ? (
-                            <View 
-                              style={[
-                                styles.statusBadge, 
-                                member.invite_status === 'ACCEPTED' ? styles.statusBadgeAccepted : styles.statusBadgePending,
-                                { borderCurve: 'continuous' }
-                              ]}
+                    <View style={styles.accordionsList}>
+                      {family.members.map((member) => {
+                        const isExpanded = expandedMembers[member.id] || false;
+                        
+                        // Filter records for this member
+                        const memberRecords = records.filter(
+                          (r) => r.family_member_id === member.id
+                        );
+
+                        return (
+                          <View 
+                            key={member.id} 
+                            style={[
+                              styles.accordionCard, 
+                              isExpanded ? styles.accordionCardExpanded : null,
+                              { borderCurve: 'continuous' }
+                            ]}
+                          >
+                            {/* Accordion Header */}
+                            <Pressable 
+                              onPress={() => toggleExpand(member.id)}
+                              style={styles.accordionHeader}
                             >
-                              <Typography.Label 
-                                style={[
-                                  styles.statusText,
-                                  member.invite_status === 'ACCEPTED' ? styles.statusTextAccepted : styles.statusTextPending
-                                ]}
-                              >
-                                {member.invite_status}
-                              </Typography.Label>
-                            </View>
-                          ) : null}
-                        </View>
-                      ))}
+                              <View style={styles.avatar}>
+                                <Typography.Label style={styles.avatarText}>
+                                  {member.name.charAt(0).toUpperCase()}
+                                </Typography.Label>
+                              </View>
+                              <View style={styles.memberInfo}>
+                                <Typography.Paragraph style={styles.memberName}>
+                                  {member.name}
+                                </Typography.Paragraph>
+                                <Typography.Label style={styles.memberRelation}>
+                                  {member.relation} • {memberRecords.length} {memberRecords.length === 1 ? 'Record' : 'Records'}
+                                </Typography.Label>
+                              </View>
+                              <Image 
+                                source={isExpanded ? "sf:chevron.up" : "sf:chevron.down"} 
+                                style={[styles.chevronIcon, { tintColor: theme.colors.text.tertiary }]} 
+                              />
+                            </Pressable>
+
+                            {/* Accordion Content */}
+                            {isExpanded ? (
+                              <Animated.View entering={FadeInDown.duration(300)} style={styles.accordionContent}>
+                                <View style={styles.accordionDivider} />
+                                
+                                {memberRecords.length > 0 ? (
+                                  <View style={styles.recordsList}>
+                                    {memberRecords.map((recordItem) => (
+                                      <Pressable
+                                        key={recordItem.id}
+                                        onPress={() => handleNavigateRecordDetails(recordItem.id)}
+                                        style={({ pressed }) => [
+                                          styles.recordItemCard,
+                                          pressed ? styles.recordItemCardPressed : null,
+                                          { borderCurve: 'continuous' }
+                                        ]}
+                                      >
+                                        <View style={styles.recordRow}>
+                                          <View style={styles.recordLeft}>
+                                            <Typography.Paragraph style={styles.recordComplaint}>
+                                              {recordItem.chief_complaint || 'General Checkup'}
+                                            </Typography.Paragraph>
+                                            <Typography.Label style={styles.recordContext}>
+                                              {recordItem.primary_context || 'Location not specified'}
+                                            </Typography.Label>
+                                          </View>
+                                          <View style={styles.recordRight}>
+                                            <Typography.Label style={styles.recordDate}>
+                                              {recordItem.visit_date}
+                                            </Typography.Label>
+                                            <Image source="sf:chevron.right" style={styles.arrowRightIcon} />
+                                          </View>
+                                        </View>
+                                        {recordItem.ai_summary ? (
+                                          <View style={styles.aiBadgeContainer}>
+                                            <Image source="sf:sparkles" style={styles.sparklesMini} />
+                                            <Typography.Label numberOfLines={1} style={styles.aiBadgeText}>
+                                              {recordItem.ai_summary}
+                                            </Typography.Label>
+                                          </View>
+                                        ) : null}
+                                      </Pressable>
+                                    ))}
+                                  </View>
+                                ) : (
+                                  <View style={styles.emptyRecords}>
+                                    <Typography.Paragraph style={styles.emptyRecordsText}>
+                                      No medical records logged yet.
+                                    </Typography.Paragraph>
+                                  </View>
+                                )}
+
+                                {/* Add record for this member shortcut */}
+                                <Pressable
+                                  onPress={() => handleNavigateCreateRecord(member.id)}
+                                  style={({ pressed }) => [
+                                    styles.addRecordShortcutButton,
+                                    pressed ? styles.addRecordShortcutButtonPressed : null,
+                                    { borderCurve: 'continuous' }
+                                  ]}
+                                >
+                                  <Image source="sf:plus" style={styles.plusMini} />
+                                  <Typography.Label style={styles.addRecordShortcutText}>
+                                    Add Medical Record
+                                  </Typography.Label>
+                                </Pressable>
+                              </Animated.View>
+                            ) : null}
+                          </View>
+                        );
+                      })}
                     </View>
                   ) : (
                     <View style={styles.emptyState}>
@@ -191,17 +317,17 @@ export default function Index() {
                 </View>
               )}
 
-              {/* Quick Actions post-onboarding */}
+              {/* Circle Actions (Switch/Create/Join post-onboarding) */}
               <View style={[styles.actionsCard, { borderCurve: 'continuous' }]}>
                 <Typography.Subheading style={styles.actionsTitle}>
-                  Circle Actions
+                  Circle Settings
                 </Typography.Subheading>
                 <Typography.Paragraph style={styles.actionsDesc}>
-                  You can start another family circle or switch circles by joining with a new invite code.
+                  Need to switch circles? Start a new family circle or join another circle using a different invite code.
                 </Typography.Paragraph>
                 <View style={styles.actionsRow}>
                   <Pressable 
-                    onPress={handleNavigateCreate}
+                    onPress={handleNavigateCreateFamily}
                     style={({ pressed }) => [
                       styles.actionButton,
                       pressed ? styles.actionButtonPressed : null,
@@ -215,7 +341,7 @@ export default function Index() {
                   </Pressable>
 
                   <Pressable 
-                    onPress={handleNavigateJoin}
+                    onPress={handleNavigateJoinFamily}
                     style={({ pressed }) => [
                       styles.actionButton,
                       pressed ? styles.actionButtonPressed : null,
@@ -257,16 +383,28 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: theme.colors.text.primary,
   },
-  logoutButton: {
+  profileButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
     paddingVertical: theme.spacing.xs,
     paddingHorizontal: theme.spacing.sm,
+    backgroundColor: theme.colors.background.default,
+    borderRadius: theme.radius.full,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
   },
-  logoutButtonPressed: {
-    opacity: 0.6,
+  profileButtonPressed: {
+    opacity: 0.7,
   },
-  logoutText: {
-    color: theme.colors.status.error,
+  profileIcon: {
+    width: 18,
+    height: 18,
+  },
+  profileText: {
+    fontSize: 12,
     fontWeight: '600',
+    color: theme.colors.text.primary,
   },
   scrollView: {
     flex: 1,
@@ -318,7 +456,7 @@ const styles = StyleSheet.create({
   },
   cardSubtitle: {
     fontSize: theme.fontSize.xs,
-    color: theme.colors.text.tertiary,
+    color: theme.colors.text.secondary,
     marginTop: 2,
   },
   inviteBadge: {
@@ -350,32 +488,37 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.border.light,
     marginVertical: theme.spacing.md,
   },
-  sectionHeader: {
-    color: theme.colors.text.tertiary,
-    fontWeight: '700',
-    fontSize: theme.fontSize.xs,
-    letterSpacing: 1,
-    marginBottom: theme.spacing.md,
-  },
-  membersList: {
+  accordionsList: {
     gap: theme.spacing.md,
   },
-  memberRow: {
+  accordionCard: {
+    backgroundColor: theme.colors.background.default,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
+    overflow: 'hidden',
+  },
+  accordionCardExpanded: {
+    backgroundColor: theme.colors.background.surface,
+    borderColor: theme.colors.border.default,
+  },
+  accordionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    padding: theme.spacing.md,
     gap: theme.spacing.md,
   },
   avatar: {
     width: 40,
     height: 40,
     borderRadius: theme.radius.full,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#EEF2FF',
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarText: {
     fontWeight: '700',
-    color: theme.colors.text.secondary,
+    color: theme.colors.primary.DEFAULT,
   },
   memberInfo: {
     flex: 1,
@@ -388,26 +531,122 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.xs,
     color: theme.colors.text.secondary,
   },
-  statusBadge: {
+  chevronIcon: {
+    width: 16,
+    height: 16,
+  },
+  accordionContent: {
+    padding: theme.spacing.md,
+    paddingTop: 0,
+    gap: theme.spacing.md,
+  },
+  accordionDivider: {
+    height: 1,
+    backgroundColor: theme.colors.border.light,
+    marginBottom: theme.spacing.xs,
+  },
+  recordsList: {
+    gap: theme.spacing.sm,
+  },
+  recordItemCard: {
+    backgroundColor: theme.colors.background.surface,
+    padding: theme.spacing.md,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
+    gap: theme.spacing.xs,
+    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.02)",
+  },
+  recordItemCardPressed: {
+    backgroundColor: theme.colors.background.default,
+    borderColor: theme.colors.border.default,
+  },
+  recordRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+  },
+  recordLeft: {
+    flex: 1,
+    gap: 2,
+  },
+  recordComplaint: {
+    fontWeight: '600',
+    color: theme.colors.text.primary,
+  },
+  recordContext: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.text.secondary,
+  },
+  recordRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+  },
+  recordDate: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.text.tertiary,
+  },
+  arrowRightIcon: {
+    width: 14,
+    height: 14,
+    tintColor: theme.colors.text.tertiary,
+  },
+  aiBadgeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FAF5FF',
+    borderWidth: 1,
+    borderColor: '#E9D5FF',
+    borderRadius: theme.radius.sm,
     paddingVertical: 2,
     paddingHorizontal: theme.spacing.xs,
-    borderRadius: theme.radius.sm,
+    marginTop: theme.spacing.xs,
+    gap: 4,
   },
-  statusBadgeAccepted: {
-    backgroundColor: '#ECFDF5',
+  sparklesMini: {
+    width: 10,
+    height: 10,
+    tintColor: theme.colors.primary.DEFAULT,
   },
-  statusBadgePending: {
-    backgroundColor: '#FEF3C7',
-  },
-  statusText: {
+  aiBadgeText: {
     fontSize: 10,
-    fontWeight: '700',
+    color: theme.colors.primary.DEFAULT,
+    flex: 1,
   },
-  statusTextAccepted: {
-    color: theme.colors.status.success,
+  emptyRecords: {
+    alignItems: 'center',
+    paddingVertical: theme.spacing.md,
   },
-  statusTextPending: {
-    color: theme.colors.status.warning,
+  emptyRecordsText: {
+    color: theme.colors.text.tertiary,
+    fontSize: theme.fontSize.sm,
+  },
+  addRecordShortcutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.background.default,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
+    borderRadius: theme.radius.md,
+    paddingVertical: theme.spacing.sm,
+    gap: theme.spacing.xs,
+    marginTop: theme.spacing.xs,
+  },
+  addRecordShortcutButtonPressed: {
+    backgroundColor: theme.colors.border.light,
+  },
+  plusMini: {
+    width: 12,
+    height: 12,
+    tintColor: theme.colors.text.primary,
+  },
+  addRecordShortcutText: {
+    fontSize: theme.fontSize.sm,
+    fontWeight: '600',
+    color: theme.colors.text.primary,
   },
   emptyState: {
     alignItems: 'center',
@@ -421,7 +660,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   
-  // Actions card styles
+  // Switch actions card styles
   actionsCard: {
     backgroundColor: theme.colors.background.surface,
     padding: theme.spacing.lg,

@@ -57,6 +57,9 @@ function InitialLayout() {
       <Stack.Screen name="onboarding" />
       <Stack.Screen name="family/create" />
       <Stack.Screen name="family/join" />
+      <Stack.Screen name="profile" />
+      <Stack.Screen name="medical-records/create" />
+      <Stack.Screen name="medical-records/[id]" />
     </Stack>
   );
 }

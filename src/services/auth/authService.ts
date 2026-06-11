@@ -42,6 +42,10 @@ export const authService = {
     return apiClient.get<UserProfileResponse>('/users/me');
   },
   
+  async updateMyProfile(data: { full_name: string }): Promise<UserProfileResponse> {
+    return apiClient.patch<UserProfileResponse>('/users/me', data);
+  },
+  
   async restoreSession(): Promise<UserProfileResponse | null> {
     const refreshToken = await tokenStorage.getRefreshToken();
     if (!refreshToken) return null;
