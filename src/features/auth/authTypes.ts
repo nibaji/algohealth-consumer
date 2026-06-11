@@ -3,7 +3,7 @@ export interface UserProfileResponse {
   email: string;
   full_name?: string | null;
   family_id?: string | null;
-  is_active: boolean;
+  is_active?: boolean;
 }
 
 export interface AuthResponse {
@@ -12,6 +12,7 @@ export interface AuthResponse {
   token_type: string;
   family_id?: string | null;
   family_member_id?: string | null;
+  pending_invite?: boolean;
   user: UserProfileResponse;
 }
 
