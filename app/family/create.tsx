@@ -401,8 +401,8 @@ export default function CreateFamily() {
                 keyboardType="phone-pad"
               />
 
-              <Button.Secondary
-                title="Add Another Member"
+              <Button.Primary
+                title="Add"
                 onPress={handleAddMember}
                 loading={memberLoading}
                 style={styles.addButton}

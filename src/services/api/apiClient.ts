@@ -100,11 +100,11 @@ async function customFetch<T>(endpoint: string, options: FetchOptions = {}): Pro
       const errorData = await response.json().catch(() => ({}));
       // Standardize extracting the error message
       let errorMessage = 'An error occurred';
-      if (errorData.detail) {
+      if (errorData.message) {
+        errorMessage = errorData.message;
+      } else if (errorData.detail) {
         if (typeof errorData.detail === 'string') errorMessage = errorData.detail;
         else if (Array.isArray(errorData.detail) && errorData.detail.length > 0) errorMessage = errorData.detail[0].msg || JSON.stringify(errorData.detail);
-      } else if (errorData.message) {
-        errorMessage = errorData.message;
       }
       throw new Error(errorMessage);
     }
