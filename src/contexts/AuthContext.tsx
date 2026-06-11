@@ -8,6 +8,7 @@ interface AuthContextType {
   login: typeof authService.login;
   register: typeof authService.register;
   logout: () => Promise<void>;
+  refreshProfile: () => Promise<UserProfileResponse | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -41,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const profile = await authService.getMyProfile();
         setUser(profile);
-      } catch (_error) {}
+      } catch {}
     }
     return response;
   }, []);
@@ -51,12 +52,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }, []);
 
+  const refreshProfile = useCallback(async (): Promise<UserProfileResponse | null> => {
+    try {
+      const profile = await authService.getMyProfile();
+      setUser(profile);
+      return profile;
+    } catch {
+      return null;
+    }
+  }, []);
+
   const value = {
     user,
     isLoading,
     login,
     register,
     logout,
+    refreshProfile,
   };
 
   return <AuthContext value={value}>{children}</AuthContext>;

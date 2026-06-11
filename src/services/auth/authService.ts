@@ -51,7 +51,7 @@ export const authService = {
       tokenStorage.setAccessToken(refreshResponse.access_token);
       await tokenStorage.setRefreshToken(refreshResponse.refresh_token);
       return refreshResponse.user;
-    } catch (_error) {
+    } catch {
       await tokenStorage.clearTokens();
       return null;
     }

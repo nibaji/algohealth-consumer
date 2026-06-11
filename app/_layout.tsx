@@ -1,4 +1,4 @@
-import { Slot, useRouter, useSegments } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from '@/src/contexts/AuthContext';
 import { useEffect } from 'react';
@@ -14,13 +14,27 @@ function InitialLayout() {
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === '(auth)';
+    const inOnboardingGroup = segments[0] === 'onboarding' || segments[0] === 'family';
 
-    if (!user && !inAuthGroup) {
-      // Redirect to the login page.
-      router.replace('/(auth)/login');
-    } else if (user && inAuthGroup) {
-      // Redirect away from the login page.
-      router.replace('/');
+    if (!user) {
+      if (!inAuthGroup) {
+        // Redirect to the login page.
+        router.replace('/(auth)/login');
+      }
+    } else {
+      // User is logged in
+      if (!user.family_id) {
+        // If user is not in a family, they must go through onboarding (join/create family).
+        if (!inOnboardingGroup) {
+          router.replace('/onboarding');
+        }
+      } else {
+        // User is in a family.
+        // Redirect away from auth and onboarding landing screens, but allow accessing family pages post-login.
+        if (inAuthGroup || segments[0] === 'onboarding') {
+          router.replace('/');
+        }
+      }
     }
   }, [user, isLoading, segments, router]);
 
@@ -32,7 +46,19 @@ function InitialLayout() {
     );
   }
 
-  return <Slot />;
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: theme.colors.background.default },
+      }}
+    >
+      <Stack.Screen name="index" />
+      <Stack.Screen name="onboarding" />
+      <Stack.Screen name="family/create" />
+      <Stack.Screen name="family/join" />
+    </Stack>
+  );
 }
 
 export default function RootLayout() {
