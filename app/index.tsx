@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
@@ -11,12 +11,12 @@ import { ConsultModal } from '@/components/medical-records/consult-modal';
 import Animated, { FadeInDown, LayoutAnimationConfig } from 'react-native-reanimated';
 import * as Clipboard from 'expo-clipboard';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { MemberAccordion } from '@/components/medical-records/member-accordion';
 import { EditMemberModal } from '@/components/medical-records/edit-member-modal';
 
 export default function Index() {
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const router = useRouter();
 
   // Active Family & Records state
@@ -29,6 +29,9 @@ export default function Index() {
   const [expandedMembers, setExpandedMembers] = useState<Record<string, boolean>>({});
   const [copied, setCopied] = useState(false);
 
+  // Track initial load to show full screen spinner only once
+  const isInitialLoad = React.useRef(true);
+
   // Consult modal states
   const [isConsultVisible, setIsConsultVisible] = useState(false);
   const [activeConsultMember, setActiveConsultMember] = useState<FamilyMemberOut | null>(null);
@@ -39,12 +42,22 @@ export default function Index() {
 
   // Fetch Family details and Medical Records
   const loadDashboardData = useCallback(async () => {
-    if (!user?.family_id) {
-      setLoading(false);
-      return;
+    if (isInitialLoad.current) {
+      setLoading(true);
+      isInitialLoad.current = false;
     }
     setError(null);
     try {
+      // Refresh user profile first to ensure we have the latest family_id
+      const updatedUser = await refreshProfile();
+      
+      if (!updatedUser?.family_id) {
+        setFamily(null);
+        setRecords([]);
+        setLoading(false);
+        return;
+      }
+
       const [familyData, recordsData] = await Promise.all([
         familyService.getMyFamily(),
         medicalRecordService.listMedicalRecords(),
@@ -56,10 +69,10 @@ export default function Index() {
       // Expand the first member who has records by default, or the owner
       if (familyData.members.length > 0) {
         const defaultExpandedId = familyData.members[0].id;
-        setExpandedMembers(prev => ({
-          [defaultExpandedId]: true,
-          ...prev
-        }));
+        setExpandedMembers(prev => {
+          if (Object.keys(prev).length > 0) return prev;
+          return { [defaultExpandedId]: true };
+        });
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to load health records';
@@ -67,11 +80,13 @@ export default function Index() {
     } finally {
       setLoading(false);
     }
-  }, [user?.family_id]);
+  }, [refreshProfile]);
 
-  useEffect(() => {
-    loadDashboardData();
-  }, [loadDashboardData]);
+  useFocusEffect(
+    useCallback(() => {
+      loadDashboardData();
+    }, [loadDashboardData])
+  );
 
   // Toggle Accordion
   const toggleExpand = useCallback((memberId: string) => {
