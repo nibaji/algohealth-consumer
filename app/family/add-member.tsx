@@ -22,13 +22,26 @@ export default function AddMember() {
   const [memberName, setMemberName] = useState('');
   const [memberRelation, setMemberRelation] = useState<RelationType>('Spouse');
   const [memberGender, setMemberGender] = useState<GenderType>('Female');
-  const [memberDob, setMemberDob] = useState(''); // YYYY-MM-DD
+  const [memberDob, setMemberDob] = useState(''); // DD-MM-YYYY
   const [memberEmail, setMemberEmail] = useState('');
   const [memberMobile, setMemberMobile] = useState('');
+  const [customRelation, setCustomRelation] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  // DOB formatting handler
+  const handleDobChange = useCallback((text: string) => {
+    const cleaned = text.replace(/[^0-9]/g, '');
+    let formatted = cleaned;
+    if (cleaned.length > 2 && cleaned.length <= 4) {
+      formatted = `${cleaned.slice(0, 2)}-${cleaned.slice(2)}`;
+    } else if (cleaned.length > 4) {
+      formatted = `${cleaned.slice(0, 2)}-${cleaned.slice(2, 4)}-${cleaned.slice(4, 8)}`;
+    }
+    setMemberDob(formatted);
+  }, []);
 
   // Form submission handler
   const handleAddMember = useCallback(async () => {
@@ -41,17 +54,17 @@ export default function AddMember() {
       return;
     }
 
-    // Basic date validation YYYY-MM-DD
-    const dobRegex = /^\d{4}-\d{2}-\d{2}$/;
+    // Basic date validation DD-MM-YYYY
+    const dobRegex = /^\d{2}-\d{2}-\d{4}$/;
     if (!dobRegex.test(memberDob)) {
-      setError('Date of birth must be in YYYY-MM-DD format');
+      setError('Date of birth must be in DD-MM-YYYY format');
       return;
     }
 
     const dateParts = memberDob.split('-');
-    const year = parseInt(dateParts[0], 10);
+    const day = parseInt(dateParts[0], 10);
     const month = parseInt(dateParts[1], 10);
-    const day = parseInt(dateParts[2], 10);
+    const year = parseInt(dateParts[2], 10);
     const dateObj = new Date(year, month - 1, day);
     const today = new Date();
 
@@ -90,11 +103,12 @@ export default function AddMember() {
     setSuccess(false);
 
     try {
+      const apiDob = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
       const payload: FamilyMemberCreate = {
         name: memberName,
-        relation: memberRelation,
+        relation: memberRelation === 'Other' && customRelation.trim() ? customRelation.trim() : memberRelation,
         gender: memberGender,
-        date_of_birth: memberDob,
+        date_of_birth: apiDob,
         email_id: memberEmail.trim() ? memberEmail : null,
         mobile_no: memberMobile.trim() ? memberMobile : null,
       };
@@ -120,7 +134,7 @@ export default function AddMember() {
     } finally {
       setLoading(false);
     }
-  }, [memberName, memberRelation, memberGender, memberDob, memberEmail, memberMobile, refreshProfile, router]);
+  }, [memberName, memberRelation, memberGender, memberDob, memberEmail, memberMobile, customRelation, refreshProfile, router]);
 
   const handleBack = useCallback(() => {
     if (router.canGoBack()) {
@@ -202,9 +216,9 @@ export default function AddMember() {
                 <View style={styles.flexHalf}>
                   <TextInput
                     label="Date of Birth"
-                    placeholder="YYYY-MM-DD"
+                    placeholder="DD-MM-YYYY"
                     value={memberDob}
-                    onChangeText={setMemberDob}
+                    onChangeText={handleDobChange}
                     maxLength={10}
                     keyboardType="numeric"
                   />
@@ -243,7 +257,7 @@ export default function AddMember() {
 
               {/* RELATION SHIPS SELECTION */}
               <View style={styles.formGroup}>
-                <Typography.Label style={styles.selectLabel}>Relation to Owner</Typography.Label>
+                <Typography.Label style={styles.selectLabel}>Relationship</Typography.Label>
                 <ScrollView 
                   horizontal 
                   showsHorizontalScrollIndicator={false}
@@ -274,6 +288,16 @@ export default function AddMember() {
                   })}
                 </ScrollView>
               </View>
+
+              {/* Optional Custom Relation TextInput */}
+              {memberRelation === 'Other' ? (
+                <TextInput
+                  label="Custom Relationship (Optional)"
+                  placeholder="e.g. Cousin, Friend, Caregiver"
+                  value={customRelation}
+                  onChangeText={setCustomRelation}
+                />
+              ) : null}
 
               <TextInput
                 label="Email ID (Optional)"

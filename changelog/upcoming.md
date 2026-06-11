@@ -1,4 +1,5 @@
 ## Unreleased
+- 2026-06-11: Updated the add family member form to use DD-MM-YYYY format for Date of Birth with auto-inserted hyphens, renamed the "Relation to Owner" label to "Relationship", and added an optional custom relationship text input when "Other" is selected. Changed in `app/family/add-member.tsx`.
 - 2026-06-11: Added an "Add Family Member" CTA button on the homepage dashboard within the active family circle card, linking to `app/family/add-member.tsx`. Changed in `app/index.tsx`.
 - 2026-06-11: Disabled ability for a user to join or create a new family circle if they are already in one by hiding the "Circle Settings" settings actions card from the homepage dashboard. Changed in `app/index.tsx`.
 - 2026-06-11: Updated authentication type definitions (`src/features/auth/authTypes.ts`) to include the optional `pending_invite` boolean property in `AuthResponse`, and made `is_active` optional in `UserProfileResponse` to match register/login payloads. Changed in `src/features/auth/authTypes.ts`.
