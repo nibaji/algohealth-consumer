@@ -93,6 +93,43 @@ export default function CreateFamily() {
       return;
     }
 
+    const dateParts = memberDob.split('-');
+    const year = parseInt(dateParts[0], 10);
+    const month = parseInt(dateParts[1], 10);
+    const day = parseInt(dateParts[2], 10);
+    const dateObj = new Date(year, month - 1, day);
+    const today = new Date();
+
+    if (
+      dateObj.getFullYear() !== year ||
+      dateObj.getMonth() !== month - 1 ||
+      dateObj.getDate() !== day
+    ) {
+      setMemberError('Please enter a valid calendar date');
+      return;
+    }
+
+    if (dateObj > today) {
+      setMemberError('Date of birth cannot be in the future');
+      return;
+    }
+
+    if (memberEmail.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(memberEmail.trim())) {
+        setMemberError('Please enter a valid email address');
+        return;
+      }
+    }
+
+    if (memberMobile.trim()) {
+      const phoneRegex = /^\+?[0-9]{7,15}$/;
+      if (!phoneRegex.test(memberMobile.trim())) {
+        setMemberError('Please enter a valid mobile number (7 to 15 digits)');
+        return;
+      }
+    }
+
     setMemberError(null);
     setMemberLoading(true);
     setMemberSuccess(false);
