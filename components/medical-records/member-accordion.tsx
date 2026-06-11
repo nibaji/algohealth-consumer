@@ -16,6 +16,7 @@ interface MemberAccordionProps {
   onNavigateCreateRecord: () => void;
   onNavigateRecordDetails: (recordId: string) => void;
   onConsult: () => void;
+  onEditMember: () => void;
 }
 
 export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
@@ -26,6 +27,7 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
   onNavigateCreateRecord,
   onNavigateRecordDetails,
   onConsult,
+  onEditMember,
 }) => {
   return (
     <View 
@@ -111,20 +113,36 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
             </View>
           )}
 
-          {/* Add record for this member shortcut */}
-          <Pressable
-            onPress={onNavigateCreateRecord}
-            style={({ pressed }) => [
-              styles.addRecordShortcutButton,
-              pressed ? styles.addRecordShortcutButtonPressed : null,
-              { borderCurve: 'continuous' }
-            ]}
-          >
-            <Image source="sf:plus" style={styles.plusMini} />
-            <Typography.Label style={styles.addRecordShortcutText}>
-              Add Medical Record
-            </Typography.Label>
-          </Pressable>
+          {/* Add record and edit member shortcuts */}
+          <View style={styles.actionsFooterRow}>
+            <Pressable
+              onPress={onNavigateCreateRecord}
+              style={({ pressed }) => [
+                styles.addRecordShortcutButton,
+                pressed ? styles.addRecordShortcutButtonPressed : null,
+                { borderCurve: 'continuous' }
+              ]}
+            >
+              <Image source="sf:plus" style={styles.plusMini} />
+              <Typography.Label style={styles.addRecordShortcutText}>
+                Add Record
+              </Typography.Label>
+            </Pressable>
+
+            <Pressable
+              onPress={onEditMember}
+              style={({ pressed }) => [
+                styles.editMemberShortcutButton,
+                pressed ? styles.editMemberShortcutButtonPressed : null,
+                { borderCurve: 'continuous' }
+              ]}
+            >
+              <Image source="sf:pencil" style={styles.pencilMini} />
+              <Typography.Label style={styles.editMemberShortcutText}>
+                Edit Member
+              </Typography.Label>
+            </Pressable>
+          </View>
         </Animated.View>
       ) : null}
     </View>
@@ -248,7 +266,19 @@ const styles = StyleSheet.create({
     color: theme.colors.text.tertiary,
     fontSize: theme.fontSize.sm,
   },
+  addRecordShortcutText: {
+    fontSize: theme.fontSize.sm,
+    fontWeight: '600',
+    color: theme.colors.text.primary,
+  },
+  actionsFooterRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.xs,
+    width: '100%',
+  },
   addRecordShortcutButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -258,7 +288,6 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md,
     paddingVertical: theme.spacing.sm,
     gap: theme.spacing.xs,
-    marginTop: theme.spacing.xs,
   },
   addRecordShortcutButtonPressed: {
     backgroundColor: theme.colors.border.light,
@@ -268,9 +297,29 @@ const styles = StyleSheet.create({
     height: 12,
     tintColor: theme.colors.text.primary,
   },
-  addRecordShortcutText: {
+  editMemberShortcutButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.background.default,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
+    borderRadius: theme.radius.md,
+    paddingVertical: theme.spacing.sm,
+    gap: theme.spacing.xs,
+  },
+  editMemberShortcutButtonPressed: {
+    backgroundColor: theme.colors.border.light,
+  },
+  pencilMini: {
+    width: 12,
+    height: 12,
+    tintColor: theme.colors.primary.DEFAULT,
+  },
+  editMemberShortcutText: {
     fontSize: theme.fontSize.sm,
     fontWeight: '600',
-    color: theme.colors.text.primary,
+    color: theme.colors.primary.DEFAULT,
   },
 });

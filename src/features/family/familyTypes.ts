@@ -69,3 +69,19 @@ export interface FamilyMemberResponse {
   invite_status?: string | null;
   profile_picture_url: string | null;
 }
+
+export interface FamilyMemberUpdate {
+  name?: string;
+  relation?: string;
+  gender?: string;
+  date_of_birth?: string;
+  height?: number | null;
+  height_unit?: string | null;
+  weight?: number | null;
+  weight_unit?: string | null;
+  blood_group?: string | null;
+  mobile_no?: string | null;
+  country_code?: string | null;
+  email_id?: string | null;
+  health_summary?: string | null;
+}

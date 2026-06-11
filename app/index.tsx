@@ -13,6 +13,7 @@ import * as Clipboard from 'expo-clipboard';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { MemberAccordion } from '@/components/medical-records/member-accordion';
+import { EditMemberModal } from '@/components/medical-records/edit-member-modal';
 
 export default function Index() {
   const { user } = useAuth();
@@ -31,6 +32,10 @@ export default function Index() {
   // Consult modal states
   const [isConsultVisible, setIsConsultVisible] = useState(false);
   const [activeConsultMember, setActiveConsultMember] = useState<FamilyMemberOut | null>(null);
+
+  // Edit member modal states
+  const [isEditMemberVisible, setIsEditMemberVisible] = useState(false);
+  const [activeEditMember, setActiveEditMember] = useState<FamilyMemberOut | null>(null);
 
   // Fetch Family details and Medical Records
   const loadDashboardData = useCallback(async () => {
@@ -85,6 +90,16 @@ export default function Index() {
   const handleCloseConsult = useCallback(() => {
     setIsConsultVisible(false);
     setActiveConsultMember(null);
+  }, []);
+
+  const handleOpenEditMember = useCallback((member: FamilyMemberOut) => {
+    setActiveEditMember(member);
+    setIsEditMemberVisible(true);
+  }, []);
+
+  const handleCloseEditMember = useCallback(() => {
+    setIsEditMemberVisible(false);
+    setActiveEditMember(null);
   }, []);
 
   // Copy Invite Code handler
@@ -227,6 +242,7 @@ export default function Index() {
                             onNavigateCreateRecord={() => handleNavigateCreateRecord(member.id)}
                             onNavigateRecordDetails={handleNavigateRecordDetails}
                             onConsult={() => handleOpenConsult(member)}
+                            onEditMember={() => handleOpenEditMember(member)}
                           />
                         );
                       })}
@@ -315,6 +331,13 @@ export default function Index() {
         visible={isConsultVisible}
         member={activeConsultMember}
         onClose={handleCloseConsult}
+      />
+
+      <EditMemberModal
+        visible={isEditMemberVisible}
+        member={activeEditMember}
+        onClose={handleCloseEditMember}
+        onUpdateSuccess={loadDashboardData}
       />
     </View>
   );
