@@ -6,3 +6,4 @@ Versioned changelogs are stored in `changelog/` (one file per version).
 - [upcoming](changelog/upcoming.md)
 
 ## Versions
+- [20260611.1](changelog/20260611.1.md)
