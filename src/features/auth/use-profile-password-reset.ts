@@ -4,14 +4,14 @@ import { authService } from '@/src/services/auth/authService';
 interface UseProfilePasswordResetReturn {
   resetToken: string;
   newPassword: string;
-  confirmPassword: string;
+
   resetEmailLoading: boolean;
   passwordResetLoading: boolean;
   passwordResetError: string | null;
   passwordResetSuccess: string | null;
   setResetToken: (value: string) => void;
   setNewPassword: (value: string) => void;
-  setConfirmPassword: (value: string) => void;
+
   sendResetEmail: () => Promise<void>;
   resetPassword: () => Promise<void>;
 }
@@ -21,7 +21,7 @@ export const useProfilePasswordReset = (
 ): UseProfilePasswordResetReturn => {
   const [resetToken, setResetToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+
   const [resetEmailLoading, setResetEmailLoading] = useState(false);
   const [passwordResetLoading, setPasswordResetLoading] = useState(false);
   const [passwordResetError, setPasswordResetError] = useState<string | null>(null);
@@ -60,10 +60,7 @@ export const useProfilePasswordReset = (
       return;
     }
 
-    if (newPassword !== confirmPassword) {
-      setPasswordResetError('Passwords do not match');
-      return;
-    }
+
 
     setPasswordResetError(null);
     setPasswordResetSuccess(null);
@@ -76,7 +73,6 @@ export const useProfilePasswordReset = (
       });
       setResetToken('');
       setNewPassword('');
-      setConfirmPassword('');
       setPasswordResetSuccess('Password reset successfully.');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to reset password';
@@ -84,19 +80,17 @@ export const useProfilePasswordReset = (
     } finally {
       setPasswordResetLoading(false);
     }
-  }, [confirmPassword, newPassword, resetToken]);
+  }, [newPassword, resetToken]);
 
   return {
     resetToken,
     newPassword,
-    confirmPassword,
     resetEmailLoading,
     passwordResetLoading,
     passwordResetError,
     passwordResetSuccess,
     setResetToken,
     setNewPassword,
-    setConfirmPassword,
     sendResetEmail,
     resetPassword,
   };

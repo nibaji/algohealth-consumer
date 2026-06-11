@@ -15,28 +15,24 @@ export const PasswordResetCard = ({ email }: PasswordResetCardProps): React.JSX.
   const {
     resetToken,
     newPassword,
-    confirmPassword,
     resetEmailLoading,
     passwordResetLoading,
     passwordResetError,
     passwordResetSuccess,
     setResetToken,
     setNewPassword,
-    setConfirmPassword,
     sendResetEmail,
     resetPassword,
   } = useProfilePasswordReset(email);
 
   const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
 
   const toggleNewPassword = useCallback((): void => {
     setShowNewPassword((prev) => !prev);
   }, []);
 
-  const toggleConfirmPassword = useCallback((): void => {
-    setShowConfirmPassword((prev) => !prev);
-  }, []);
+
 
   return (
     <View style={styles.cardForm}>
@@ -104,32 +100,7 @@ export const PasswordResetCard = ({ email }: PasswordResetCardProps): React.JSX.
         </Pressable>
       </View>
 
-      <View style={styles.passwordFieldWrapper}>
-        <TextInput
-          label="Confirm Password"
-          placeholder="Re-enter new password"
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry={!showConfirmPassword}
-          textContentType="newPassword"
-          style={styles.passwordInput}
-        />
-        <Pressable
-          onPress={toggleConfirmPassword}
-          style={({ pressed }) => [
-            styles.eyeButton,
-            pressed ? styles.eyeButtonPressed : null,
-          ]}
-          hitSlop={8}
-          accessibilityLabel={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
-          accessibilityRole="button"
-        >
-          <Image
-            source={showConfirmPassword ? 'sf:eye.slash' : 'sf:eye'}
-            style={[styles.eyeIcon, { tintColor: theme.colors.text.tertiary }]}
-          />
-        </Pressable>
-      </View>
+
 
       <Button.Primary
         title="Reset Password"
