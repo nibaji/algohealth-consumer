@@ -87,7 +87,7 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
         setMemberName(fullDetails.name);
         
         const relationLower = (fullDetails.relation || '').toLowerCase();
-        const isMemberSelf = relationLower === 'self' || fullDetails.user_id === user?.id;
+        const isMemberSelf = relationLower === 'self';
         setIsSelf(isMemberSelf);
 
         // Match relation option
