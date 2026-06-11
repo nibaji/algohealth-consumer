@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert, Pressable } from 'react-native';
+import { Image } from 'expo-image';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
@@ -7,14 +8,19 @@ import { theme } from '@/constants/theme';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { Link } from 'expo-router';
 
-export default function RegisterScreen() {
+export default function RegisterScreen(): React.JSX.Element {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
 
-  const handleRegister = async () => {
+  const toggleShowPassword = useCallback((): void => {
+    setShowPassword((prev) => !prev);
+  }, []);
+
+  const handleRegister = async (): Promise<void> => {
     if (!email.trim() || !password || !fullName.trim()) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
@@ -72,13 +78,31 @@ export default function RegisterScreen() {
             autoCapitalize="none"
             keyboardType="email-address"
           />
-          <TextInput
-            label="Password"
-            placeholder="Create a password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+          <View style={styles.passwordFieldWrapper}>
+            <TextInput
+              label="Password"
+              placeholder="Create a password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              style={styles.passwordInput}
+            />
+            <Pressable
+              onPress={toggleShowPassword}
+              style={({ pressed }) => [
+                styles.eyeButton,
+                pressed ? styles.eyeButtonPressed : null,
+              ]}
+              hitSlop={8}
+              accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+              accessibilityRole="button"
+            >
+              <Image
+                source={showPassword ? 'sf:eye.slash' : 'sf:eye'}
+                style={[styles.eyeIcon, { tintColor: theme.colors.text.tertiary }]}
+              />
+            </Pressable>
+          </View>
           
           <Button.Primary 
             title="Register" 
@@ -113,7 +137,31 @@ const styles = StyleSheet.create({
   header: { marginBottom: theme.spacing['2xl'], gap: theme.spacing.xs },
   subtitle: { color: theme.colors.text.secondary },
   form: { gap: theme.spacing.lg },
+  passwordFieldWrapper: {
+    position: 'relative',
+  },
+  passwordInput: {
+    paddingRight: 48,
+  },
+  eyeButton: {
+    position: 'absolute',
+    right: theme.spacing.sm,
+    bottom: theme.spacing.sm,
+    width: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: theme.radius.full,
+  },
+  eyeButtonPressed: {
+    opacity: 0.5,
+  },
+  eyeIcon: {
+    width: 20,
+    height: 20,
+  },
   footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: theme.spacing.xl },
   linkButton: { borderWidth: 0, paddingHorizontal: 0, paddingVertical: 0 },
   linkText: { color: theme.colors.primary.DEFAULT },
 });
+
