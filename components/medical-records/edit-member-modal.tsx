@@ -17,6 +17,7 @@ import { TextInput } from '@/components/ui/TextInput';
 import { theme } from '@/constants/theme';
 import { FamilyMemberOut, FamilyMemberUpdate } from '@/src/features/family/familyTypes';
 import { familyService } from '@/src/services/family/familyService';
+import { useAuth } from '@/src/contexts/AuthContext';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 interface EditMemberModalProps {
@@ -35,6 +36,8 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
   member,
   onUpdateSuccess,
 }) => {
+  const { user } = useAuth();
+
   // Loading and error states
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -49,6 +52,7 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
   const [memberEmail, setMemberEmail] = useState('');
   const [memberMobile, setMemberMobile] = useState('');
   const [customRelation, setCustomRelation] = useState('');
+  const [isSelf, setIsSelf] = useState(false);
 
   const [errors, setErrors] = useState<{
     name?: string;
@@ -75,10 +79,17 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
       setErrors({});
       setCustomRelation('');
 
+      const initialRelationLower = (member.relation || '').toLowerCase();
+      setIsSelf(initialRelationLower === 'self');
+
       try {
         const fullDetails = await familyService.getFamilyMember(member.id);
         setMemberName(fullDetails.name);
         
+        const relationLower = (fullDetails.relation || '').toLowerCase();
+        const isMemberSelf = relationLower === 'self' || fullDetails.user_id === user?.id;
+        setIsSelf(isMemberSelf);
+
         // Match relation option
         const relationVal = fullDetails.relation;
         const standardRelations = ['Spouse', 'Child', 'Parent', 'Sibling', 'Grandparent'];
@@ -103,7 +114,7 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
     };
 
     fetchMemberDetails();
-  }, [visible, member]);
+  }, [visible, member, user?.id]);
 
   // Form field validation handler (runs on blur & submission)
   const validateField = useCallback((field: 'name' | 'dob' | 'email' | 'mobile', value: string) => {
@@ -277,7 +288,7 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
       const apiDob = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
       const payload: FamilyMemberUpdate = {
         name: memberName,
-        relation: memberRelation === 'Other' && customRelation.trim() ? customRelation.trim() : memberRelation,
+        relation: isSelf ? (member?.relation || 'Self') : (memberRelation === 'Other' && customRelation.trim() ? customRelation.trim() : memberRelation),
         gender: memberGender,
         date_of_birth: apiDob,
         email_id: memberEmail.trim() ? memberEmail : null,
@@ -293,7 +304,7 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
     } finally {
       setSaving(false);
     }
-  }, [member, memberName, memberRelation, memberGender, memberDob, memberEmail, memberMobile, customRelation, onUpdateSuccess, onClose, validateField]);
+  }, [member, memberName, memberRelation, memberGender, memberDob, memberEmail, memberMobile, customRelation, isSelf, onUpdateSuccess, onClose, validateField]);
 
   // Handler for deleting member
   const handleDeleteMember = useCallback(() => {
@@ -442,41 +453,43 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
                   </View>
 
                   {/* RELATION SHIPS SELECTION */}
-                  <View style={styles.formGroup}>
-                    <Typography.Label style={styles.selectLabel}>Relationship</Typography.Label>
-                    <ScrollView 
-                      horizontal 
-                      showsHorizontalScrollIndicator={false}
-                      contentContainerStyle={styles.relationsRow}
-                    >
-                      {(['Spouse', 'Child', 'Parent', 'Sibling', 'Grandparent', 'Other'] as RelationType[]).map((relationOption) => {
-                        const isSelected = memberRelation === relationOption;
-                        return (
-                          <Pressable
-                            key={relationOption}
-                            onPress={() => handleRelationChange(relationOption)}
-                            style={[
-                              styles.relationChip,
-                              isSelected ? styles.relationChipSelected : null,
-                              { borderCurve: 'continuous' }
-                            ]}
-                          >
-                            <Typography.Label 
+                  {isSelf ? null : (
+                    <View style={styles.formGroup}>
+                      <Typography.Label style={styles.selectLabel}>Relationship</Typography.Label>
+                      <ScrollView 
+                        horizontal 
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.relationsRow}
+                      >
+                        {(['Spouse', 'Child', 'Parent', 'Sibling', 'Grandparent', 'Other'] as RelationType[]).map((relationOption) => {
+                          const isSelected = memberRelation === relationOption;
+                          return (
+                            <Pressable
+                              key={relationOption}
+                              onPress={() => handleRelationChange(relationOption)}
                               style={[
-                                styles.relationChipText,
-                                isSelected ? styles.relationChipTextSelected : null
+                                styles.relationChip,
+                                isSelected ? styles.relationChipSelected : null,
+                                { borderCurve: 'continuous' }
                               ]}
                             >
-                              {relationOption}
-                            </Typography.Label>
-                          </Pressable>
-                        );
-                      })}
-                    </ScrollView>
-                  </View>
+                              <Typography.Label 
+                                style={[
+                                  styles.relationChipText,
+                                  isSelected ? styles.relationChipTextSelected : null
+                                ]}
+                              >
+                                {relationOption}
+                              </Typography.Label>
+                            </Pressable>
+                          );
+                        })}
+                      </ScrollView>
+                    </View>
+                  )}
 
                   {/* Optional Custom Relation TextInput */}
-                  {memberRelation === 'Other' ? (
+                  {!isSelf && memberRelation === 'Other' ? (
                     <TextInput
                       label="Custom Relationship (Optional)"
                       placeholder="e.g. Cousin, Friend, Caregiver"
