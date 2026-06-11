@@ -59,6 +59,7 @@ export default function AddMember() {
           const year = parseInt(dateParts[2], 10);
           const dateObj = new Date(year, month - 1, day);
           const today = new Date();
+          const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
           if (
             dateObj.getFullYear() !== year ||
@@ -66,7 +67,7 @@ export default function AddMember() {
             dateObj.getDate() !== day
           ) {
             errorMsg = 'Please enter a valid calendar date';
-          } else if (dateObj > today) {
+          } else if (dateObj > todayDate) {
             errorMsg = 'Date of birth cannot be in the future';
           }
         }
@@ -100,11 +101,25 @@ export default function AddMember() {
     const cleaned = text.replace(/[^0-9]/g, '');
     let formatted = cleaned;
     
-    // Auto-insert hyphens
-    if (cleaned.length > 2 && cleaned.length <= 4) {
-      formatted = `${cleaned.slice(0, 2)}-${cleaned.slice(2)}`;
-    } else if (cleaned.length > 4) {
-      formatted = `${cleaned.slice(0, 2)}-${cleaned.slice(2, 4)}-${cleaned.slice(4, 8)}`;
+    // Check if user is deleting
+    const isDeleting = text.length < memberDob.length;
+    
+    if (isDeleting) {
+      if (cleaned.length > 2 && cleaned.length <= 4) {
+        formatted = `${cleaned.slice(0, 2)}-${cleaned.slice(2)}`;
+      } else if (cleaned.length > 4) {
+        formatted = `${cleaned.slice(0, 2)}-${cleaned.slice(2, 4)}-${cleaned.slice(4, 8)}`;
+      }
+    } else {
+      if (cleaned.length === 2) {
+        formatted = `${cleaned}-`;
+      } else if (cleaned.length > 2 && cleaned.length < 4) {
+        formatted = `${cleaned.slice(0, 2)}-${cleaned.slice(2)}`;
+      } else if (cleaned.length === 4) {
+        formatted = `${cleaned.slice(0, 2)}-${cleaned.slice(2, 4)}-`;
+      } else if (cleaned.length > 4) {
+        formatted = `${cleaned.slice(0, 2)}-${cleaned.slice(2, 4)}-${cleaned.slice(4, 8)}`;
+      }
     }
     
     setMemberDob(formatted);
@@ -143,6 +158,23 @@ export default function AddMember() {
       const currentYear = new Date().getFullYear();
       if (yyyy < 1900 || yyyy > currentYear) {
         localError = `Year must be between 1900 and ${currentYear}`;
+      } else {
+        // Run full calendar correctness and future check on the complete date string
+        const dd = parseInt(cleaned.slice(0, 2), 10);
+        const mm = parseInt(cleaned.slice(2, 4), 10);
+        const dateObj = new Date(yyyy, mm - 1, dd);
+        const today = new Date();
+        const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        
+        if (
+          dateObj.getFullYear() !== yyyy ||
+          dateObj.getMonth() !== mm - 1 ||
+          dateObj.getDate() !== dd
+        ) {
+          localError = 'Please enter a valid calendar date';
+        } else if (dateObj > todayDate) {
+          localError = 'Date of birth cannot be in the future';
+        }
       }
     }
 
@@ -150,7 +182,7 @@ export default function AddMember() {
       ...prev,
       dob: localError ? localError : undefined
     }));
-  }, []);
+  }, [memberDob]);
 
   const handleRelationChange = useCallback((relation: RelationType) => {
     setMemberRelation(relation);
@@ -184,6 +216,14 @@ export default function AddMember() {
         mobile_no: memberMobile.trim() ? memberMobile : null,
       };
 
+      //### 📋 Add Family Member Form Improvements (Follow-up)
+      // - **DOB Formatter & DD-MM-YYYY Validation (`app/family/add-member.tsx`)**: Updated the Date of Birth input field to use the `DD-MM-YYYY` format.
+      //   - *On Change segment validation*: DAY digits are verified immediately (must start with 0-3 and resolve to 01-31), MONTH digits are verified immediately (must start with 0-1 and resolve to 01-12), and YEAR is verified to be in the range `[1900, currentYear]` as soon as 4 digits are completed. Also checks the completed date string to verify it is not in the future.
+      //   - *On Blur complete verification*: The entire DOB is validated for correct formatting, exact calendar validation (e.g. Feb 30th checks), and checking that the date is not in the future (using timezone-safe date-only comparison).
+      //   - *Auto-Hyphenation Formatting*: Hyphens (`-`) are appended immediately upon completing the day (`DD`) and month (`MM`) segments (e.g., typing `12` turns into `12-` immediately) while preserving natural backspace behavior so the user does not get stuck.
+      // - **Custom Relationship Option (`app/family/add-member.tsx`)**: Replaced the label "Relation to Owner" with "Relationship". Introduced a conditional "Custom Relationship" text input that appears when the user selects "Other" as the relation, allowing custom labels.
+      // - **Form-wide Input Validation on Blur & Change (`app/family/add-member.tsx`)**: Implemented robust inline error displays for Full Name, Email, and Mobile fields. Inputs validate on blur and clear/correct errors immediately on change. Form submission runs a full validate pass over all fields.
+      
       await familyService.addFamilyMember(payload);
       
       // Update local profile and context
