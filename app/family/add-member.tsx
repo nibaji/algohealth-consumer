@@ -271,7 +271,7 @@ export default function AddMember() {
 
               {/* RELATION SHIPS SELECTION */}
               <View style={styles.formGroup}>
-                <Typography.Label style={styles.selectLabel}>Relationship</Typography.Label>
+                <Typography.Label style={styles.selectLabel}>Relationship to Family Head</Typography.Label>
                 <ScrollView 
                   horizontal 
                   showsHorizontalScrollIndicator={false}

@@ -18,8 +18,6 @@ import { DateInput, validateDateString, apiDateToInputDate, inputDateToApiDate }
 import { theme } from '@/constants/theme';
 import { FamilyMemberOut, FamilyMemberUpdate } from '@/src/features/family/familyTypes';
 import { familyService } from '@/src/services/family/familyService';
-import { useAuth } from '@/src/contexts/AuthContext';
-import { isMemberSelf } from '@/src/utils/relation';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
@@ -40,7 +38,6 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
   member,
   onUpdateSuccess,
 }) => {
-  const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const keyboardAvoidingEnabled = useKeyboardAvoiding();
 
@@ -58,7 +55,7 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
   const [memberEmail, setMemberEmail] = useState('');
   const [memberMobile, setMemberMobile] = useState('');
   const [customRelation, setCustomRelation] = useState('');
-  const [isSelf, setIsSelf] = useState(false);
+  const [isFamilyHead, setIsFamilyHead] = useState(false);
 
   const [errors, setErrors] = useState<{
     name?: string;
@@ -79,15 +76,13 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
       setErrors({});
       setCustomRelation('');
 
-      const isInitialSelf = isMemberSelf(member, user);
-      setIsSelf(isInitialSelf);
+      setIsFamilyHead((member?.relation || '').toLowerCase() === 'self');
 
       try {
         const fullDetails = await familyService.getFamilyMember(member.id);
         setMemberName(fullDetails.name);
         
-        const isMemberSelfUpdated = isMemberSelf(fullDetails, user);
-        setIsSelf(isMemberSelfUpdated);
+        setIsFamilyHead((fullDetails.relation || '').toLowerCase() === 'self');
 
         // Match relation option
         const relationVal = fullDetails.relation;
@@ -113,7 +108,7 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
     };
 
     fetchMemberDetails();
-  }, [visible, member, user]);
+  }, [visible, member]);
 
   // Form field validation handler (runs on blur & submission)
   const validateField = useCallback((field: 'name' | 'dob' | 'email' | 'mobile', value: string) => {
@@ -176,7 +171,7 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
     try {
       const payload: FamilyMemberUpdate = {
         name: memberName,
-        relation: isSelf ? (member?.relation || 'Self') : (memberRelation === 'Other' && customRelation.trim() ? customRelation.trim() : memberRelation),
+        relation: isFamilyHead ? (member?.relation || 'Self') : (memberRelation === 'Other' && customRelation.trim() ? customRelation.trim() : memberRelation),
         gender: memberGender,
         date_of_birth: inputDateToApiDate(memberDob),
         email_id: memberEmail.trim() ? memberEmail : null,
@@ -192,7 +187,7 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
     } finally {
       setSaving(false);
     }
-  }, [member, memberName, memberRelation, memberGender, memberDob, memberEmail, memberMobile, customRelation, isSelf, onUpdateSuccess, onClose, validateField]);
+  }, [member, memberName, memberRelation, memberGender, memberDob, memberEmail, memberMobile, customRelation, isFamilyHead, onUpdateSuccess, onClose, validateField]);
 
   // Handler for deleting member
   const handleDeleteMember = useCallback(() => {
@@ -354,9 +349,15 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
                   </View>
 
                   {/* RELATION SHIPS SELECTION */}
-                  {isSelf ? null : (
-                    <View style={styles.formGroup}>
-                      <Typography.Label style={styles.selectLabel}>Relationship</Typography.Label>
+                  <View style={styles.formGroup}>
+                    <Typography.Label style={styles.selectLabel}>Relationship to Family Head</Typography.Label>
+                    {isFamilyHead ? (
+                      <View style={[styles.lockedRelationContainer, { borderCurve: 'continuous' }]}>
+                        <Typography.Paragraph style={styles.lockedRelationText}>
+                          Self (Family Head)
+                        </Typography.Paragraph>
+                      </View>
+                    ) : (
                       <ScrollView 
                         horizontal 
                         showsHorizontalScrollIndicator={false}
@@ -386,11 +387,11 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
                           );
                         })}
                       </ScrollView>
-                    </View>
-                  )}
+                    )}
+                  </View>
 
                   {/* Optional Custom Relation TextInput */}
-                  {!isSelf && memberRelation === 'Other' ? (
+                  {!isFamilyHead && memberRelation === 'Other' ? (
                     <TextInput
                       label="Custom Relationship (Optional)"
                       placeholder="e.g. Cousin, Friend, Caregiver"
@@ -591,6 +592,19 @@ const styles = StyleSheet.create({
   },
   relationChipTextSelected: {
     color: theme.colors.primary.content,
+  },
+  lockedRelationContainer: {
+    backgroundColor: theme.colors.background.default,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
+    borderRadius: theme.radius.md,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+  },
+  lockedRelationText: {
+    color: theme.colors.text.secondary,
+    fontSize: theme.fontSize.sm,
+    fontWeight: '600',
   },
   actionsContainer: {
     gap: theme.spacing.md,

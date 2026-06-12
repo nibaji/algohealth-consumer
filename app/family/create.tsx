@@ -332,7 +332,7 @@ export default function CreateFamily() {
 
               {/* RELATION SHIPS SELECTION */}
               <View style={styles.formGroup}>
-                <Typography.Label style={styles.selectLabel}>Relation to Owner</Typography.Label>
+                <Typography.Label style={styles.selectLabel}>Relationship to Family Head</Typography.Label>
                 <ScrollView 
                   horizontal 
                   showsHorizontalScrollIndicator={false}

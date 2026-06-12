@@ -19,11 +19,12 @@ export function getDisplayRelation(
   user: UserProfileResponse | null
 ): string {
   if (!member) return '';
-  if (isMemberSelf(member, user)) {
-    return 'Self';
+  const isSelf = isMemberSelf(member, user);
+  const isFamilyHead = member.relation.toLowerCase() === 'self';
+
+  if (isFamilyHead) {
+    return isSelf ? 'Self' : 'Family Head';
   }
-  if (member.relation.toLowerCase() === 'self') {
-    return 'Family Head';
-  }
-  return member.relation;
+
+  return isSelf ? `Self (${member.relation})` : member.relation;
 }
