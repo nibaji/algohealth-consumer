@@ -61,7 +61,7 @@ export default function MedicalRecordDetail() {
         setMemberRelation(getDisplayRelation(member, user));
       } else {
         setMemberName('Unknown Member');
-        setMemberRelation('Family Circle');
+        setMemberRelation('Family');
       }
     } catch (err: unknown) {
       if (isCancelled?.()) return;

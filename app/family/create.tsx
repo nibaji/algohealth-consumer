@@ -200,10 +200,10 @@ export default function CreateFamily() {
           >
             <View style={styles.infoSection}>
               <Typography.Heading style={styles.stepTitle}>
-                Start a New Health Circle
+                Start a New Family
               </Typography.Heading>
               <Typography.Paragraph style={styles.stepDescription}>
-                Name your family circle. As the creator, you&apos;ll be marked as the owner, and you can invite others to view and manage medical records together.
+                Name your family. As the creator, you&apos;ll be marked as the owner, and you can invite others to view and manage medical records together.
               </Typography.Paragraph>
             </View>
 
@@ -259,7 +259,7 @@ export default function CreateFamily() {
                 </Pressable>
               </View>
               <Typography.Paragraph style={styles.inviteHelp}>
-                Others can enter this code in their &quot;Join Family&quot; screen to join this circle instantly.
+                Others can enter this code in their &quot;Join Family&quot; screen to join this family instantly.
               </Typography.Paragraph>
             </View>
 

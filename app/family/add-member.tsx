@@ -197,7 +197,7 @@ export default function AddMember() {
               Member Added!
             </Typography.Heading>
             <Typography.Paragraph style={styles.successDescription}>
-              {memberName} has been added to your family health circle successfully.
+              {memberName} has been added to your family successfully.
             </Typography.Paragraph>
           </Animated.View>
         ) : (

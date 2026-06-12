@@ -113,7 +113,7 @@ export default function JoinFamily() {
               Joined Family!
             </Typography.Heading>
             <Typography.Paragraph style={styles.successDescription}>
-              You have successfully joined the family health circle. Redirecting you to your health dashboard...
+              You have successfully joined the family. Redirecting you to your health dashboard...
             </Typography.Paragraph>
           </Animated.View>
         ) : (
@@ -127,7 +127,7 @@ export default function JoinFamily() {
                 Enter Invite Code
               </Typography.Heading>
               <Typography.Paragraph style={styles.stepDescription}>
-                Ask the owner of the family circle for their unique family invite code. Once entered, you will gain access to shared records and members.
+                Ask the owner of the family for their unique family invite code. Once entered, you will gain access to shared records and members.
               </Typography.Paragraph>
             </View>
 
@@ -143,7 +143,7 @@ export default function JoinFamily() {
               />
 
               <Button.Primary
-                title="Join Circle"
+                title="Join Family"
                 onPress={handleJoin}
                 loading={isPending}
                 style={styles.submitButton}

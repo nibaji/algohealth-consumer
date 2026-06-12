@@ -8,6 +8,8 @@
 - 2026-06-12: Changed default StatusBar style to "dark" so that status bar icons and text remain visible on the new white background theme. Changed in `app/_layout.tsx`.
 - 2026-06-12: Updated `app.config.js` to dynamically append ' Dev' to the app name when building under the `development` build profile. Changed in `app.config.js`.
 - 2026-06-12: Replaced the share icon with a copy icon for the home screen family invite code badge, structured a nested header row, and positioned the explicit invite code instructions directly below the invite code pill for improved readability. Changed in `app/index.tsx`.
+- 2026-06-12: Standardized terminology across the application by replacing occurrences of the word "circle" with "family" or specific health synonyms in text descriptions, screen titles, error states, and messages. Changed in `app/index.tsx`, `app/onboarding.tsx`, `app/family/create.tsx`, `app/family/join.tsx`, `app/family/add-member.tsx`, `app/medical-records/[id].tsx`, and `components/medical-records/consult-modal.tsx`.
+
 
 
 

@@ -32,10 +32,10 @@ export default function Onboarding() {
           style={styles.header}
         >
           <Typography.Heading style={styles.title}>
-            Setup Your Circle
+            Setup Your Family
           </Typography.Heading>
           <Typography.Paragraph style={styles.subtitle}>
-            Hello {user?.full_name || 'there'}! Manage your medical records, checkups, and family health circles in one secure place.
+            Hello {user?.full_name || 'there'}! Manage your medical records, checkups, and family health history in one secure place.
           </Typography.Paragraph>
         </Animated.View>
 
@@ -65,7 +65,7 @@ export default function Onboarding() {
                   Create a Family
                 </Typography.Subheading>
                 <Typography.Paragraph style={styles.cardDescription}>
-                  Start a new health circle, get an invite code, and add family members to manage their records together.
+                  Start a new family, get an invite code, and add family members to manage their records together.
                 </Typography.Paragraph>
               </View>
             </View>
@@ -98,7 +98,7 @@ export default function Onboarding() {
                   Join a Family
                 </Typography.Subheading>
                 <Typography.Paragraph style={styles.cardDescription}>
-                  Have an invite code from a family member? Enter it here to join their existing health circle.
+                  Have an invite code from a family member? Enter it here to join their existing family.
                 </Typography.Paragraph>
               </View>
             </View>

@@ -44,7 +44,7 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
       } else {
         const welcomeMessage: ChatMessage = {
           id: 'welcome',
-          text: `Hi! I am your Health Consultant, your AlgoHealth assistant. I have loaded ${member.name}'s medical circle data. How can I help you today?`,
+          text: `Hi! I am your Health Consultant, your AlgoHealth assistant. I have loaded ${member.name}'s medical records. How can I help you today?`,
           sender: 'bot',
           timestamp: new Date()
         };

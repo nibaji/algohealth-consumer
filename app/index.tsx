@@ -205,10 +205,10 @@ export default function Index() {
       >
         <Animated.View entering={FadeInDown.duration(500)} style={styles.welcomeSection}>
           <Typography.Heading style={styles.title}>
-            Health Circle
+            My Family
           </Typography.Heading>
           <Typography.Paragraph style={styles.description}>
-            View and manage medical history for your circle.
+            View and manage medical history for your family.
           </Typography.Paragraph>
         </Animated.View>
 
@@ -255,7 +255,7 @@ export default function Index() {
                     </View>
 
                     <Typography.Paragraph style={styles.inviteInstructions}>
-                      Share this invite code with family members so they can enter it in their &quot;Join Circle&quot; screen to join this circle.
+                      Share this invite code with family members so they can enter it in their &quot;Join Family&quot; screen to join this family.
                     </Typography.Paragraph>
                   </View>
 
@@ -290,7 +290,7 @@ export default function Index() {
                   ) : (
                     <View style={styles.emptyState}>
                       <Typography.Paragraph style={styles.emptyStateText}>
-                        No family members registered in this circle.
+                        No family members registered in this family.
                       </Typography.Paragraph>
                     </View>
                   )}
@@ -317,7 +317,7 @@ export default function Index() {
               ) : (
                 <View style={[styles.card, { borderCurve: 'continuous' }]}>
                   <Typography.Paragraph style={styles.errorText}>
-                    {error ? error : 'No active family circle found. Setup family circle to get started.'}
+                    {error ? error : 'No active family found. Setup family to get started.'}
                   </Typography.Paragraph>
                 </View>
               )}
@@ -326,10 +326,10 @@ export default function Index() {
               {user?.family_id ? null : (
                 <View style={[styles.actionsCard, { borderCurve: 'continuous' }]}>
                   <Typography.Subheading style={styles.actionsTitle}>
-                    Circle Settings
+                    Family Settings
                   </Typography.Subheading>
                   <Typography.Paragraph style={styles.actionsDesc}>
-                    Need to switch circles? Start a new family circle or join another circle using a different invite code.
+                    Need to switch? Start a new family or join another family using a different invite code.
                   </Typography.Paragraph>
                   <View style={styles.actionsRow}>
                     <Pressable 
@@ -356,7 +356,7 @@ export default function Index() {
                     >
                       <Icon name="arrow.right.to.line.cycle" size={20} tintColor={theme.colors.status.success} />
                       <Typography.Label style={styles.actionButtonText}>
-                        Join Circle
+                        Join Family
                       </Typography.Label>
                     </Pressable>
                   </View>
