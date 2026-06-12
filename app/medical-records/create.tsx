@@ -1,20 +1,23 @@
 import React, { useState, useEffect, useCallback, useTransition } from 'react';
-import { StyleSheet, View, ScrollView, Pressable, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, ScrollView, Pressable, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { theme } from '@/constants/theme';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
+import { DateInput, validateDateString, inputDateToApiDate } from '@/components/ui/DateInput';
 import { familyService } from '@/src/services/family/familyService';
 import { medicalRecordService } from '@/src/services/medical-records/medicalRecordService';
 import { FamilyMemberOut } from '@/src/features/family/familyTypes';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Icon } from '@/components/ui/icon';
 import * as DocumentPicker from 'expo-document-picker';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function CreateMedicalRecord() {
   const router = useRouter();
   const { memberId } = useLocalSearchParams<{ memberId?: string }>();
+  const insets = useSafeAreaInsets();
 
   // Form states
   const [members, setMembers] = useState<FamilyMemberOut[]>([]);
@@ -24,7 +27,7 @@ export default function CreateMedicalRecord() {
     const yyyy = today.getFullYear();
     const mm = String(today.getMonth() + 1).padStart(2, '0');
     const dd = String(today.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
+    return `${dd}-${mm}-${yyyy}`;
   });
   const [primaryContext, setPrimaryContext] = useState('');
   const [chiefComplaint, setChiefComplaint] = useState('');
@@ -115,36 +118,9 @@ export default function CreateMedicalRecord() {
       setError('Please select a family member');
       return;
     }
-    if (!visitDate.trim()) {
-      setError('Visit date is required');
-      return;
-    }
-
-    // Date YYYY-MM-DD validation
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(visitDate)) {
-      setError('Date must be in YYYY-MM-DD format');
-      return;
-    }
-
-    const dateParts = visitDate.split('-');
-    const year = parseInt(dateParts[0], 10);
-    const month = parseInt(dateParts[1], 10);
-    const day = parseInt(dateParts[2], 10);
-    const dateObj = new Date(year, month - 1, day);
-    const today = new Date();
-
-    if (
-      dateObj.getFullYear() !== year ||
-      dateObj.getMonth() !== month - 1 ||
-      dateObj.getDate() !== day
-    ) {
-      setError('Please enter a valid calendar date');
-      return;
-    }
-
-    if (dateObj > today) {
-      setError('Visit date cannot be in the future');
+    const dateError = validateDateString(visitDate, { label: 'Visit date' });
+    if (dateError) {
+      setError(dateError);
       return;
     }
 
@@ -161,7 +137,7 @@ export default function CreateMedicalRecord() {
         // Create payload object
         const payload = {
           family_member_id: selectedMemberId,
-          visit_date: visitDate,
+          visit_date: inputDateToApiDate(visitDate),
           primary_context: primaryContext.trim(),
           chief_complaint: chiefComplaint.trim() ? chiefComplaint.trim() : null,
           notes: notes.trim() ? notes.trim() : null,
@@ -211,9 +187,12 @@ export default function CreateMedicalRecord() {
   }, [router]);
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       {/* Header bar */}
-      <View style={styles.headerBar}>
+      <View style={[styles.headerBar, { paddingTop: insets.top, height: 56 + insets.top }]}>
         <Pressable 
           onPress={handleBack}
           style={({ pressed }) => [
@@ -308,13 +287,10 @@ export default function CreateMedicalRecord() {
 
             {/* General inputs */}
             <View style={styles.cardForm}>
-              <TextInput
+              <DateInput
                 label="Visit Date"
-                placeholder="YYYY-MM-DD"
                 value={visitDate}
                 onChangeText={setVisitDate}
-                maxLength={10}
-                keyboardType="numeric"
               />
 
               <TextInput
@@ -448,7 +424,7 @@ export default function CreateMedicalRecord() {
           </Animated.View>
         )}
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

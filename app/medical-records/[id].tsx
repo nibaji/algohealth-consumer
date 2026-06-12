@@ -5,15 +5,18 @@ import { theme } from '@/constants/theme';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
+import { DateInput, validateDateString, apiDateToInputDate, inputDateToApiDate } from '@/components/ui/DateInput';
 import { familyService } from '@/src/services/family/familyService';
 import { medicalRecordService } from '@/src/services/medical-records/medicalRecordService';
 import { MedicalRecordResponse } from '@/src/features/medical-records/medicalRecordTypes';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Icon } from '@/components/ui/icon';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function MedicalRecordDetail() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const insets = useSafeAreaInsets();
 
   // Page states
   const [record, setRecord] = useState<MedicalRecordResponse | null>(null);
@@ -42,7 +45,7 @@ export default function MedicalRecordDetail() {
       if (isCancelled?.()) return;
 
       setRecord(data);
-      setVisitDate(data.visit_date);
+      setVisitDate(apiDateToInputDate(data.visit_date));
       setPrimaryContext(data.primary_context || '');
       setChiefComplaint(data.chief_complaint || '');
       setNotes(data.notes || '');
@@ -85,36 +88,9 @@ export default function MedicalRecordDetail() {
   // Edit form submission
   const handleSave = useCallback(async () => {
     if (!record) return;
-    if (!visitDate.trim()) {
-      setEditError('Visit date is required');
-      return;
-    }
-
-    // Date YYYY-MM-DD validation
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(visitDate)) {
-      setEditError('Date must be in YYYY-MM-DD format');
-      return;
-    }
-
-    const dateParts = visitDate.split('-');
-    const year = parseInt(dateParts[0], 10);
-    const month = parseInt(dateParts[1], 10);
-    const day = parseInt(dateParts[2], 10);
-    const dateObj = new Date(year, month - 1, day);
-    const today = new Date();
-
-    if (
-      dateObj.getFullYear() !== year ||
-      dateObj.getMonth() !== month - 1 ||
-      dateObj.getDate() !== day
-    ) {
-      setEditError('Please enter a valid calendar date');
-      return;
-    }
-
-    if (dateObj > today) {
-      setEditError('Visit date cannot be in the future');
+    const dateError = validateDateString(visitDate, { label: 'Visit date' });
+    if (dateError) {
+      setEditError(dateError);
       return;
     }
 
@@ -128,7 +104,7 @@ export default function MedicalRecordDetail() {
     startTransition(async () => {
       try {
         const updated = await medicalRecordService.updateMedicalRecord(record.id, {
-          visit_date: visitDate,
+          visit_date: inputDateToApiDate(visitDate),
           primary_context: primaryContext.trim(),
           chief_complaint: chiefComplaint.trim() ? chiefComplaint.trim() : null,
           notes: notes.trim() ? notes.trim() : null,
@@ -192,7 +168,7 @@ export default function MedicalRecordDetail() {
     if (isEditing) {
       // Revert edit states to current record values
       if (record) {
-        setVisitDate(record.visit_date);
+        setVisitDate(apiDateToInputDate(record.visit_date));
         setPrimaryContext(record.primary_context || '');
         setChiefComplaint(record.chief_complaint || '');
         setNotes(record.notes || '');
@@ -211,7 +187,7 @@ export default function MedicalRecordDetail() {
   return (
     <View style={styles.container}>
       {/* Header bar */}
-      <View style={styles.headerBar}>
+      <View style={[styles.headerBar, { paddingTop: insets.top, height: 56 + insets.top }]}>
         <Pressable 
           onPress={handleBack}
           style={({ pressed }) => [
@@ -279,13 +255,10 @@ export default function MedicalRecordDetail() {
               ) : null}
 
               <View style={styles.cardForm}>
-                <TextInput
+                <DateInput
                   label="Visit Date"
-                  placeholder="YYYY-MM-DD"
                   value={visitDate}
                   onChangeText={setVisitDate}
-                  maxLength={10}
-                  keyboardType="numeric"
                 />
 
                 <TextInput
@@ -353,7 +326,7 @@ export default function MedicalRecordDetail() {
                 <View style={styles.detailItem}>
                   <Typography.Label style={styles.detailLabel}>Visit Date</Typography.Label>
                   <Typography.Paragraph style={styles.detailValue}>
-                    {record.visit_date}
+                    {apiDateToInputDate(record.visit_date)}
                   </Typography.Paragraph>
                 </View>
 

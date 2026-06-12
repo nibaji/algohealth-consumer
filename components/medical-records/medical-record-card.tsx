@@ -4,6 +4,7 @@ import { Icon } from '@/components/ui/icon';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
 import { MedicalRecordResponse } from '@/src/features/medical-records/medicalRecordTypes';
+import { apiDateToInputDate } from '@/components/ui/DateInput';
 
 interface MedicalRecordCardProps {
   record: MedicalRecordResponse;
@@ -31,7 +32,7 @@ export const MedicalRecordCard: React.FC<MedicalRecordCardProps> = React.memo(({
         </View>
         <View style={styles.recordRight}>
           <Typography.Label style={styles.recordDate}>
-            {record.visit_date}
+            {apiDateToInputDate(record.visit_date)}
           </Typography.Label>
           <Icon name="chevron.right" size={14} tintColor={theme.colors.text.tertiary} />
         </View>

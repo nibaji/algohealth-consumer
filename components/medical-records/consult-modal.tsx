@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView, 
   Platform 
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '@/components/ui/icon';
 import { FlashList, FlashListRef } from '@shopify/flash-list';
 import { Typography } from '@/components/ui/Typography';
@@ -30,6 +31,7 @@ interface ChatMessage {
 }
 
 export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, onClose, member }) => {
+  const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -42,7 +44,7 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
       setMessages([
         {
           id: 'welcome',
-          text: `Hi! I am Benish AI, your AlgoHealth assistant. I have loaded ${member.name}'s medical circle data. How can I help you today?`,
+          text: `Hi! I am your Health Consultant, your AlgoHealth assistant. I have loaded ${member.name}'s medical circle data. How can I help you today?`,
           sender: 'bot',
           timestamp: new Date()
         }
@@ -147,9 +149,9 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
       statusBarTranslucent
     >
       <KeyboardAvoidingView 
-        style={styles.modalContainer}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 25}
+        style={[styles.modalContainer, { paddingTop: insets.top }]}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
         {/* Modal Header */}
         <View style={styles.header}>
@@ -161,7 +163,7 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
             </View>
             <View>
               <Typography.Subheading style={styles.headerTitle}>
-                Consult Benish
+                Health Consultant
               </Typography.Subheading>
               <Typography.Label style={styles.headerSubtitle}>
                 Health AI • {member.name}
@@ -205,7 +207,7 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
         </View>
 
         {/* Input Bar */}
-        <View style={styles.inputBar}>
+        <View style={[styles.inputBar, { paddingBottom: Math.max(insets.bottom, theme.spacing.md) }]}>
           <TextInput
             placeholder={`Ask about ${member.name}'s records...`}
             value={inputText}
@@ -244,7 +246,6 @@ const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
     backgroundColor: theme.colors.background.default,
-    paddingTop: Platform.OS === 'ios' ? 44 : 24,
   },
   header: {
     height: 64,
