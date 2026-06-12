@@ -150,22 +150,28 @@ export default function CreateMedicalRecord() {
         formData.append('payload', JSON.stringify(payload));
 
         // Append files
-        documents.forEach((doc) => {
-          formData.append('files', {
-            uri: doc.uri,
-            name: doc.name,
-            type: doc.mimeType || 'application/octet-stream',
-          } as unknown as Blob);
-        });
+        for (const doc of documents) {
+          try {
+            const fileRes = await fetch(doc.uri);
+            const blob = await fileRes.blob();
+            formData.append('files', blob, doc.name);
+          } catch (err) {
+            console.error(`Failed to load document: ${doc.name}`, err);
+            throw new Error(`Failed to read file: ${doc.name}. Make sure the file is accessible.`);
+          }
+        }
 
         // Append audio files
-        audioFiles.forEach((audio) => {
-          formData.append('audio_files', {
-            uri: audio.uri,
-            name: audio.name,
-            type: audio.mimeType || 'audio/mpeg',
-          } as unknown as Blob);
-        });
+        for (const audio of audioFiles) {
+          try {
+            const audioRes = await fetch(audio.uri);
+            const blob = await audioRes.blob();
+            formData.append('audio_files', blob, audio.name);
+          } catch (err) {
+            console.error(`Failed to load audio: ${audio.name}`, err);
+            throw new Error(`Failed to read audio: ${audio.name}. Make sure the file is accessible.`);
+          }
+        }
 
         await medicalRecordService.createMedicalRecord(formData);
         setSuccess(true);
