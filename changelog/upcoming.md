@@ -1,5 +1,6 @@
 ## Unreleased
 
+- 2026-06-12: Upgrade project dependencies to Expo SDK 55.0.0, React 19.2.0, React Native 0.83.6, and React Native Reanimated 4.2.1. Changed in `package.json`, `app.json`, `bun.lock`.
 - 2026-06-11: Add profile password reset flow with reset-code email request and token-based password update. Changed in `app/profile.tsx`, `components/profile/password-reset-card.tsx`, `components/profile/profile-details-card.tsx`, `src/features/auth/use-profile-password-reset.ts`.
 - 2026-06-11: Add show/hide password toggle to password fields on login, register, and profile password reset screens. Changed in `app/(auth)/login.tsx`, `app/(auth)/register.tsx`, `components/profile/password-reset-card.tsx`.
 - 2026-06-11: Remove confirm password field from profile password reset card. Changed in `components/profile/password-reset-card.tsx`, `src/features/auth/use-profile-password-reset.ts`.
