@@ -41,6 +41,9 @@ export const TextInput = ({
           style,
         ]}
         placeholderTextColor={theme.colors.text.tertiary}
+        cursorColor={theme.colors.primary.DEFAULT}
+        selectionColor={`${theme.colors.primary.DEFAULT}4D`}
+        selectionHandleColor={theme.colors.primary.DEFAULT}
         onFocus={(e) => {
           setIsFocused(true);
           props.onFocus?.(e);
