@@ -13,6 +13,11 @@ export interface AuthResponse {
   family_id?: string | null;
   family_member_id?: string | null;
   pending_invite?: boolean;
+  invite_code?: string;
+  invite_family_id?: string;
+  invite_family_member_id?: string;
+  family_name?: string;
+  owner_name?: string;
   user: UserProfileResponse;
 }
 

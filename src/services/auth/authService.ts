@@ -46,7 +46,7 @@ export const authService = {
     return apiClient.patch<UserProfileResponse>('/users/me', data);
   },
   
-  async restoreSession(): Promise<UserProfileResponse | null> {
+  async restoreSession(): Promise<AuthResponse | null> {
     const refreshToken = await tokenStorage.getRefreshToken();
     if (!refreshToken) return null;
     
@@ -54,13 +54,7 @@ export const authService = {
       const refreshResponse = await apiClient.post<AuthResponse>('/auth/refresh', { refresh_token: refreshToken }, { requiresAuth: false });
       tokenStorage.setAccessToken(refreshResponse.access_token);
       await tokenStorage.setRefreshToken(refreshResponse.refresh_token);
-      if (refreshResponse.user) {
-        return {
-          ...refreshResponse.user,
-          family_id: refreshResponse.user.family_id || refreshResponse.family_id || null,
-        };
-      }
-      return null;
+      return refreshResponse;
     } catch {
       await tokenStorage.clearTokens();
       return null;
