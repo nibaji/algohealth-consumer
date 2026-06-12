@@ -1,5 +1,5 @@
 import React, { createContext, use, useState, useEffect, useCallback } from 'react';
-import { UserProfileResponse } from '@/src/features/auth/authTypes';
+import { UserProfileResponse, LoginRequest, RegisterRequest } from '@/src/features/auth/authTypes';
 import { authService } from '@/src/services/auth/authService';
 
 interface AuthContextType {
@@ -27,8 +27,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
   }, []);
 
-  const login = useCallback(async (...args: Parameters<typeof authService.login>) => {
-    const response = await authService.login(...args);
+  const login = useCallback(async (data: LoginRequest) => {
+    const response = await authService.login(data);
     if (response.user) {
       setUser({
         ...response.user,
@@ -38,8 +38,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return response;
   }, []);
 
-  const register = useCallback(async (...args: Parameters<typeof authService.register>) => {
-    const response = await authService.register(...args);
+  const register = useCallback(async (data: RegisterRequest) => {
+    const response = await authService.register(data);
     if (response.user) {
       setUser({
         ...response.user,

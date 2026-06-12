@@ -1,5 +1,6 @@
 ## Unreleased
 
+- 2026-06-12: Upgrade project dependencies to Expo SDK 56.0.11, React 19.2.3, React Native 0.85.3, and React Native Reanimated 4.3.1. Removed deprecated `@react-navigation/*` packages. Refactored state synchronization and effect logic to satisfy new React 19/Compiler rules. Changed in `package.json`, `app.json`, `bun.lock`, `app/medical-records/[id].tsx`, `app/medical-records/create.tsx`, `src/contexts/AuthContext.tsx`, `src/features/auth/use-profile-details.ts`.
 - 2026-06-12: Upgrade project dependencies to Expo SDK 55.0.0, React 19.2.0, React Native 0.83.6, and React Native Reanimated 4.2.1. Changed in `package.json`, `app.json`, `bun.lock`.
 - 2026-06-11: Add profile password reset flow with reset-code email request and token-based password update. Changed in `app/profile.tsx`, `components/profile/password-reset-card.tsx`, `components/profile/profile-details-card.tsx`, `src/features/auth/use-profile-password-reset.ts`.
 - 2026-06-11: Add show/hide password toggle to password fields on login, register, and profile password reset screens. Changed in `app/(auth)/login.tsx`, `app/(auth)/register.tsx`, `components/profile/password-reset-card.tsx`.

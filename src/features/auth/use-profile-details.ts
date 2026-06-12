@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { authService } from '@/src/services/auth/authService';
 
 interface UseProfileDetailsReturn {
@@ -15,13 +15,15 @@ export const useProfileDetails = (
   refreshProfile: () => Promise<unknown>,
 ): UseProfileDetailsReturn => {
   const [fullName, setFullName] = useState(initialFullName || '');
+  const [prevInitialFullName, setPrevInitialFullName] = useState(initialFullName);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  useEffect((): void => {
+  if (initialFullName !== prevInitialFullName) {
+    setPrevInitialFullName(initialFullName);
     setFullName(initialFullName || '');
-  }, [initialFullName]);
+  }
 
   const saveProfile = useCallback(async (): Promise<void> => {
     if (!fullName.trim()) {

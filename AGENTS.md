@@ -25,14 +25,14 @@ When working on this codebase:
 
 ---
 
-## 🏗️ Architecture Overview (Updated 2026-02-28 - SDK 55)
+## 🏗️ Architecture Overview (Updated 2026-06-12 - SDK 56)
 
 ### Tech Stack
-- **Expo SDK**: 55
-- **React**: 19.2.0 (with React Compiler enabled)
-- **React Native**: 0.83.2
+- **Expo SDK**: 56
+- **React**: 19.2.3 (with React Compiler enabled)
+- **React Native**: 0.85.3
 - **JavaScript Engine**: Hermes V1 (opt-in)
-- **Expo Router**: 55.0.3
+- **Expo Router**: 56.2.10
 
 ### State Management
 - **Context Providers** - Use React 19 syntax for contexts.

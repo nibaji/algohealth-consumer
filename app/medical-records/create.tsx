@@ -18,7 +18,13 @@ export default function CreateMedicalRecord() {
   // Form states
   const [members, setMembers] = useState<FamilyMemberOut[]>([]);
   const [selectedMemberId, setSelectedMemberId] = useState<string>('');
-  const [visitDate, setVisitDate] = useState('');
+  const [visitDate, setVisitDate] = useState<string>(() => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  });
   const [primaryContext, setPrimaryContext] = useState('');
   const [chiefComplaint, setChiefComplaint] = useState('');
   const [notes, setNotes] = useState('');
@@ -28,15 +34,6 @@ export default function CreateMedicalRecord() {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-
-  // Set today's date in YYYY-MM-DD format as default
-  useEffect(() => {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    setVisitDate(`${yyyy}-${mm}-${dd}`);
-  }, []);
 
   // Fetch family members
   useEffect(() => {

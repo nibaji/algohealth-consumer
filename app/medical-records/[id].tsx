@@ -33,22 +33,20 @@ export default function MedicalRecordDetail() {
   const [editError, setEditError] = useState<string | null>(null);
 
   // Load record and member details
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (isCancelled?: () => boolean) => {
     if (!id) return;
-    setLoading(true);
-    setError(null);
     try {
       const data = await medicalRecordService.getMedicalRecord(id);
-      setRecord(data);
+      const family = await familyService.getMyFamily();
+      
+      if (isCancelled?.()) return;
 
-      // Populate edit form states
+      setRecord(data);
       setVisitDate(data.visit_date);
       setPrimaryContext(data.primary_context || '');
       setChiefComplaint(data.chief_complaint || '');
       setNotes(data.notes || '');
 
-      // Load family members to resolve the name
-      const family = await familyService.getMyFamily();
       const member = family.members.find(m => m.id === data.family_member_id);
       if (member) {
         setMemberName(member.name);
@@ -58,14 +56,29 @@ export default function MedicalRecordDetail() {
         setMemberRelation('Family Circle');
       }
     } catch (err: unknown) {
+      if (isCancelled?.()) return;
       const message = err instanceof Error ? err.message : 'Failed to load medical record';
       setError(message);
     } finally {
+      if (isCancelled?.()) return;
       setLoading(false);
     }
   }, [id]);
 
   useEffect(() => {
+    let ignore = false;
+    const init = async () => {
+      await loadData(() => ignore);
+    };
+    init();
+    return () => {
+      ignore = true;
+    };
+  }, [loadData]);
+
+  const handleRetry = useCallback(() => {
+    setLoading(true);
+    setError(null);
     loadData();
   }, [loadData]);
 
@@ -252,7 +265,7 @@ export default function MedicalRecordDetail() {
             <Typography.Paragraph style={styles.errorText}>
               {error}
             </Typography.Paragraph>
-            <Button.Secondary title="Retry" onPress={loadData} style={styles.retryButton} />
+            <Button.Secondary title="Retry" onPress={handleRetry} style={styles.retryButton} />
           </View>
         ) : record ? (
           isEditing ? (
