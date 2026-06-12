@@ -220,148 +220,155 @@ export default function Index() {
           <LayoutAnimationConfig>
             <Animated.View entering={FadeInDown.duration(500).delay(100)} style={styles.dashboardBody}>
               
-              {/* Active Family Circle Card */}
-              {family ? (
-                <View style={styles.familyContainer}>
-                  <View style={styles.familyHeader}>
-                    <View style={styles.familyHeaderRow}>
-                      <View style={styles.familyTitleContainer}>
-                        <Typography.Subheading style={styles.cardTitle}>
-                          {family.name}
-                        </Typography.Subheading>
-                        <Typography.Paragraph style={styles.cardSubtitle}>
-                          Tap a family member to view their medical records.
+              <View style={styles.sectionsContainer}>
+                {/* Active Family Circle Card */}
+                {family ? (
+                  <View style={styles.familyContainer}>
+                    <View style={styles.familyHeader}>
+                      <View style={styles.familyHeaderRow}>
+                        <View style={styles.familyTitleContainer}>
+                          <Typography.Subheading style={styles.cardTitle}>
+                            {family.name}
+                          </Typography.Subheading>
+                          <Typography.Paragraph style={styles.cardSubtitle}>
+                            Tap a family member to view their medical records.
+                          </Typography.Paragraph>
+                        </View>
+                        
+                        {/* Share invite code pill */}
+                        <Pressable 
+                          onPress={handleCopyCode}
+                          style={({ pressed }) => [
+                            styles.inviteBadge,
+                            pressed ? styles.inviteBadgePressed : null,
+                            { borderCurve: 'continuous' }
+                          ]}
+                        >
+                          <Icon 
+                            name={copied ? "checkmark" : "doc.on.doc.fill"} 
+                            size={14}
+                            tintColor={copied ? theme.colors.status.success : theme.colors.primary.DEFAULT}
+                          />
+                          <Typography.Label style={[styles.badgeText, copied ? styles.badgeTextSuccess : null]}>
+                            {copied ? 'Copied' : `Invite: ${family.invite_code}`}
+                          </Typography.Label>
+                        </Pressable>
+                      </View>
+
+                      <Typography.Paragraph style={styles.inviteInstructions}>
+                        Share this invite code with family members so they can enter it in their &quot;Join Family&quot; screen to join this family.
+                      </Typography.Paragraph>
+                    </View>
+
+                    <View style={styles.divider} />
+
+                    {/* ACCORDION SECTION GROUPED BY FAMILY MEMBER */}
+                    {family.members.length > 0 ? (
+                      <View style={styles.accordionsList}>
+                        {family.members.map((member) => {
+                          const isExpanded = expandedMembers[member.id] || false;
+                          
+                          // Filter records for this member
+                          const memberRecords = records.filter(
+                            (r) => r.family_member_id === member.id
+                          );
+
+                          return (
+                            <MemberAccordion
+                              key={member.id}
+                              member={member}
+                              records={memberRecords}
+                              isExpanded={isExpanded}
+                              onToggleExpand={() => toggleExpand(member.id)}
+                              onNavigateCreateRecord={() => handleNavigateCreateRecord(member.id)}
+                              onNavigateRecordDetails={handleNavigateRecordDetails}
+                              onConsult={() => handleOpenConsult(member)}
+                              onEditMember={() => handleOpenEditMember(member)}
+                            />
+                          );
+                        })}
+                      </View>
+                    ) : (
+                      <View style={styles.emptyState}>
+                        <Typography.Paragraph style={styles.emptyStateText}>
+                          No family members registered in this family.
                         </Typography.Paragraph>
                       </View>
-                      
-                      {/* Share invite code pill */}
+                    )}
+
+                    {/* Add Family Member CTA */}
+                    <Pressable
+                      onPress={handleNavigateAddMember}
+                      style={({ pressed }) => [
+                        styles.addMemberButton,
+                        pressed ? styles.addMemberButtonPressed : null,
+                        { borderCurve: 'continuous' }
+                      ]}
+                    >
+                      <Icon 
+                        name="person.badge.plus" 
+                        size={18}
+                        tintColor={theme.colors.primary.DEFAULT}
+                      />
+                      <Typography.Label style={styles.addMemberText}>
+                        Add Family Member
+                      </Typography.Label>
+                    </Pressable>
+                  </View>
+                ) : (
+                  <View style={styles.errorContainer}>
+                    <Typography.Paragraph style={styles.errorText}>
+                      {error ? error : 'No active family found. Setup family to get started.'}
+                    </Typography.Paragraph>
+                  </View>
+                )}
+
+                {/* Separator if both family list and settings actions are shown */}
+                {family && !user?.family_id ? (
+                  <View style={styles.separator} />
+                ) : null}
+
+                {/* Circle Actions (Switch/Create/Join post-onboarding) */}
+                {user?.family_id ? null : (
+                  <View style={styles.actionsContainer}>
+                    <Typography.Subheading style={styles.actionsTitle}>
+                      Family Settings
+                    </Typography.Subheading>
+                    <Typography.Paragraph style={styles.actionsDesc}>
+                      Need to switch? Start a new family or join another family using a different invite code.
+                    </Typography.Paragraph>
+                    <View style={styles.actionsRow}>
                       <Pressable 
-                        onPress={handleCopyCode}
+                        onPress={handleNavigateCreateFamily}
                         style={({ pressed }) => [
-                          styles.inviteBadge,
-                          pressed ? styles.inviteBadgePressed : null,
+                          styles.actionButton,
+                          pressed ? styles.actionButtonPressed : null,
                           { borderCurve: 'continuous' }
                         ]}
                       >
-                        <Icon 
-                          name={copied ? "checkmark" : "doc.on.doc.fill"} 
-                          size={14}
-                          tintColor={copied ? theme.colors.status.success : theme.colors.primary.DEFAULT}
-                        />
-                        <Typography.Label style={[styles.badgeText, copied ? styles.badgeTextSuccess : null]}>
-                          {copied ? 'Copied' : `Invite: ${family.invite_code}`}
+                        <Icon name="plus.circle.fill" size={20} tintColor={theme.colors.primary.DEFAULT} />
+                        <Typography.Label style={styles.actionButtonText}>
+                          New Family
+                        </Typography.Label>
+                      </Pressable>
+
+                      <Pressable 
+                        onPress={handleNavigateJoinFamily}
+                        style={({ pressed }) => [
+                          styles.actionButton,
+                          pressed ? styles.actionButtonPressed : null,
+                          { borderCurve: 'continuous' }
+                        ]}
+                      >
+                        <Icon name="arrow.right.to.line.cycle" size={20} tintColor={theme.colors.status.success} />
+                        <Typography.Label style={styles.actionButtonText}>
+                          Join Family
                         </Typography.Label>
                       </Pressable>
                     </View>
-
-                    <Typography.Paragraph style={styles.inviteInstructions}>
-                      Share this invite code with family members so they can enter it in their &quot;Join Family&quot; screen to join this family.
-                    </Typography.Paragraph>
                   </View>
-
-                  <View style={styles.divider} />
-
-                  {/* ACCORDION SECTION GROUPED BY FAMILY MEMBER */}
-                  {family.members.length > 0 ? (
-                    <View style={styles.accordionsList}>
-                      {family.members.map((member) => {
-                        const isExpanded = expandedMembers[member.id] || false;
-                        
-                        // Filter records for this member
-                        const memberRecords = records.filter(
-                          (r) => r.family_member_id === member.id
-                        );
-
-                        return (
-                          <MemberAccordion
-                            key={member.id}
-                            member={member}
-                            records={memberRecords}
-                            isExpanded={isExpanded}
-                            onToggleExpand={() => toggleExpand(member.id)}
-                            onNavigateCreateRecord={() => handleNavigateCreateRecord(member.id)}
-                            onNavigateRecordDetails={handleNavigateRecordDetails}
-                            onConsult={() => handleOpenConsult(member)}
-                            onEditMember={() => handleOpenEditMember(member)}
-                          />
-                        );
-                      })}
-                    </View>
-                  ) : (
-                    <View style={styles.emptyState}>
-                      <Typography.Paragraph style={styles.emptyStateText}>
-                        No family members registered in this family.
-                      </Typography.Paragraph>
-                    </View>
-                  )}
-
-                  {/* Add Family Member CTA */}
-                  <Pressable
-                    onPress={handleNavigateAddMember}
-                    style={({ pressed }) => [
-                      styles.addMemberButton,
-                      pressed ? styles.addMemberButtonPressed : null,
-                      { borderCurve: 'continuous' }
-                    ]}
-                  >
-                    <Icon 
-                      name="person.badge.plus" 
-                      size={18}
-                      tintColor={theme.colors.primary.DEFAULT}
-                    />
-                    <Typography.Label style={styles.addMemberText}>
-                      Add Family Member
-                    </Typography.Label>
-                  </Pressable>
-                </View>
-              ) : (
-                <View style={[styles.card, { borderCurve: 'continuous' }]}>
-                  <Typography.Paragraph style={styles.errorText}>
-                    {error ? error : 'No active family found. Setup family to get started.'}
-                  </Typography.Paragraph>
-                </View>
-              )}
-
-              {/* Circle Actions (Switch/Create/Join post-onboarding) */}
-              {user?.family_id ? null : (
-                <View style={[styles.actionsCard, { borderCurve: 'continuous' }]}>
-                  <Typography.Subheading style={styles.actionsTitle}>
-                    Family Settings
-                  </Typography.Subheading>
-                  <Typography.Paragraph style={styles.actionsDesc}>
-                    Need to switch? Start a new family or join another family using a different invite code.
-                  </Typography.Paragraph>
-                  <View style={styles.actionsRow}>
-                    <Pressable 
-                      onPress={handleNavigateCreateFamily}
-                      style={({ pressed }) => [
-                        styles.actionButton,
-                        pressed ? styles.actionButtonPressed : null,
-                        { borderCurve: 'continuous' }
-                      ]}
-                    >
-                      <Icon name="plus.circle.fill" size={20} tintColor={theme.colors.primary.DEFAULT} />
-                      <Typography.Label style={styles.actionButtonText}>
-                        New Family
-                      </Typography.Label>
-                    </Pressable>
-
-                    <Pressable 
-                      onPress={handleNavigateJoinFamily}
-                      style={({ pressed }) => [
-                        styles.actionButton,
-                        pressed ? styles.actionButtonPressed : null,
-                        { borderCurve: 'continuous' }
-                      ]}
-                    >
-                      <Icon name="arrow.right.to.line.cycle" size={20} tintColor={theme.colors.status.success} />
-                      <Typography.Label style={styles.actionButtonText}>
-                        Join Family
-                      </Typography.Label>
-                    </Pressable>
-                  </View>
-                </View>
-              )}
+                )}
+              </View>
 
             </Animated.View>
           </LayoutAnimationConfig>
@@ -460,13 +467,32 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border.light,
     boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
   },
-  familyContainer: {
+  sectionsContainer: {
     backgroundColor: theme.colors.background.surface,
     marginHorizontal: -theme.spacing.lg,
-    paddingVertical: theme.spacing.lg,
     borderTopWidth: 1,
     borderBottomWidth: 1,
     borderColor: theme.colors.border.light,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: theme.colors.border.light,
+    marginHorizontal: theme.spacing.lg,
+  },
+  familyContainer: {
+    backgroundColor: theme.colors.background.surface,
+    paddingVertical: theme.spacing.lg,
+  },
+  errorContainer: {
+    backgroundColor: theme.colors.background.surface,
+    paddingVertical: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.lg,
+  },
+  actionsContainer: {
+    backgroundColor: theme.colors.background.surface,
+    paddingVertical: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.lg,
+    gap: theme.spacing.md,
   },
   familyHeader: {
     flexDirection: 'column',
@@ -572,17 +598,6 @@ const styles = StyleSheet.create({
   addMemberText: {
     fontWeight: '600',
     color: theme.colors.text.primary,
-  },
-  
-  // Switch actions card styles
-  actionsCard: {
-    backgroundColor: theme.colors.background.surface,
-    padding: theme.spacing.lg,
-    borderRadius: theme.radius.xl,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-    gap: theme.spacing.md,
-    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
   },
   actionsTitle: {
     fontSize: theme.fontSize.lg,

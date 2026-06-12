@@ -87,17 +87,21 @@ export default function Profile(): React.JSX.Element {
             </Typography.Paragraph>
           </View>
 
-          <ProfileDetailsCard
-            email={user?.email}
-            fullName={fullName}
-            loading={loading}
-            error={error}
-            success={success}
-            onFullNameChange={setFullName}
-            onSave={saveProfile}
-          />
+          <View style={styles.sectionsContainer}>
+            <ProfileDetailsCard
+              email={user?.email}
+              fullName={fullName}
+              loading={loading}
+              error={error}
+              success={success}
+              onFullNameChange={setFullName}
+              onSave={saveProfile}
+            />
 
-          <PasswordResetCard email={user?.email} />
+            <View style={styles.separator} />
+
+            <PasswordResetCard email={user?.email} />
+          </View>
 
           {/* Actions */}
           <View style={styles.actionsContainer}>
@@ -158,6 +162,18 @@ const styles = StyleSheet.create({
   },
   profileBody: {
     gap: theme.spacing.lg,
+  },
+  sectionsContainer: {
+    backgroundColor: theme.colors.background.surface,
+    marginHorizontal: -theme.spacing.lg,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: theme.colors.border.light,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: theme.colors.border.light,
+    marginHorizontal: theme.spacing.lg,
   },
   avatarContainer: {
     alignItems: 'center',

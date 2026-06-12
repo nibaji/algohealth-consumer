@@ -117,12 +117,9 @@ export const PasswordResetCard = ({ email }: PasswordResetCardProps): React.JSX.
 const styles = StyleSheet.create({
   cardForm: {
     backgroundColor: theme.colors.background.surface,
-    padding: theme.spacing.lg,
-    borderRadius: theme.radius.xl,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
+    paddingVertical: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.lg,
     gap: theme.spacing.md,
-    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
   },
   formSectionTitle: {
     fontSize: theme.fontSize.lg,
