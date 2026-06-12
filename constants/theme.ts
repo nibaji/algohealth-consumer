@@ -26,7 +26,7 @@ export const theme = {
   colors: {
     primary: purplePrimary,
     background: {
-      default: neutral.gray50,
+      default: neutral.white,
       surface: neutral.white,
       inverse: neutral.gray900,
     },
