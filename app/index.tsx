@@ -222,8 +222,8 @@ export default function Index() {
               
               {/* Active Family Circle Card */}
               {family ? (
-                <View style={[styles.card, { borderCurve: 'continuous' }]}>
-                  <View style={styles.cardHeader}>
+                <View style={styles.familyContainer}>
+                  <View style={styles.familyHeader}>
                     <View style={styles.familyTitleContainer}>
                       <Typography.Subheading style={styles.cardTitle}>
                         {family.name}
@@ -454,6 +454,21 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border.light,
     boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
   },
+  familyContainer: {
+    backgroundColor: theme.colors.background.surface,
+    marginHorizontal: -theme.spacing.lg,
+    paddingVertical: theme.spacing.lg,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: theme.colors.border.light,
+  },
+  familyHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+  },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -504,10 +519,12 @@ const styles = StyleSheet.create({
   },
   accordionsList: {
     gap: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
   },
   emptyState: {
     alignItems: 'center',
     paddingVertical: theme.spacing.xl,
+    paddingHorizontal: theme.spacing.lg,
   },
   emptyStateText: {
     color: theme.colors.text.tertiary,
@@ -527,6 +544,7 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border.light,
     gap: theme.spacing.xs,
     marginTop: theme.spacing.lg,
+    marginHorizontal: theme.spacing.lg,
   },
   addMemberButtonPressed: {
     backgroundColor: theme.colors.border.light,
