@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useTransition } from 'react';
-import { StyleSheet, View, ScrollView, Pressable, ActivityIndicator, Alert, Platform } from 'react-native';
+import { StyleSheet, View, ScrollView, Pressable, ActivityIndicator, Alert, Platform, RefreshControl } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { theme } from '@/constants/theme';
 import { Typography } from '@/components/ui/Typography';
@@ -26,6 +26,7 @@ export default function MedicalRecordDetail() {
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [deleteSuccess, setDeleteSuccess] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Edit form states
   const [visitDate, setVisitDate] = useState('');
@@ -83,6 +84,12 @@ export default function MedicalRecordDetail() {
     setLoading(true);
     setError(null);
     loadData();
+  }, [loadData]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
   }, [loadData]);
 
   // Edit form submission
@@ -212,6 +219,14 @@ export default function MedicalRecordDetail() {
         contentContainerStyle={styles.content}
         contentInsetAdjustmentBehavior="automatic"
         keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[theme.colors.primary.DEFAULT]}
+            tintColor={theme.colors.primary.DEFAULT}
+          />
+        }
       >
         {loading ? (
           <View style={styles.loaderContainer}>

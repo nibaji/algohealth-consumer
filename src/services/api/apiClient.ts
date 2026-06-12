@@ -31,7 +31,7 @@ function parseXhrError(xhr: XMLHttpRequest): Error {
       }
     }
     return new Error(errorMessage);
-  } catch (e) {
+  } catch {
     return new Error(`Request failed with status ${xhr.status}`);
   }
 }

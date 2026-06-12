@@ -1,2 +1,4 @@
 ## Unreleased
 
+- 2026-06-12: Optimized API call frequency by disabling focus-based reloading on the homepage dashboard. Added pull-to-refresh (`RefreshControl`) to the dashboard and medical record detail screens. Changed in `app/index.tsx`, `app/medical-records/[id].tsx`.
+

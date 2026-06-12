@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, Pressable, ActivityIndicator } from 'react-native';
+import React, { useState, useCallback, useEffect } from 'react';
+import { View, StyleSheet, ScrollView, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/src/contexts/AuthContext';
@@ -11,7 +11,7 @@ import { ConsultModal } from '@/components/medical-records/consult-modal';
 import Animated, { FadeInDown, LayoutAnimationConfig } from 'react-native-reanimated';
 import * as Clipboard from 'expo-clipboard';
 import { Icon } from '@/components/ui/icon';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MemberAccordion } from '@/components/medical-records/member-accordion';
 import { EditMemberModal } from '@/components/medical-records/edit-member-modal';
@@ -26,13 +26,11 @@ export default function Index() {
   const [records, setRecords] = useState<MedicalRecordResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Accordion open/close states
   const [expandedMembers, setExpandedMembers] = useState<Record<string, boolean>>({});
   const [copied, setCopied] = useState(false);
-
-  // Track initial load to show full screen spinner only once
-  const isInitialLoad = React.useRef(true);
 
   // Consult modal states
   const [isConsultVisible, setIsConsultVisible] = useState(false);
@@ -44,10 +42,6 @@ export default function Index() {
 
   // Fetch Family details and Medical Records
   const loadDashboardData = useCallback(async () => {
-    if (isInitialLoad.current) {
-      setLoading(true);
-      isInitialLoad.current = false;
-    }
     setError(null);
     try {
       // Refresh user profile first to ensure we have the latest family_id
@@ -84,11 +78,24 @@ export default function Index() {
     }
   }, [refreshProfile]);
 
-  useFocusEffect(
-    useCallback(() => {
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadDashboardData();
+    setRefreshing(false);
+  }, [loadDashboardData]);
+
+  useEffect(() => {
+    let ignore = false;
+    const init = async () => {
+      await Promise.resolve();
+      if (ignore) return;
       loadDashboardData();
-    }, [loadDashboardData])
-  );
+    };
+    init();
+    return () => {
+      ignore = true;
+    };
+  }, [loadDashboardData]);
 
   // Toggle Accordion
   const toggleExpand = useCallback((memberId: string) => {
@@ -187,6 +194,14 @@ export default function Index() {
         style={styles.scrollView}
         contentContainerStyle={styles.content}
         contentInsetAdjustmentBehavior="automatic"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[theme.colors.primary.DEFAULT]}
+            tintColor={theme.colors.primary.DEFAULT}
+          />
+        }
       >
         <Animated.View entering={FadeInDown.duration(500)} style={styles.welcomeSection}>
           <Typography.Heading style={styles.title}>
