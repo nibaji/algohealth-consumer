@@ -5,6 +5,8 @@
 - 2026-06-12: Aligned relationship labels and logic to be with respect to the Family Head. Exposed the relationship selector for logged-in users who are not the Family Head, while keeping it read-only and marked as "Self (Family Head)" for the Family Head. Updated relation display helpers to format non-Family Head self views as "Self (Relation)" and non-self views as their direct relation. Changed in `src/utils/relation.ts`, `components/medical-records/edit-member-modal.tsx`, `app/family/add-member.tsx`, and `app/family/create.tsx`.
 - 2026-06-12: Flattened the active family container UI on the home screen to remove card styling (borders, corners, shadow), allowing edge-to-edge layout with a white background and adjusted internal spacing to match content alignment. Changed in `app/index.tsx`.
 - 2026-06-12: Updated the global application theme `colors.background.default` to white, making the default background color white across all screens and UI containers in the app. Changed in `constants/theme.ts`.
+- 2026-06-12: Changed default StatusBar style to "dark" so that status bar icons and text remain visible on the new white background theme. Changed in `app/_layout.tsx`.
+
 
 
 

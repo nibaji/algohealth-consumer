@@ -73,7 +73,7 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <StatusBar style="auto" />
+        <StatusBar style="dark" />
         <InitialLayout />
       </AuthProvider>
     </SafeAreaProvider>
