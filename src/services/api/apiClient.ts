@@ -18,8 +18,121 @@ const addRefreshSubscriber = (callback: (token: string) => void) => {
   refreshSubscribers.push(callback);
 };
 
+function parseXhrError(xhr: XMLHttpRequest): Error {
+  try {
+    const errorData = JSON.parse(xhr.responseText);
+    let errorMessage = 'An error occurred';
+    if (errorData.message) {
+      errorMessage = errorData.message;
+    } else if (errorData.detail) {
+      if (typeof errorData.detail === 'string') errorMessage = errorData.detail;
+      else if (Array.isArray(errorData.detail) && errorData.detail.length > 0) {
+        errorMessage = errorData.detail[0].msg || JSON.stringify(errorData.detail);
+      }
+    }
+    return new Error(errorMessage);
+  } catch (e) {
+    return new Error(`Request failed with status ${xhr.status}`);
+  }
+}
+
+async function customXhr<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
+  const { requiresAuth = true, ...customOptions } = options;
+  const url = `${ENV.API_BASE_URL}${endpoint}`;
+
+  return new Promise<T>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(customOptions.method || 'POST', url);
+
+    if (requiresAuth) {
+      const accessToken = tokenStorage.getAccessToken();
+      if (accessToken) {
+        xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
+      }
+    }
+
+    const headers = new Headers(customOptions.headers || {});
+    headers.forEach((value, key) => {
+      if (key.toLowerCase() !== 'content-type') {
+        xhr.setRequestHeader(key, value);
+      }
+    });
+
+    xhr.onload = async () => {
+      if (xhr.status === 401 && requiresAuth) {
+        try {
+          const refreshToken = await tokenStorage.getRefreshToken();
+          if (!refreshToken) {
+            reject(new Error('Session expired'));
+            return;
+          }
+          const refreshResponse = await fetch(`${ENV.API_BASE_URL}/auth/refresh`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: refreshToken }),
+          });
+
+          if (!refreshResponse.ok) {
+            await tokenStorage.clearTokens();
+            reject(new Error('Session expired'));
+            return;
+          }
+
+          const data: AuthResponse = await refreshResponse.json();
+          tokenStorage.setAccessToken(data.access_token);
+          await tokenStorage.setRefreshToken(data.refresh_token);
+
+          // Retry request
+          const retryXhr = new XMLHttpRequest();
+          retryXhr.open(customOptions.method || 'POST', url);
+          retryXhr.setRequestHeader('Authorization', `Bearer ${data.access_token}`);
+          headers.forEach((value, key) => {
+            if (key.toLowerCase() !== 'content-type') {
+              retryXhr.setRequestHeader(key, value);
+            }
+          });
+
+          retryXhr.onload = () => {
+            if (retryXhr.status >= 200 && retryXhr.status < 300) {
+              if (retryXhr.status === 204) resolve({} as T);
+              else resolve(JSON.parse(retryXhr.responseText) as T);
+            } else {
+              reject(parseXhrError(retryXhr));
+            }
+          };
+          retryXhr.onerror = () => reject(new Error('Network request failed'));
+          retryXhr.send(customOptions.body);
+          return;
+        } catch (err) {
+          reject(err);
+          return;
+        }
+      }
+
+      if (xhr.status >= 200 && xhr.status < 300) {
+        if (xhr.status === 204) resolve({} as T);
+        else {
+          try {
+            resolve(JSON.parse(xhr.responseText) as T);
+          } catch (e) {
+            reject(e);
+          }
+        }
+      } else {
+        reject(parseXhrError(xhr));
+      }
+    };
+
+    xhr.onerror = () => reject(new Error('Network request failed'));
+    xhr.send(customOptions.body);
+  });
+}
+
 async function customFetch<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
   const { requiresAuth = true, ...customOptions } = options;
+  if (customOptions.body instanceof FormData) {
+    return customXhr<T>(endpoint, options);
+  }
   const url = `${ENV.API_BASE_URL}${endpoint}`;
 
   const headers = new Headers(customOptions.headers || {});
