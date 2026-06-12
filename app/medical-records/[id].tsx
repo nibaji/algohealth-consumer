@@ -13,10 +13,14 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Icon } from '@/components/ui/icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useAuth } from '@/src/contexts/AuthContext';
+import { getDisplayRelation } from '@/src/utils/relation';
+
 export default function MedicalRecordDetail() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
 
   // Page states
   const [record, setRecord] = useState<MedicalRecordResponse | null>(null);
@@ -54,7 +58,7 @@ export default function MedicalRecordDetail() {
       const member = family.members.find(m => m.id === data.family_member_id);
       if (member) {
         setMemberName(member.name);
-        setMemberRelation(member.relation);
+        setMemberRelation(getDisplayRelation(member, user));
       } else {
         setMemberName('Unknown Member');
         setMemberRelation('Family Circle');
@@ -67,7 +71,7 @@ export default function MedicalRecordDetail() {
       if (isCancelled?.()) return;
       setLoading(false);
     }
-  }, [id]);
+  }, [id, user]);
 
   useEffect(() => {
     let ignore = false;

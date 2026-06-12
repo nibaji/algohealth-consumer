@@ -19,6 +19,7 @@ import { theme } from '@/constants/theme';
 import { FamilyMemberOut, FamilyMemberUpdate } from '@/src/features/family/familyTypes';
 import { familyService } from '@/src/services/family/familyService';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { isMemberSelf } from '@/src/utils/relation';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
@@ -78,16 +79,15 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
       setErrors({});
       setCustomRelation('');
 
-      const initialRelationLower = (member.relation || '').toLowerCase();
-      setIsSelf(initialRelationLower === 'self');
+      const isInitialSelf = isMemberSelf(member, user);
+      setIsSelf(isInitialSelf);
 
       try {
         const fullDetails = await familyService.getFamilyMember(member.id);
         setMemberName(fullDetails.name);
         
-        const relationLower = (fullDetails.relation || '').toLowerCase();
-        const isMemberSelf = relationLower === 'self';
-        setIsSelf(isMemberSelf);
+        const isMemberSelfUpdated = isMemberSelf(fullDetails, user);
+        setIsSelf(isMemberSelfUpdated);
 
         // Match relation option
         const relationVal = fullDetails.relation;
@@ -113,7 +113,7 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
     };
 
     fetchMemberDetails();
-  }, [visible, member, user?.id]);
+  }, [visible, member, user]);
 
   // Form field validation handler (runs on blur & submission)
   const validateField = useCallback((field: 'name' | 'dob' | 'email' | 'mobile', value: string) => {

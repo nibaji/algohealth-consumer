@@ -37,6 +37,7 @@ export interface FamilyMemberOut {
   id: string;
   name: string;
   relation: string;
+  user_id?: string | null;
   email_id?: string | null;
   invite_status?: string | null;
 }

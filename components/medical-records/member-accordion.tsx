@@ -7,6 +7,8 @@ import { theme } from '@/constants/theme';
 import { FamilyMemberOut } from '@/src/features/family/familyTypes';
 import { MedicalRecordResponse } from '@/src/features/medical-records/medicalRecordTypes';
 import { MedicalRecordCard } from './medical-record-card';
+import { useAuth } from '@/src/contexts/AuthContext';
+import { getDisplayRelation } from '@/src/utils/relation';
 
 interface MemberAccordionProps {
   member: FamilyMemberOut;
@@ -29,6 +31,7 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
   onConsult,
   onEditMember,
 }) => {
+  const { user } = useAuth();
   return (
     <View 
       style={[
@@ -53,7 +56,7 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
               {member.name}
             </Typography.Paragraph>
             <Typography.Label style={styles.memberRelation}>
-              {member.relation} • {records.length} {records.length === 1 ? 'Record' : 'Records'}
+              {getDisplayRelation(member, user)} • {records.length} {records.length === 1 ? 'Record' : 'Records'}
             </Typography.Label>
           </View>
         </Pressable>

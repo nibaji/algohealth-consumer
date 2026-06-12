@@ -2,6 +2,7 @@ import React, { createContext, use, useState, useEffect, useCallback } from 'rea
 import { UserProfileResponse, LoginRequest, RegisterRequest, AuthResponse } from '@/src/features/auth/authTypes';
 import { authService } from '@/src/services/auth/authService';
 import { familyService } from '@/src/services/family/familyService';
+import { consultCache } from '@/src/utils/consultCache';
 
 interface AuthContextType {
   user: UserProfileResponse | null;
@@ -36,6 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const restore = async () => {
       try {
+        consultCache.clear();
         const response = await authService.restoreSession();
         if (response && response.user) {
           let familyId = response.user.family_id || response.family_id || null;
@@ -97,6 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(async () => {
     await authService.logout();
+    consultCache.clear();
     setUser(null);
   }, []);
 

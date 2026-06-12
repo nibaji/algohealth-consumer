@@ -14,6 +14,8 @@ import { Icon } from '@/components/ui/icon';
 import * as DocumentPicker from 'expo-document-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
+import { useAuth } from '@/src/contexts/AuthContext';
+import { getDisplayRelation } from '@/src/utils/relation';
 import {
   useAudioRecorder,
   useAudioRecorderState,
@@ -40,6 +42,7 @@ export default function CreateMedicalRecord() {
   const { memberId } = useLocalSearchParams<{ memberId?: string }>();
   const insets = useSafeAreaInsets();
   const keyboardAvoidingEnabled = useKeyboardAvoiding();
+  const { user } = useAuth();
 
   // Form states
   const [members, setMembers] = useState<FamilyMemberOut[]>([]);
@@ -402,7 +405,7 @@ export default function CreateMedicalRecord() {
                             isSelected ? styles.memberChipTextSelected : null
                           ]}
                         >
-                          {member.name} ({member.relation})
+                          {member.name} ({getDisplayRelation(member, user)})
                         </Typography.Label>
                       </Pressable>
                     );

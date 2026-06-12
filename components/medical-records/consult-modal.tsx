@@ -17,18 +17,12 @@ import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
 import { FamilyMemberOut } from '@/src/features/family/familyTypes';
 import { medicalRecordService } from '@/src/services/medical-records/medicalRecordService';
+import { consultCache, ChatMessage } from '@/src/utils/consultCache';
 
 interface ConsultModalProps {
   visible: boolean;
   onClose: () => void;
   member: FamilyMemberOut | null;
-}
-
-interface ChatMessage {
-  id: string;
-  text: string;
-  sender: 'user' | 'bot';
-  timestamp: Date;
 }
 
 export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, onClose, member }) => {
@@ -44,18 +38,36 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
   // Initialize chat when modal opens
   useEffect(() => {
     if (visible && member) {
-      setMessages([
-        {
+      const cached = consultCache.get(member.id);
+      if (cached && cached.length > 0) {
+        setMessages(cached);
+      } else {
+        const welcomeMessage: ChatMessage = {
           id: 'welcome',
           text: `Hi! I am your Health Consultant, your AlgoHealth assistant. I have loaded ${member.name}'s medical circle data. How can I help you today?`,
           sender: 'bot',
           timestamp: new Date()
-        }
-      ]);
+        };
+        setMessages([welcomeMessage]);
+      }
       setInputText('');
       setIsProcessing(false);
+      
+      // Auto-scroll to bottom after rendering
+      setTimeout(() => {
+        if (flashListRef.current) {
+          flashListRef.current.scrollToEnd({ animated: false });
+        }
+      }, 150);
     }
   }, [visible, member]);
+
+  // Synchronize messages with cache
+  useEffect(() => {
+    if (member && messages.length > 0) {
+      consultCache.set(member.id, messages);
+    }
+  }, [messages, member]);
 
   // Auto scroll to bottom
   const scrollToBottom = useCallback(() => {
