@@ -224,33 +224,39 @@ export default function Index() {
               {family ? (
                 <View style={styles.familyContainer}>
                   <View style={styles.familyHeader}>
-                    <View style={styles.familyTitleContainer}>
-                      <Typography.Subheading style={styles.cardTitle}>
-                        {family.name}
-                      </Typography.Subheading>
-                      <Typography.Paragraph style={styles.cardSubtitle}>
-                        Tap a family member to view their medical records. Copy and share the invite code to let others join this circle.
-                      </Typography.Paragraph>
+                    <View style={styles.familyHeaderRow}>
+                      <View style={styles.familyTitleContainer}>
+                        <Typography.Subheading style={styles.cardTitle}>
+                          {family.name}
+                        </Typography.Subheading>
+                        <Typography.Paragraph style={styles.cardSubtitle}>
+                          Tap a family member to view their medical records.
+                        </Typography.Paragraph>
+                      </View>
+                      
+                      {/* Share invite code pill */}
+                      <Pressable 
+                        onPress={handleCopyCode}
+                        style={({ pressed }) => [
+                          styles.inviteBadge,
+                          pressed ? styles.inviteBadgePressed : null,
+                          { borderCurve: 'continuous' }
+                        ]}
+                      >
+                        <Icon 
+                          name={copied ? "checkmark" : "doc.on.doc.fill"} 
+                          size={14}
+                          tintColor={copied ? theme.colors.status.success : theme.colors.primary.DEFAULT}
+                        />
+                        <Typography.Label style={[styles.badgeText, copied ? styles.badgeTextSuccess : null]}>
+                          {copied ? 'Copied' : `Invite: ${family.invite_code}`}
+                        </Typography.Label>
+                      </Pressable>
                     </View>
-                    
-                    {/* Share invite code pill */}
-                    <Pressable 
-                      onPress={handleCopyCode}
-                      style={({ pressed }) => [
-                        styles.inviteBadge,
-                        pressed ? styles.inviteBadgePressed : null,
-                        { borderCurve: 'continuous' }
-                      ]}
-                    >
-                      <Icon 
-                        name={copied ? "checkmark" : "doc.on.doc.fill"} 
-                        size={14}
-                        tintColor={copied ? theme.colors.status.success : theme.colors.primary.DEFAULT}
-                      />
-                      <Typography.Label style={[styles.badgeText, copied ? styles.badgeTextSuccess : null]}>
-                        {copied ? 'Copied' : `Invite: ${family.invite_code}`}
-                      </Typography.Label>
-                    </Pressable>
+
+                    <Typography.Paragraph style={styles.inviteInstructions}>
+                      Share this invite code with family members so they can enter it in their &quot;Join Circle&quot; screen to join this circle.
+                    </Typography.Paragraph>
                   </View>
 
                   <View style={styles.divider} />
@@ -463,11 +469,21 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border.light,
   },
   familyHeader: {
+    flexDirection: 'column',
+    gap: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.lg,
+  },
+  familyHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     gap: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
+  },
+  inviteInstructions: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.text.secondary,
+    marginTop: theme.spacing.xs,
+    lineHeight: theme.lineHeight.xs,
   },
   cardHeader: {
     flexDirection: 'row',
