@@ -1,16 +1,18 @@
 import React, { useState, useCallback } from 'react';
-import { StyleSheet, View, ScrollView, Pressable } from 'react-native';
+import { StyleSheet, View, ScrollView, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { theme } from '@/constants/theme';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
+import { DateInput, validateDateString, inputDateToApiDate } from '@/components/ui/DateInput';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { familyService } from '@/src/services/family/familyService';
 import { FamilyOut, FamilyMemberCreate } from '@/src/features/family/familyTypes';
 import Animated, { FadeInDown, FadeInUp, LayoutAnimationConfig } from 'react-native-reanimated';
 import * as Clipboard from 'expo-clipboard';
 import { Icon } from '@/components/ui/icon';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type GenderType = 'Male' | 'Female' | 'Other' | 'Unknown';
 type RelationType = 'Spouse' | 'Child' | 'Parent' | 'Sibling' | 'Grandparent' | 'Other';
@@ -18,6 +20,7 @@ type RelationType = 'Spouse' | 'Child' | 'Parent' | 'Sibling' | 'Grandparent' | 
 export default function CreateFamily() {
   const router = useRouter();
   const { refreshProfile } = useAuth();
+  const insets = useSafeAreaInsets();
 
   // Step 1: Create Family states
   const [familyName, setFamilyName] = useState('');
@@ -81,36 +84,9 @@ export default function CreateFamily() {
       setMemberError('Member name is required');
       return;
     }
-    if (!memberDob.trim()) {
-      setMemberError('Date of birth is required');
-      return;
-    }
-
-    // Basic date validation YYYY-MM-DD
-    const dobRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dobRegex.test(memberDob)) {
-      setMemberError('Date of birth must be in YYYY-MM-DD format');
-      return;
-    }
-
-    const dateParts = memberDob.split('-');
-    const year = parseInt(dateParts[0], 10);
-    const month = parseInt(dateParts[1], 10);
-    const day = parseInt(dateParts[2], 10);
-    const dateObj = new Date(year, month - 1, day);
-    const today = new Date();
-
-    if (
-      dateObj.getFullYear() !== year ||
-      dateObj.getMonth() !== month - 1 ||
-      dateObj.getDate() !== day
-    ) {
-      setMemberError('Please enter a valid calendar date');
-      return;
-    }
-
-    if (dateObj > today) {
-      setMemberError('Date of birth cannot be in the future');
+    const dobError = validateDateString(memberDob, { label: 'Date of birth' });
+    if (dobError) {
+      setMemberError(dobError);
       return;
     }
 
@@ -139,7 +115,7 @@ export default function CreateFamily() {
         name: memberName,
         relation: memberRelation,
         gender: memberGender,
-        date_of_birth: memberDob,
+        date_of_birth: inputDateToApiDate(memberDob),
         email_id: memberEmail.trim() ? memberEmail : null,
         mobile_no: memberMobile.trim() ? memberMobile : null,
       };
@@ -182,9 +158,12 @@ export default function CreateFamily() {
   }, [router]);
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       {/* Header bar */}
-      <View style={styles.headerBar}>
+      <View style={[styles.headerBar, { paddingTop: insets.top, height: 56 + insets.top }]}>
         <Pressable 
           onPress={handleBack}
           style={({ pressed }) => [
@@ -309,15 +288,11 @@ export default function CreateFamily() {
               />
 
               <View style={styles.formRow}>
-                {/* DOB INPUT */}
                 <View style={styles.flexHalf}>
-                  <TextInput
+                  <DateInput
                     label="Date of Birth"
-                    placeholder="YYYY-MM-DD"
                     value={memberDob}
                     onChangeText={setMemberDob}
-                    maxLength={10}
-                    keyboardType="numeric"
                   />
                 </View>
                 
@@ -450,7 +425,7 @@ export default function CreateFamily() {
           </Animated.View>
         )}
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

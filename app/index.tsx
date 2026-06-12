@@ -12,12 +12,14 @@ import Animated, { FadeInDown, LayoutAnimationConfig } from 'react-native-reanim
 import * as Clipboard from 'expo-clipboard';
 import { Icon } from '@/components/ui/icon';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MemberAccordion } from '@/components/medical-records/member-accordion';
 import { EditMemberModal } from '@/components/medical-records/edit-member-modal';
 
 export default function Index() {
   const { user, refreshProfile } = useAuth();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   // Active Family & Records state
   const [family, setFamily] = useState<FamilyOut | null>(null);
@@ -156,7 +158,7 @@ export default function Index() {
   return (
     <View style={styles.container}>
       {/* Header bar */}
-      <View style={styles.headerBar}>
+      <View style={[styles.headerBar, { paddingTop: insets.top, height: 56 + insets.top }]}>
         <Typography.Subheading style={styles.headerTitle}>
           AlgoHealth Plus
         </Typography.Subheading>

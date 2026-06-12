@@ -10,10 +10,12 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import { useProfileDetails } from '@/src/features/auth/use-profile-details';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Icon } from '@/components/ui/icon';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function Profile(): React.JSX.Element {
   const router = useRouter();
   const { user, refreshProfile, logout } = useAuth();
+  const insets = useSafeAreaInsets();
   const {
     fullName,
     loading,
@@ -34,7 +36,7 @@ export default function Profile(): React.JSX.Element {
   return (
     <View style={styles.container}>
       {/* Header bar */}
-      <View style={styles.headerBar}>
+      <View style={[styles.headerBar, { paddingTop: insets.top, height: 56 + insets.top }]}>
         <Pressable 
           onPress={handleBack}
           style={({ pressed }) => [

@@ -14,11 +14,13 @@ import { Icon } from '@/components/ui/icon';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
+import { DateInput, validateDateString, apiDateToInputDate, inputDateToApiDate } from '@/components/ui/DateInput';
 import { theme } from '@/constants/theme';
 import { FamilyMemberOut, FamilyMemberUpdate } from '@/src/features/family/familyTypes';
 import { familyService } from '@/src/services/family/familyService';
 import { useAuth } from '@/src/contexts/AuthContext';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface EditMemberModalProps {
   visible: boolean;
@@ -37,6 +39,7 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
   onUpdateSuccess,
 }) => {
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
 
   // Loading and error states
   const [loadingDetails, setLoadingDetails] = useState(false);
@@ -61,13 +64,7 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
     mobile?: string;
   }>({});
 
-  // Helper to format API date YYYY-MM-DD into DD-MM-YYYY
-  const formatApiDateToInput = (apiDateStr: string): string => {
-    if (!apiDateStr) return '';
-    const parts = apiDateStr.split('-');
-    if (parts.length !== 3) return apiDateStr;
-    return `${parts[2]}-${parts[1]}-${parts[0]}`;
-  };
+
 
   // Fetch full details of the member when modal opens
   useEffect(() => {
@@ -102,7 +99,7 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
         }
 
         setMemberGender((fullDetails.gender || 'Unknown') as GenderType);
-        setMemberDob(formatApiDateToInput(fullDetails.date_of_birth));
+        setMemberDob(apiDateToInputDate(fullDetails.date_of_birth));
         setMemberEmail(fullDetails.email_id || '');
         setMemberMobile(fullDetails.mobile_no || '');
       } catch (err: unknown) {
@@ -125,31 +122,9 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
         errorMsg = 'Full name is required';
       }
     } else if (field === 'dob') {
-      if (!value.trim()) {
-        errorMsg = 'Date of birth is required';
-      } else {
-        const dobRegex = /^\d{2}-\d{2}-\d{4}$/;
-        if (!dobRegex.test(value)) {
-          errorMsg = 'Date of birth must be in DD-MM-YYYY format';
-        } else {
-          const dateParts = value.split('-');
-          const day = parseInt(dateParts[0], 10);
-          const month = parseInt(dateParts[1], 10);
-          const year = parseInt(dateParts[2], 10);
-          const dateObj = new Date(year, month - 1, day);
-          const today = new Date();
-          const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-
-          if (
-            dateObj.getFullYear() !== year ||
-            dateObj.getMonth() !== month - 1 ||
-            dateObj.getDate() !== day
-          ) {
-            errorMsg = 'Please enter a valid calendar date';
-          } else if (dateObj > todayDate) {
-            errorMsg = 'Date of birth cannot be in the future';
-          }
-        }
+      const dobError = validateDateString(value, { label: 'Date of birth' });
+      if (dobError) {
+        errorMsg = dobError;
       }
     } else if (field === 'email') {
       if (value.trim()) {
@@ -175,93 +150,6 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
     return !errorMsg;
   }, []);
 
-  // DOB formatting & inline segment validation handler
-  const handleDobChange = useCallback((text: string) => {
-    const cleaned = text.replace(/[^0-9]/g, '');
-    let formatted = cleaned;
-    
-    // Check if user is deleting
-    const isDeleting = text.length < memberDob.length;
-    
-    if (isDeleting) {
-      if (cleaned.length > 2 && cleaned.length <= 4) {
-        formatted = `${cleaned.slice(0, 2)}-${cleaned.slice(2)}`;
-      } else if (cleaned.length > 4) {
-        formatted = `${cleaned.slice(0, 2)}-${cleaned.slice(2, 4)}-${cleaned.slice(4, 8)}`;
-      }
-    } else {
-      if (cleaned.length === 2) {
-        formatted = `${cleaned}-`;
-      } else if (cleaned.length > 2 && cleaned.length < 4) {
-        formatted = `${cleaned.slice(0, 2)}-${cleaned.slice(2)}`;
-      } else if (cleaned.length === 4) {
-        formatted = `${cleaned.slice(0, 2)}-${cleaned.slice(2, 4)}-`;
-      } else if (cleaned.length > 4) {
-        formatted = `${cleaned.slice(0, 2)}-${cleaned.slice(2, 4)}-${cleaned.slice(4, 8)}`;
-      }
-    }
-    
-    setMemberDob(formatted);
-
-    // Segment validation (on change)
-    let localError = '';
-    
-    if (cleaned.length >= 1) {
-      const d1 = parseInt(cleaned[0], 10);
-      if (d1 > 3) {
-        localError = 'Day must start with 0, 1, 2, or 3';
-      }
-    }
-    if (cleaned.length >= 2 && !localError) {
-      const dd = parseInt(cleaned.slice(0, 2), 10);
-      if (dd < 1 || dd > 31) {
-        localError = 'Day must be between 01 and 31';
-      }
-    }
-    
-    if (cleaned.length >= 3 && !localError) {
-      const m1 = parseInt(cleaned[2], 10);
-      if (m1 > 1) {
-        localError = 'Month must start with 0 or 1';
-      }
-    }
-    if (cleaned.length >= 4 && !localError) {
-      const mm = parseInt(cleaned.slice(2, 4), 10);
-      if (mm < 1 || mm > 12) {
-        localError = 'Month must be between 01 and 12';
-      }
-    }
-    
-    if (cleaned.length >= 8 && !localError) {
-      const yyyy = parseInt(cleaned.slice(4, 8), 10);
-      const currentYear = new Date().getFullYear();
-      if (yyyy < 1900 || yyyy > currentYear) {
-        localError = `Year must be between 1900 and ${currentYear}`;
-      } else {
-        const dd = parseInt(cleaned.slice(0, 2), 10);
-        const mm = parseInt(cleaned.slice(2, 4), 10);
-        const dateObj = new Date(yyyy, mm - 1, dd);
-        const today = new Date();
-        const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        
-        if (
-          dateObj.getFullYear() !== yyyy ||
-          dateObj.getMonth() !== mm - 1 ||
-          dateObj.getDate() !== dd
-        ) {
-          localError = 'Please enter a valid calendar date';
-        } else if (dateObj > todayDate) {
-          localError = 'Date of birth cannot be in the future';
-        }
-      }
-    }
-
-    setErrors(prev => ({
-      ...prev,
-      dob: localError ? localError : undefined
-    }));
-  }, [memberDob]);
-
   const handleRelationChange = useCallback((relation: RelationType) => {
     setMemberRelation(relation);
   }, []);
@@ -284,13 +172,11 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
     setSaving(true);
 
     try {
-      const dateParts = memberDob.split('-');
-      const apiDob = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
       const payload: FamilyMemberUpdate = {
         name: memberName,
         relation: isSelf ? (member?.relation || 'Self') : (memberRelation === 'Other' && customRelation.trim() ? customRelation.trim() : memberRelation),
         gender: memberGender,
-        date_of_birth: apiDob,
+        date_of_birth: inputDateToApiDate(memberDob),
         email_id: memberEmail.trim() ? memberEmail : null,
         mobile_no: memberMobile.trim() ? memberMobile : null,
       };
@@ -357,7 +243,7 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
     >
       <View style={styles.container}>
         {/* Header bar */}
-        <View style={styles.headerBar}>
+        <View style={[styles.headerBar, Platform.OS !== 'ios' ? { paddingTop: insets.top, height: 56 + insets.top } : null]}>
           <Pressable 
             onPress={onClose}
             style={({ pressed }) => [
@@ -421,15 +307,15 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
                   <View style={styles.formRow}>
                     {/* DOB INPUT */}
                     <View style={styles.flexHalf}>
-                      <TextInput
+                      <DateInput
                         label="Date of Birth"
-                        placeholder="DD-MM-YYYY"
                         value={memberDob}
-                        onChangeText={handleDobChange}
+                        onChangeText={(text) => {
+                          setMemberDob(text);
+                          if (errors.dob) validateField('dob', text);
+                        }}
                         onBlur={() => validateField('dob', memberDob)}
                         error={errors.dob}
-                        maxLength={10}
-                        keyboardType="numeric"
                       />
                     </View>
                     
