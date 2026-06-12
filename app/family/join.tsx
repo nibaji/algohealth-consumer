@@ -95,7 +95,7 @@ export default function JoinFamily() {
             entering={FadeInDown.duration(500)} 
             style={styles.successContainer}
           >
-            <View style={[styles.successIconCircle, { backgroundColor: '#ECFDF5', borderCurve: 'continuous' }]}>
+            <View style={styles.successIconCircle}>
               <Icon 
                 name="checkmark.seal.fill" 
                 size={40}
@@ -233,6 +233,8 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: theme.radius.xl,
+    borderCurve: 'continuous',
+    backgroundColor: '#ECFDF5',
     justifyContent: 'center',
     alignItems: 'center',
     boxShadow: "0 10px 15px -3px rgba(16, 185, 129, 0.15)",

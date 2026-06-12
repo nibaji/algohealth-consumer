@@ -289,7 +289,7 @@ export default function AddMember() {
             entering={FadeInDown.duration(500)} 
             style={styles.successContainer}
           >
-            <View style={[styles.successIconCircle, { backgroundColor: '#ECFDF5', borderCurve: 'continuous' }]}>
+            <View style={styles.successIconCircle}>
               <Icon 
                 name="checkmark.seal.fill" 
                 size={40}
@@ -356,7 +356,6 @@ export default function AddMember() {
                           style={[
                             styles.chip,
                             isSelected ? styles.chipSelected : null,
-                            { borderCurve: 'continuous' }
                           ]}
                         >
                           <Typography.Label 
@@ -391,7 +390,6 @@ export default function AddMember() {
                         style={[
                           styles.relationChip,
                           isSelected ? styles.relationChipSelected : null,
-                          { borderCurve: 'continuous' }
                         ]}
                       >
                         <Typography.Label 
@@ -539,6 +537,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: theme.radius.md,
+    borderCurve: 'continuous',
     borderWidth: 1,
     borderColor: theme.colors.border.light,
   },
@@ -567,6 +566,7 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.sm,
     backgroundColor: theme.colors.background.default,
     borderRadius: theme.radius.full,
+    borderCurve: 'continuous',
     borderWidth: 1,
     borderColor: theme.colors.border.light,
   },
@@ -601,6 +601,8 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: theme.radius.xl,
+    borderCurve: 'continuous',
+    backgroundColor: '#ECFDF5',
     justifyContent: 'center',
     alignItems: 'center',
     boxShadow: "0 10px 15px -3px rgba(16, 185, 129, 0.15)",

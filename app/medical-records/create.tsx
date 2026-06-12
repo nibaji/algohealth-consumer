@@ -170,9 +170,8 @@ export default function CreateMedicalRecord() {
         keyboardShouldPersistTaps="handled"
       >
         {success ? (
-          // Success State
           <Animated.View entering={FadeInDown.duration(500)} style={styles.successContainer}>
-            <View style={[styles.successIconCircle, { backgroundColor: '#ECFDF5', borderCurve: 'continuous' }]}>
+            <View style={styles.successIconCircle}>
               <Icon 
                 name="checkmark.seal.fill" 
                 size={40}
@@ -220,7 +219,6 @@ export default function CreateMedicalRecord() {
                         style={[
                           styles.memberChip,
                           isSelected ? styles.memberChipSelected : null,
-                          { borderCurve: 'continuous' }
                         ]}
                       >
                         <Typography.Label 
@@ -355,6 +353,7 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.sm,
     backgroundColor: theme.colors.background.surface,
     borderRadius: theme.radius.full,
+    borderCurve: 'continuous',
     borderWidth: 1,
     borderColor: theme.colors.border.light,
     boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
@@ -412,6 +411,8 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: theme.radius.xl,
+    borderCurve: 'continuous',
+    backgroundColor: '#ECFDF5',
     justifyContent: 'center',
     alignItems: 'center',
     boxShadow: "0 10px 15px -3px rgba(16, 185, 129, 0.15)",
