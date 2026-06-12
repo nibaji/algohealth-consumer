@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
-import { useProfilePasswordReset } from '@/src/features/auth/use-profile-password-reset';
+import { usePasswordReset } from '@/src/features/auth/use-password-reset';
 
 interface PasswordResetCardProps {
   email?: string | null;
@@ -23,7 +23,7 @@ export const PasswordResetCard = ({ email }: PasswordResetCardProps): React.JSX.
     setNewPassword,
     sendResetEmail,
     resetPassword,
-  } = useProfilePasswordReset(email);
+  } = usePasswordReset(email);
 
   const [showNewPassword, setShowNewPassword] = useState(false);
 

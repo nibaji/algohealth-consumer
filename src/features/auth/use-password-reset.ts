@@ -1,7 +1,9 @@
 import { useCallback, useState, useTransition } from 'react';
 import { authService } from '@/src/services/auth/authService';
 
-interface UseProfilePasswordResetReturn {
+interface UsePasswordResetReturn {
+  email: string;
+  setEmail: (value: string) => void;
   resetToken: string;
   newPassword: string;
 
@@ -16,9 +18,10 @@ interface UseProfilePasswordResetReturn {
   resetPassword: () => void;
 }
 
-export const useProfilePasswordReset = (
-  profileEmail?: string | null,
-): UseProfilePasswordResetReturn => {
+export const usePasswordReset = (
+  initialEmail?: string | null,
+): UsePasswordResetReturn => {
+  const [email, setEmail] = useState(initialEmail || '');
   const [resetToken, setResetToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
 
@@ -28,9 +31,15 @@ export const useProfilePasswordReset = (
   const [passwordResetSuccess, setPasswordResetSuccess] = useState<string | null>(null);
 
   const sendResetEmail = useCallback((): void => {
-    const email = profileEmail?.trim();
-    if (!email) {
-      setPasswordResetError('Your profile email is required to send a reset code');
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      setPasswordResetError('Email is required to send a reset code');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      setPasswordResetError('Please enter a valid email address');
       return;
     }
 
@@ -39,14 +48,14 @@ export const useProfilePasswordReset = (
 
     startResetEmailTransition(async () => {
       try {
-        await authService.forgotPassword({ email });
+        await authService.forgotPassword({ email: trimmedEmail });
         setPasswordResetSuccess('Reset code sent to your email.');
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Failed to send reset code';
         setPasswordResetError(message);
       }
     });
-  }, [profileEmail]);
+  }, [email]);
 
   const resetPassword = useCallback((): void => {
     if (!resetToken.trim()) {
@@ -79,6 +88,8 @@ export const useProfilePasswordReset = (
   }, [newPassword, resetToken]);
 
   return {
+    email,
+    setEmail,
     resetToken,
     newPassword,
     resetEmailLoading: resetEmailPending,
