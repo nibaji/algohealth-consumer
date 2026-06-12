@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { StyleSheet, View, ScrollView, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, View, ScrollView, Pressable, KeyboardAvoidingView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { theme } from '@/constants/theme';
 import { Typography } from '@/components/ui/Typography';
@@ -13,6 +13,7 @@ import Animated, { FadeInDown, FadeInUp, LayoutAnimationConfig } from 'react-nat
 import * as Clipboard from 'expo-clipboard';
 import { Icon } from '@/components/ui/icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useKeyboardVisibility } from '@/hooks/useKeyboardVisibility';
 
 type GenderType = 'Male' | 'Female' | 'Other' | 'Unknown';
 type RelationType = 'Spouse' | 'Child' | 'Parent' | 'Sibling' | 'Grandparent' | 'Other';
@@ -21,6 +22,14 @@ export default function CreateFamily() {
   const router = useRouter();
   const { refreshProfile } = useAuth();
   const insets = useSafeAreaInsets();
+  const isKeyboardVisible = useKeyboardVisibility();
+
+  let keyboardAvoidingEnabled = isKeyboardVisible;
+  if (process.env.EXPO_OS === 'web') {
+    keyboardAvoidingEnabled = false;
+  } else if (process.env.EXPO_OS === 'ios') {
+    keyboardAvoidingEnabled = true;
+  }
 
   // Step 1: Create Family states
   const [familyName, setFamilyName] = useState('');
@@ -160,7 +169,8 @@ export default function CreateFamily() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior="padding"
+      enabled={keyboardAvoidingEnabled}
     >
       {/* Header bar */}
       <View style={[styles.headerBar, { paddingTop: insets.top, height: 56 + insets.top }]}>

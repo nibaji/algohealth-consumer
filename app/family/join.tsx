@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useTransition } from 'react';
-import { StyleSheet, View, ScrollView, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, View, ScrollView, Pressable, KeyboardAvoidingView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { theme } from '@/constants/theme';
 import { Typography } from '@/components/ui/Typography';
@@ -10,6 +10,7 @@ import { familyService } from '@/src/services/family/familyService';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Icon } from '@/components/ui/icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useKeyboardVisibility } from '@/hooks/useKeyboardVisibility';
 
 export default function JoinFamily() {
   const router = useRouter();
@@ -17,6 +18,14 @@ export default function JoinFamily() {
   const insets = useSafeAreaInsets();
   const [inviteCode, setInviteCode] = useState('');
   const [isPending, startTransition] = useTransition();
+  const isKeyboardVisible = useKeyboardVisibility();
+
+  let keyboardAvoidingEnabled = isKeyboardVisible;
+  if (process.env.EXPO_OS === 'web') {
+    keyboardAvoidingEnabled = false;
+  } else if (process.env.EXPO_OS === 'ios') {
+    keyboardAvoidingEnabled = true;
+  }
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
@@ -64,7 +73,8 @@ export default function JoinFamily() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior="padding"
+      enabled={keyboardAvoidingEnabled}
     >
       {/* Header bar */}
       <View style={[styles.headerBar, { paddingTop: insets.top, height: 56 + insets.top }]}>

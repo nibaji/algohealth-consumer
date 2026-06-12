@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useTransition } from 'react';
-import { StyleSheet, View, ScrollView, Pressable, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, View, ScrollView, Pressable, ActivityIndicator, KeyboardAvoidingView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { theme } from '@/constants/theme';
 import { Typography } from '@/components/ui/Typography';
@@ -13,11 +13,20 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Icon } from '@/components/ui/icon';
 import * as DocumentPicker from 'expo-document-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useKeyboardVisibility } from '@/hooks/useKeyboardVisibility';
 
 export default function CreateMedicalRecord() {
   const router = useRouter();
   const { memberId } = useLocalSearchParams<{ memberId?: string }>();
   const insets = useSafeAreaInsets();
+  const isKeyboardVisible = useKeyboardVisibility();
+
+  let keyboardAvoidingEnabled = isKeyboardVisible;
+  if (process.env.EXPO_OS === 'web') {
+    keyboardAvoidingEnabled = false;
+  } else if (process.env.EXPO_OS === 'ios') {
+    keyboardAvoidingEnabled = true;
+  }
 
   // Form states
   const [members, setMembers] = useState<FamilyMemberOut[]>([]);
@@ -189,7 +198,8 @@ export default function CreateMedicalRecord() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior="padding"
+      enabled={keyboardAvoidingEnabled}
     >
       {/* Header bar */}
       <View style={[styles.headerBar, { paddingTop: insets.top, height: 56 + insets.top }]}>

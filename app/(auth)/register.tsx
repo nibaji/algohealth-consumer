@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useTransition } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert, Pressable } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, ScrollView, Alert, Pressable } from 'react-native';
 import { Icon } from '@/components/ui/icon';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
@@ -7,6 +7,7 @@ import { TextInput } from '@/components/ui/TextInput';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { Link } from 'expo-router';
+import { useKeyboardVisibility } from '@/hooks/useKeyboardVisibility';
 
 export default function RegisterScreen(): React.JSX.Element {
   const [fullName, setFullName] = useState('');
@@ -15,6 +16,14 @@ export default function RegisterScreen(): React.JSX.Element {
   const [showPassword, setShowPassword] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { register } = useAuth();
+  const isKeyboardVisible = useKeyboardVisibility();
+
+  let keyboardAvoidingEnabled = isKeyboardVisible;
+  if (process.env.EXPO_OS === 'web') {
+    keyboardAvoidingEnabled = false;
+  } else if (process.env.EXPO_OS === 'ios') {
+    keyboardAvoidingEnabled = true;
+  }
 
   const toggleShowPassword = useCallback((): void => {
     setShowPassword((prev) => !prev);
@@ -51,7 +60,8 @@ export default function RegisterScreen(): React.JSX.Element {
   return (
     <KeyboardAvoidingView 
       style={styles.container} 
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior="padding"
+      enabled={keyboardAvoidingEnabled}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>

@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useTransition } from 'react';
-import { StyleSheet, View, ScrollView, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, View, ScrollView, Pressable, KeyboardAvoidingView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { theme } from '@/constants/theme';
 import { Typography } from '@/components/ui/Typography';
@@ -12,6 +12,7 @@ import { FamilyMemberCreate } from '@/src/features/family/familyTypes';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Icon } from '@/components/ui/icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useKeyboardVisibility } from '@/hooks/useKeyboardVisibility';
 
 type GenderType = 'Male' | 'Female' | 'Other' | 'Unknown';
 type RelationType = 'Spouse' | 'Child' | 'Parent' | 'Sibling' | 'Grandparent' | 'Other';
@@ -20,6 +21,14 @@ export default function AddMember() {
   const router = useRouter();
   const { refreshProfile } = useAuth();
   const insets = useSafeAreaInsets();
+  const isKeyboardVisible = useKeyboardVisibility();
+
+  let keyboardAvoidingEnabled = isKeyboardVisible;
+  if (process.env.EXPO_OS === 'web') {
+    keyboardAvoidingEnabled = false;
+  } else if (process.env.EXPO_OS === 'ios') {
+    keyboardAvoidingEnabled = true;
+  }
 
   // Form states
   const [memberName, setMemberName] = useState('');
@@ -148,7 +157,8 @@ export default function AddMember() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior="padding"
+      enabled={keyboardAvoidingEnabled}
     >
       {/* Header bar */}
       <View style={[styles.headerBar, { paddingTop: insets.top, height: 56 + insets.top }]}>
