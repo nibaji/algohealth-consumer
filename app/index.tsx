@@ -229,7 +229,7 @@ export default function Index() {
                         {family.name}
                       </Typography.Subheading>
                       <Typography.Paragraph style={styles.cardSubtitle}>
-                        Tap a family member to view their medical records.
+                        Tap a family member to view their medical records. Copy and share the invite code to let others join this circle.
                       </Typography.Paragraph>
                     </View>
                     
@@ -243,7 +243,7 @@ export default function Index() {
                       ]}
                     >
                       <Icon 
-                        name={copied ? "checkmark" : "square.and.arrow.up"} 
+                        name={copied ? "checkmark" : "doc.on.doc.fill"} 
                         size={14}
                         tintColor={copied ? theme.colors.status.success : theme.colors.primary.DEFAULT}
                       />
