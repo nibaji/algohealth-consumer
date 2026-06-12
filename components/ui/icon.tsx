@@ -32,6 +32,9 @@ const MATERIAL_MAP: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   'eye': 'visibility',
   'eye.slash': 'visibility-off',
   'arrow.right.to.line.cycle': 'sync',
+  'doc.fill': 'description',
+  'waveform': 'keyboard-voice',
+  'paperclip': 'attach-file',
 };
 
 type SFSymbolName = keyof typeof MATERIAL_MAP;

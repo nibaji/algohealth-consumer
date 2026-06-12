@@ -10,6 +10,7 @@ import { medicalRecordService } from '@/src/services/medical-records/medicalReco
 import { FamilyMemberOut } from '@/src/features/family/familyTypes';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Icon } from '@/components/ui/icon';
+import * as DocumentPicker from 'expo-document-picker';
 
 export default function CreateMedicalRecord() {
   const router = useRouter();
@@ -28,6 +29,10 @@ export default function CreateMedicalRecord() {
   const [primaryContext, setPrimaryContext] = useState('');
   const [chiefComplaint, setChiefComplaint] = useState('');
   const [notes, setNotes] = useState('');
+  
+  // Upload states
+  const [documents, setDocuments] = useState<DocumentPicker.DocumentPickerAsset[]>([]);
+  const [audioFiles, setAudioFiles] = useState<DocumentPicker.DocumentPickerAsset[]>([]);
 
   // Page states
   const [membersLoading, setMembersLoading] = useState(true);
@@ -56,6 +61,53 @@ export default function CreateMedicalRecord() {
     }
     loadMembers();
   }, [memberId]);
+
+  const formatFileSize = useCallback((bytes?: number): string => {
+    if (bytes === undefined || bytes === null) return '0 B';
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+  }, []);
+
+  const handlePickDocuments = useCallback(async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: '*/*',
+        multiple: true,
+        copyToCacheDirectory: true,
+      });
+      if (!result.canceled && result.assets) {
+        setDocuments(prev => [...prev, ...result.assets]);
+      }
+    } catch (err) {
+      console.error('Failed to pick documents', err);
+    }
+  }, []);
+
+  const handlePickAudio = useCallback(async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'audio/*',
+        multiple: true,
+        copyToCacheDirectory: true,
+      });
+      if (!result.canceled && result.assets) {
+        setAudioFiles(prev => [...prev, ...result.assets]);
+      }
+    } catch (err) {
+      console.error('Failed to pick audio files', err);
+    }
+  }, []);
+
+  const removeDocument = useCallback((indexToRemove: number) => {
+    setDocuments(prev => prev.filter((_, i) => i !== indexToRemove));
+  }, []);
+
+  const removeAudio = useCallback((indexToRemove: number) => {
+    setAudioFiles(prev => prev.filter((_, i) => i !== indexToRemove));
+  }, []);
 
   // Form submission
   const handleSubmit = useCallback(async () => {
@@ -119,6 +171,24 @@ export default function CreateMedicalRecord() {
         const formData = new FormData();
         formData.append('payload', JSON.stringify(payload));
 
+        // Append files
+        documents.forEach((doc) => {
+          formData.append('files', {
+            uri: doc.uri,
+            name: doc.name,
+            type: doc.mimeType || 'application/octet-stream',
+          } as unknown as Blob);
+        });
+
+        // Append audio files
+        audioFiles.forEach((audio) => {
+          formData.append('audio_files', {
+            uri: audio.uri,
+            name: audio.name,
+            type: audio.mimeType || 'audio/mpeg',
+          } as unknown as Blob);
+        });
+
         await medicalRecordService.createMedicalRecord(formData);
         setSuccess(true);
         
@@ -130,7 +200,7 @@ export default function CreateMedicalRecord() {
         setError(message);
       }
     });
-  }, [selectedMemberId, visitDate, primaryContext, chiefComplaint, notes, router]);
+  }, [selectedMemberId, visitDate, primaryContext, chiefComplaint, notes, documents, audioFiles, router]);
 
   const handleBack = useCallback(() => {
     if (router.canGoBack()) {
@@ -271,6 +341,103 @@ export default function CreateMedicalRecord() {
                 style={styles.notesInput}
               />
 
+              {/* Attachments Section */}
+              <View style={styles.attachmentsSection}>
+                <Typography.Label style={styles.attachmentsLabel}>Attachments</Typography.Label>
+                
+                <View style={styles.attachmentsButtonsRow}>
+                  <Pressable
+                    onPress={handlePickDocuments}
+                    style={({ pressed }) => [
+                      styles.attachButton,
+                      pressed ? styles.attachButtonPressed : null,
+                    ]}
+                  >
+                    <Icon name="doc.fill" size={16} tintColor={theme.colors.primary.DEFAULT} />
+                    <Typography.Label style={styles.attachButtonText}>Add Documents</Typography.Label>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={handlePickAudio}
+                    style={({ pressed }) => [
+                      styles.attachButton,
+                      pressed ? styles.attachButtonPressed : null,
+                    ]}
+                  >
+                    <Icon name="waveform" size={16} tintColor={theme.colors.primary.DEFAULT} />
+                    <Typography.Label style={styles.attachButtonText}>Add Audio</Typography.Label>
+                  </Pressable>
+                </View>
+
+                {/* Documents List */}
+                {documents.length > 0 ? (
+                  <View style={styles.fileList}>
+                    {documents.map((doc, idx) => (
+                      <Animated.View
+                        key={`doc-${idx}-${doc.uri}`}
+                        entering={FadeInDown.duration(200)}
+                        style={styles.fileItem}
+                      >
+                        <View style={styles.fileInfo}>
+                          <Icon name="paperclip" size={16} tintColor={theme.colors.text.secondary} />
+                          <View style={styles.fileNameContainer}>
+                            <Typography.Paragraph numberOfLines={1} style={styles.fileName}>
+                              {doc.name}
+                            </Typography.Paragraph>
+                            <Typography.Label style={styles.fileSize}>
+                              {formatFileSize(doc.size)}
+                            </Typography.Label>
+                          </View>
+                        </View>
+                        <Pressable
+                          onPress={() => removeDocument(idx)}
+                          style={({ pressed }) => [
+                            styles.deleteFileButton,
+                            pressed ? styles.deleteFileButtonPressed : null,
+                          ]}
+                        >
+                          <Icon name="xmark" size={14} tintColor={theme.colors.text.secondary} />
+                        </Pressable>
+                      </Animated.View>
+                    ))}
+                  </View>
+                ) : null}
+
+                {/* Audio Files List */}
+                {audioFiles.length > 0 ? (
+                  <View style={styles.fileList}>
+                    {audioFiles.map((audio, idx) => (
+                      <Animated.View
+                        key={`audio-${idx}-${audio.uri}`}
+                        entering={FadeInDown.duration(200)}
+                        style={styles.fileItem}
+                      >
+                        <View style={styles.fileInfo}>
+                          <Icon name="waveform" size={16} tintColor={theme.colors.text.secondary} />
+                          <View style={styles.fileNameContainer}>
+                            <Typography.Paragraph numberOfLines={1} style={styles.fileName}>
+                              {audio.name}
+                            </Typography.Paragraph>
+                            <Typography.Label style={styles.fileSize}>
+                              {formatFileSize(audio.size)}
+                            </Typography.Label>
+                          </View>
+                        </View>
+                        <Pressable
+                          onPress={() => removeAudio(idx)}
+                          style={({ pressed }) => [
+                            styles.deleteFileButton,
+                            pressed ? styles.deleteFileButtonPressed : null,
+                          ]}
+                        >
+                          <Icon name="xmark" size={14} tintColor={theme.colors.text.secondary} />
+                        </Pressable>
+                      </Animated.View>
+                    ))}
+                  </View>
+                ) : null}
+              </View>
+
               <Button.Primary
                 title="Create Medical Record"
                 onPress={handleSubmit}
@@ -381,6 +548,86 @@ const styles = StyleSheet.create({
   notesInput: {
     minHeight: 100,
     textAlignVertical: 'top',
+  },
+  attachmentsSection: {
+    marginTop: theme.spacing.sm,
+    gap: theme.spacing.sm,
+  },
+  attachmentsLabel: {
+    color: theme.colors.text.secondary,
+    fontWeight: '600',
+  },
+  attachmentsButtonsRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+  },
+  attachButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing.xs,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md,
+    backgroundColor: theme.colors.background.default,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
+    borderRadius: theme.radius.lg,
+    borderCurve: 'continuous',
+  },
+  attachButtonPressed: {
+    opacity: 0.6,
+  },
+  attachButtonText: {
+    color: theme.colors.primary.DEFAULT,
+    fontWeight: '600',
+  },
+  fileList: {
+    gap: theme.spacing.xs,
+    marginTop: theme.spacing.xs,
+  },
+  fileItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.background.default,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
+    borderRadius: theme.radius.md,
+    borderCurve: 'continuous',
+  },
+  fileInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    flex: 1,
+  },
+  fileNameContainer: {
+    flex: 1,
+    gap: 2,
+  },
+  fileName: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.text.primary,
+    fontWeight: '500',
+  },
+  fileSize: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.text.secondary,
+  },
+  deleteFileButton: {
+    width: 28,
+    height: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.background.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
+  },
+  deleteFileButtonPressed: {
+    opacity: 0.6,
   },
   submitButton: {
     marginTop: theme.spacing.md,
