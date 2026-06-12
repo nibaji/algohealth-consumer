@@ -144,7 +144,18 @@ export default function CreateMedicalRecord() {
         copyToCacheDirectory: true,
       });
       if (!result.canceled && result.assets) {
-        setDocuments(prev => [...prev, ...result.assets]);
+        setDocuments(prev => {
+          const existingKeys = new Set(prev.map(doc => `${doc.name}-${doc.size}`));
+          const uniqueNewAssets = [];
+          for (const asset of result.assets) {
+            const key = `${asset.name}-${asset.size}`;
+            if (!existingKeys.has(key)) {
+              uniqueNewAssets.push(asset);
+              existingKeys.add(key);
+            }
+          }
+          return [...prev, ...uniqueNewAssets];
+        });
       }
     } catch (err) {
       console.error('Failed to pick documents', err);

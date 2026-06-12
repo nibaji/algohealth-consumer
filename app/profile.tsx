@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { StyleSheet, View, ScrollView, Pressable } from 'react-native';
+import { StyleSheet, View, ScrollView, Pressable, KeyboardAvoidingView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { theme } from '@/constants/theme';
 import { Typography } from '@/components/ui/Typography';
@@ -11,11 +11,13 @@ import { useProfileDetails } from '@/src/features/auth/use-profile-details';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Icon } from '@/components/ui/icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
 
 export default function Profile(): React.JSX.Element {
   const router = useRouter();
   const { user, refreshProfile, logout } = useAuth();
   const insets = useSafeAreaInsets();
+  const keyboardAvoidingEnabled = useKeyboardAvoiding();
   const {
     fullName,
     loading,
@@ -34,7 +36,11 @@ export default function Profile(): React.JSX.Element {
   }, [router]);
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior="padding"
+      enabled={keyboardAvoidingEnabled}
+    >
       {/* Header bar */}
       <View style={[styles.headerBar, { paddingTop: insets.top, height: 56 + insets.top }]}>
         <Pressable 
@@ -103,7 +109,7 @@ export default function Profile(): React.JSX.Element {
           </View>
         </Animated.View>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
