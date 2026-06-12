@@ -13,7 +13,7 @@ import Animated, { FadeInDown, FadeInUp, LayoutAnimationConfig } from 'react-nat
 import * as Clipboard from 'expo-clipboard';
 import { Icon } from '@/components/ui/icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useKeyboardVisibility } from '@/hooks/useKeyboardVisibility';
+import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
 
 type GenderType = 'Male' | 'Female' | 'Other' | 'Unknown';
 type RelationType = 'Spouse' | 'Child' | 'Parent' | 'Sibling' | 'Grandparent' | 'Other';
@@ -22,14 +22,7 @@ export default function CreateFamily() {
   const router = useRouter();
   const { refreshProfile } = useAuth();
   const insets = useSafeAreaInsets();
-  const isKeyboardVisible = useKeyboardVisibility();
-
-  let keyboardAvoidingEnabled = isKeyboardVisible;
-  if (process.env.EXPO_OS === 'web') {
-    keyboardAvoidingEnabled = false;
-  } else if (process.env.EXPO_OS === 'ios') {
-    keyboardAvoidingEnabled = true;
-  }
+  const keyboardAvoidingEnabled = useKeyboardAvoiding();
 
   // Step 1: Create Family states
   const [familyName, setFamilyName] = useState('');

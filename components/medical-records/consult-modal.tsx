@@ -10,7 +10,7 @@ import {
   Platform 
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useKeyboardVisibility } from '@/hooks/useKeyboardVisibility';
+import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
 import { Icon } from '@/components/ui/icon';
 import { FlashList, FlashListRef } from '@shopify/flash-list';
 import { Typography } from '@/components/ui/Typography';
@@ -33,14 +33,7 @@ interface ChatMessage {
 
 export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, onClose, member }) => {
   const insets = useSafeAreaInsets();
-  const isKeyboardVisible = useKeyboardVisibility();
-  
-  let keyboardAvoidingEnabled = isKeyboardVisible;
-  if (process.env.EXPO_OS === 'web') {
-    keyboardAvoidingEnabled = false;
-  } else if (process.env.EXPO_OS === 'ios') {
-    keyboardAvoidingEnabled = true;
-  }
+  const keyboardAvoidingEnabled = useKeyboardAvoiding();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');

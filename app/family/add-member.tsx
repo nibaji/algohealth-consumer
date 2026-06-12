@@ -12,7 +12,7 @@ import { FamilyMemberCreate } from '@/src/features/family/familyTypes';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Icon } from '@/components/ui/icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useKeyboardVisibility } from '@/hooks/useKeyboardVisibility';
+import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
 
 type GenderType = 'Male' | 'Female' | 'Other' | 'Unknown';
 type RelationType = 'Spouse' | 'Child' | 'Parent' | 'Sibling' | 'Grandparent' | 'Other';
@@ -21,14 +21,7 @@ export default function AddMember() {
   const router = useRouter();
   const { refreshProfile } = useAuth();
   const insets = useSafeAreaInsets();
-  const isKeyboardVisible = useKeyboardVisibility();
-
-  let keyboardAvoidingEnabled = isKeyboardVisible;
-  if (process.env.EXPO_OS === 'web') {
-    keyboardAvoidingEnabled = false;
-  } else if (process.env.EXPO_OS === 'ios') {
-    keyboardAvoidingEnabled = true;
-  }
+  const keyboardAvoidingEnabled = useKeyboardAvoiding();
 
   // Form states
   const [memberName, setMemberName] = useState('');

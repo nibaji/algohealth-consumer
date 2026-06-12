@@ -13,20 +13,13 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Icon } from '@/components/ui/icon';
 import * as DocumentPicker from 'expo-document-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useKeyboardVisibility } from '@/hooks/useKeyboardVisibility';
+import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
 
 export default function CreateMedicalRecord() {
   const router = useRouter();
   const { memberId } = useLocalSearchParams<{ memberId?: string }>();
   const insets = useSafeAreaInsets();
-  const isKeyboardVisible = useKeyboardVisibility();
-
-  let keyboardAvoidingEnabled = isKeyboardVisible;
-  if (process.env.EXPO_OS === 'web') {
-    keyboardAvoidingEnabled = false;
-  } else if (process.env.EXPO_OS === 'ios') {
-    keyboardAvoidingEnabled = true;
-  }
+  const keyboardAvoidingEnabled = useKeyboardAvoiding();
 
   // Form states
   const [members, setMembers] = useState<FamilyMemberOut[]>([]);

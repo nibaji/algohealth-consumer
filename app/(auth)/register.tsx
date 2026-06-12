@@ -7,7 +7,7 @@ import { TextInput } from '@/components/ui/TextInput';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { Link } from 'expo-router';
-import { useKeyboardVisibility } from '@/hooks/useKeyboardVisibility';
+import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
 
 export default function RegisterScreen(): React.JSX.Element {
   const [fullName, setFullName] = useState('');
@@ -16,14 +16,7 @@ export default function RegisterScreen(): React.JSX.Element {
   const [showPassword, setShowPassword] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { register } = useAuth();
-  const isKeyboardVisible = useKeyboardVisibility();
-
-  let keyboardAvoidingEnabled = isKeyboardVisible;
-  if (process.env.EXPO_OS === 'web') {
-    keyboardAvoidingEnabled = false;
-  } else if (process.env.EXPO_OS === 'ios') {
-    keyboardAvoidingEnabled = true;
-  }
+  const keyboardAvoidingEnabled = useKeyboardAvoiding();
 
   const toggleShowPassword = useCallback((): void => {
     setShowPassword((prev) => !prev);

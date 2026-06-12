@@ -13,19 +13,12 @@ import { theme } from '@/constants/theme';
 import { usePasswordReset } from '@/src/features/auth/use-password-reset';
 import { useRouter } from 'expo-router';
 import { Icon } from '@/components/ui/icon';
-import { useKeyboardVisibility } from '@/hooks/useKeyboardVisibility';
+import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 export default function ForgotPasswordScreen(): React.JSX.Element {
   const router = useRouter();
-  const isKeyboardVisible = useKeyboardVisibility();
-
-  let keyboardAvoidingEnabled = isKeyboardVisible;
-  if (process.env.EXPO_OS === 'web') {
-    keyboardAvoidingEnabled = false;
-  } else if (process.env.EXPO_OS === 'ios') {
-    keyboardAvoidingEnabled = true;
-  }
+  const keyboardAvoidingEnabled = useKeyboardAvoiding();
 
   const {
     email,

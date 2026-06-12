@@ -10,7 +10,7 @@ import { familyService } from '@/src/services/family/familyService';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Icon } from '@/components/ui/icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useKeyboardVisibility } from '@/hooks/useKeyboardVisibility';
+import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
 
 export default function JoinFamily() {
   const router = useRouter();
@@ -18,14 +18,7 @@ export default function JoinFamily() {
   const insets = useSafeAreaInsets();
   const [inviteCode, setInviteCode] = useState('');
   const [isPending, startTransition] = useTransition();
-  const isKeyboardVisible = useKeyboardVisibility();
-
-  let keyboardAvoidingEnabled = isKeyboardVisible;
-  if (process.env.EXPO_OS === 'web') {
-    keyboardAvoidingEnabled = false;
-  } else if (process.env.EXPO_OS === 'ios') {
-    keyboardAvoidingEnabled = true;
-  }
+  const keyboardAvoidingEnabled = useKeyboardAvoiding();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 

@@ -21,7 +21,7 @@ import { familyService } from '@/src/services/family/familyService';
 import { useAuth } from '@/src/contexts/AuthContext';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useKeyboardVisibility } from '@/hooks/useKeyboardVisibility';
+import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
 
 interface EditMemberModalProps {
   visible: boolean;
@@ -41,14 +41,7 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
 }) => {
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
-  const isKeyboardVisible = useKeyboardVisibility();
-
-  let keyboardAvoidingEnabled = isKeyboardVisible;
-  if (process.env.EXPO_OS === 'web') {
-    keyboardAvoidingEnabled = false;
-  } else if (process.env.EXPO_OS === 'ios') {
-    keyboardAvoidingEnabled = true;
-  }
+  const keyboardAvoidingEnabled = useKeyboardAvoiding();
 
   // Loading and error states
   const [loadingDetails, setLoadingDetails] = useState(false);
