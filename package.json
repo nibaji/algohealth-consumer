@@ -1,7 +1,7 @@
 {
   "name": "algohealth-consumer",
   "main": "expo-router/entry",
-  "version": "20260612.5",
+  "version": "20260612.6",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",

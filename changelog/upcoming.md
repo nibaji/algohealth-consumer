@@ -1,23 +1,2 @@
 ## Unreleased
 
-- 2026-06-12: Added dynamic configuration via `app.config.js` to automatically append `.dev` to the iOS `bundleIdentifier` and Android `package` name when building under the `development` build profile (facilitated by setting `APP_ENV=development` in `eas.json`). Changed in `eas.json` and `app.config.js`.
-- 2026-06-12: Fixed family member self-relationship deduction by using dynamic user ID/email matching against the logged-in user profile, and mapping others with database "self" relation to "Family Head". Implemented an in-memory consult chat history cache per family member that is cleared on app start or user logout. Changed in `src/features/family/familyTypes.ts`, `src/utils/relation.ts`, `src/utils/consultCache.ts`, `src/contexts/AuthContext.tsx`, `components/medical-records/consult-modal.tsx`, `components/medical-records/member-accordion.tsx`, `components/medical-records/edit-member-modal.tsx`, `app/medical-records/[id].tsx`, and `app/medical-records/create.tsx`.
-- 2026-06-12: Aligned relationship labels and logic to be with respect to the Family Head. Exposed the relationship selector for logged-in users who are not the Family Head, while keeping it read-only and marked as "Self (Family Head)" for the Family Head. Updated relation display helpers to format non-Family Head self views as "Self (Relation)" and non-self views as their direct relation. Changed in `src/utils/relation.ts`, `components/medical-records/edit-member-modal.tsx`, `app/family/add-member.tsx`, and `app/family/create.tsx`.
-- 2026-06-12: Flattened the active family container UI on the home screen to remove card styling (borders, corners, shadow), allowing edge-to-edge layout with a white background and adjusted internal spacing to match content alignment. Changed in `app/index.tsx`.
-- 2026-06-12: Updated the global application theme `colors.background.default` to white, making the default background color white across all screens and UI containers in the app. Changed in `constants/theme.ts`.
-- 2026-06-12: Changed default StatusBar style to "dark" so that status bar icons and text remain visible on the new white background theme. Changed in `app/_layout.tsx`.
-- 2026-06-12: Updated `app.config.js` to dynamically append ' Dev' to the app name when building under the `development` build profile. Changed in `app.config.js`.
-- 2026-06-12: Replaced the share icon with a copy icon for the home screen family invite code badge, structured a nested header row, and positioned the explicit invite code instructions directly below the invite code pill for improved readability. Changed in `app/index.tsx`.
-- 2026-06-12: Standardized terminology across the application by replacing occurrences of the word "circle" with "family" or specific health synonyms in text descriptions, screen titles, error states, and messages. Changed in `app/index.tsx`, `app/onboarding.tsx`, `app/family/create.tsx`, `app/family/join.tsx`, `app/family/add-member.tsx`, `app/medical-records/[id].tsx`, and `components/medical-records/consult-modal.tsx`.
-- 2026-06-12: Flattened layouts on both home and profile screens to remove individual card styling, borders, and margins, grouping inputs and lists inside a single edge-to-edge section container separated by horizontal lines. Changed in `app/index.tsx`, `app/profile.tsx`, `components/profile/profile-details-card.tsx`, and `components/profile/password-reset-card.tsx`.
-
-
-
-
-
-
-
-
-
-
-
