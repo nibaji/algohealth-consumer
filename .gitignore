@@ -43,3 +43,7 @@ app-example
 # generated native folders
 /ios
 /android
+
+# agent skills and configurations
+.agents/
+

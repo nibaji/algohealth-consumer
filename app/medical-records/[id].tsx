@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useTransition } from 'react';
 import { StyleSheet, View, ScrollView, Pressable, ActivityIndicator, Alert, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { theme } from '@/constants/theme';
@@ -29,7 +29,7 @@ export default function MedicalRecordDetail() {
   const [primaryContext, setPrimaryContext] = useState('');
   const [chiefComplaint, setChiefComplaint] = useState('');
   const [notes, setNotes] = useState('');
-  const [editLoading, setEditLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [editError, setEditError] = useState<string | null>(null);
 
   // Load record and member details
@@ -124,23 +124,22 @@ export default function MedicalRecordDetail() {
     }
 
     setEditError(null);
-    setEditLoading(true);
 
-    try {
-      const updated = await medicalRecordService.updateMedicalRecord(record.id, {
-        visit_date: visitDate,
-        primary_context: primaryContext.trim(),
-        chief_complaint: chiefComplaint.trim() ? chiefComplaint.trim() : null,
-        notes: notes.trim() ? notes.trim() : null,
-      });
-      setRecord(updated);
-      setIsEditing(false);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to update record';
-      setEditError(message);
-    } finally {
-      setEditLoading(false);
-    }
+    startTransition(async () => {
+      try {
+        const updated = await medicalRecordService.updateMedicalRecord(record.id, {
+          visit_date: visitDate,
+          primary_context: primaryContext.trim(),
+          chief_complaint: chiefComplaint.trim() ? chiefComplaint.trim() : null,
+          notes: notes.trim() ? notes.trim() : null,
+        });
+        setRecord(updated);
+        setIsEditing(false);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Failed to update record';
+        setEditError(message);
+      }
+    });
   }, [record, visitDate, primaryContext, chiefComplaint, notes]);
 
   // Deletion logic
@@ -322,7 +321,7 @@ export default function MedicalRecordDetail() {
                   <Button.Primary
                     title="Save Changes"
                     onPress={handleSave}
-                    loading={editLoading}
+                    loading={isPending}
                     style={styles.flexHalf}
                   />
                 </View>

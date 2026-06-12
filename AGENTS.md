@@ -13,6 +13,7 @@ When working on this codebase:
 1. ✅ **Read this file** - All rules are here
 2. ✅ **Check the codebase documentation** - For architecture details
 3. ✅ **Run verification** before submitting: `bunx tsc --noEmit && bun run lint`
+4. ✅ **Ensure skills are synced**: Run `node scripts/setup-skills.js` to ensure the required agent skills are installed globally in the Antigravity directory and symlinked into `.agents/skills/` (ignored by git).
 
 ### 🚨 CRITICAL: Always Update Docs & Changelog Before Committing
 

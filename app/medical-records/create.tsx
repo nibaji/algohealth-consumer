@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useTransition } from 'react';
 import { StyleSheet, View, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { theme } from '@/constants/theme';
@@ -31,7 +31,7 @@ export default function CreateMedicalRecord() {
 
   // Page states
   const [membersLoading, setMembersLoading] = useState(true);
-  const [submitLoading, setSubmitLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
@@ -102,35 +102,34 @@ export default function CreateMedicalRecord() {
     }
 
     setError(null);
-    setSubmitLoading(true);
     setSuccess(false);
 
-    try {
-      // Create payload object
-      const payload = {
-        family_member_id: selectedMemberId,
-        visit_date: visitDate,
-        primary_context: primaryContext.trim(),
-        chief_complaint: chiefComplaint.trim() ? chiefComplaint.trim() : null,
-        notes: notes.trim() ? notes.trim() : null,
-      };
+    startTransition(async () => {
+      try {
+        // Create payload object
+        const payload = {
+          family_member_id: selectedMemberId,
+          visit_date: visitDate,
+          primary_context: primaryContext.trim(),
+          chief_complaint: chiefComplaint.trim() ? chiefComplaint.trim() : null,
+          notes: notes.trim() ? notes.trim() : null,
+        };
 
-      // Construct multipart form data
-      const formData = new FormData();
-      formData.append('payload', JSON.stringify(payload));
+        // Construct multipart form data
+        const formData = new FormData();
+        formData.append('payload', JSON.stringify(payload));
 
-      await medicalRecordService.createMedicalRecord(formData);
-      setSuccess(true);
-      
-      setTimeout(() => {
-        router.replace('/');
-      }, 1500);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to create medical record';
-      setError(message);
-    } finally {
-      setSubmitLoading(false);
-    }
+        await medicalRecordService.createMedicalRecord(formData);
+        setSuccess(true);
+        
+        setTimeout(() => {
+          router.replace('/');
+        }, 1500);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Failed to create medical record';
+        setError(message);
+      }
+    });
   }, [selectedMemberId, visitDate, primaryContext, chiefComplaint, notes, router]);
 
   const handleBack = useCallback(() => {
@@ -277,7 +276,7 @@ export default function CreateMedicalRecord() {
               <Button.Primary
                 title="Create Medical Record"
                 onPress={handleSubmit}
-                loading={submitLoading}
+                loading={isPending}
                 style={styles.submitButton}
               />
             </View>
