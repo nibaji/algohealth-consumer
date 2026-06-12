@@ -6,6 +6,8 @@
 - 2026-06-12: Flattened the active family container UI on the home screen to remove card styling (borders, corners, shadow), allowing edge-to-edge layout with a white background and adjusted internal spacing to match content alignment. Changed in `app/index.tsx`.
 - 2026-06-12: Updated the global application theme `colors.background.default` to white, making the default background color white across all screens and UI containers in the app. Changed in `constants/theme.ts`.
 - 2026-06-12: Changed default StatusBar style to "dark" so that status bar icons and text remain visible on the new white background theme. Changed in `app/_layout.tsx`.
+- 2026-06-12: Updated `app.config.js` to dynamically append ' Dev' to the app name when building under the `development` build profile. Changed in `app.config.js`.
+
 
 
 
