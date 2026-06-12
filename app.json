@@ -55,7 +55,13 @@
       "expo-font",
       "expo-image",
       "expo-web-browser",
-      "expo-status-bar"
+      "expo-status-bar",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow AlgoHealth Plus to access your microphone for recording audio notes."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
