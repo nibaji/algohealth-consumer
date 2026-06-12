@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useTransition } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
@@ -10,10 +10,10 @@ import { useRouter } from 'expo-router';
 export default function ResetPasswordScreen() {
   const [token, setToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
-  const handleReset = async () => {
+  const handleReset = () => {
     if (!token.trim() || !newPassword) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
@@ -24,18 +24,17 @@ export default function ResetPasswordScreen() {
       return;
     }
     
-    setLoading(true);
-    try {
-      await authService.resetPassword({ token: token.trim(), new_password: newPassword });
-      Alert.alert('Success', 'Your password has been reset successfully.', [
-        { text: 'Login', onPress: () => router.replace('/(auth)/login') }
-      ]);
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'An error occurred';
-      Alert.alert('Error', message);
-    } finally {
-      setLoading(false);
-    }
+    startTransition(async () => {
+      try {
+        await authService.resetPassword({ token: token.trim(), new_password: newPassword });
+        Alert.alert('Success', 'Your password has been reset successfully.', [
+          { text: 'Login', onPress: () => router.replace('/(auth)/login') }
+        ]);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'An error occurred';
+        Alert.alert('Error', message);
+      }
+    });
   };
 
   return (
@@ -64,7 +63,7 @@ export default function ResetPasswordScreen() {
             secureTextEntry
           />
           
-          <Button.Primary title="Reset Password" onPress={handleReset} loading={loading} />
+          <Button.Primary title="Reset Password" onPress={handleReset} loading={isPending} />
           <Button.Secondary title="Back to Login" onPress={() => router.replace('/(auth)/login')} />
         </View>
       </ScrollView>

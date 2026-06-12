@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useTransition } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert, Pressable } from 'react-native';
 import { Icon } from '@/components/ui/icon';
 import { Typography } from '@/components/ui/Typography';
@@ -12,14 +12,14 @@ export default function LoginScreen(): React.JSX.Element {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const { login } = useAuth();
 
   const toggleShowPassword = useCallback((): void => {
     setShowPassword((prev) => !prev);
   }, []);
 
-  const handleLogin = async (): Promise<void> => {
+  const handleLogin = (): void => {
     if (!email.trim() || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
@@ -31,16 +31,15 @@ export default function LoginScreen(): React.JSX.Element {
       return;
     }
     
-    setLoading(true);
-    try {
-      await login({ email: email.trim(), password });
-      // Navigation is handled by layout route guard
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'An error occurred';
-      Alert.alert('Login Failed', message);
-    } finally {
-      setLoading(false);
-    }
+    startTransition(async () => {
+      try {
+        await login({ email: email.trim(), password });
+        // Navigation is handled by layout route guard
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'An error occurred';
+        Alert.alert('Login Failed', message);
+      }
+    });
   };
 
   return (
@@ -103,7 +102,7 @@ export default function LoginScreen(): React.JSX.Element {
           <Button.Primary 
             title="Sign In" 
             onPress={handleLogin} 
-            loading={loading}
+            loading={isPending}
           />
           
           <View style={styles.footer}>

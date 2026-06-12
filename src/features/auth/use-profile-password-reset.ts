@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useTransition } from 'react';
 import { authService } from '@/src/services/auth/authService';
 
 interface UseProfilePasswordResetReturn {
@@ -12,8 +12,8 @@ interface UseProfilePasswordResetReturn {
   setResetToken: (value: string) => void;
   setNewPassword: (value: string) => void;
 
-  sendResetEmail: () => Promise<void>;
-  resetPassword: () => Promise<void>;
+  sendResetEmail: () => void;
+  resetPassword: () => void;
 }
 
 export const useProfilePasswordReset = (
@@ -22,12 +22,12 @@ export const useProfilePasswordReset = (
   const [resetToken, setResetToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
 
-  const [resetEmailLoading, setResetEmailLoading] = useState(false);
-  const [passwordResetLoading, setPasswordResetLoading] = useState(false);
+  const [resetEmailPending, startResetEmailTransition] = useTransition();
+  const [passwordResetPending, startPasswordResetTransition] = useTransition();
   const [passwordResetError, setPasswordResetError] = useState<string | null>(null);
   const [passwordResetSuccess, setPasswordResetSuccess] = useState<string | null>(null);
 
-  const sendResetEmail = useCallback(async (): Promise<void> => {
+  const sendResetEmail = useCallback((): void => {
     const email = profileEmail?.trim();
     if (!email) {
       setPasswordResetError('Your profile email is required to send a reset code');
@@ -36,20 +36,19 @@ export const useProfilePasswordReset = (
 
     setPasswordResetError(null);
     setPasswordResetSuccess(null);
-    setResetEmailLoading(true);
 
-    try {
-      await authService.forgotPassword({ email });
-      setPasswordResetSuccess('Reset code sent to your email.');
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to send reset code';
-      setPasswordResetError(message);
-    } finally {
-      setResetEmailLoading(false);
-    }
+    startResetEmailTransition(async () => {
+      try {
+        await authService.forgotPassword({ email });
+        setPasswordResetSuccess('Reset code sent to your email.');
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Failed to send reset code';
+        setPasswordResetError(message);
+      }
+    });
   }, [profileEmail]);
 
-  const resetPassword = useCallback(async (): Promise<void> => {
+  const resetPassword = useCallback((): void => {
     if (!resetToken.trim()) {
       setPasswordResetError('Reset token is required');
       return;
@@ -60,33 +59,30 @@ export const useProfilePasswordReset = (
       return;
     }
 
-
-
     setPasswordResetError(null);
     setPasswordResetSuccess(null);
-    setPasswordResetLoading(true);
 
-    try {
-      await authService.resetPassword({
-        token: resetToken.trim(),
-        new_password: newPassword,
-      });
-      setResetToken('');
-      setNewPassword('');
-      setPasswordResetSuccess('Password reset successfully.');
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to reset password';
-      setPasswordResetError(message);
-    } finally {
-      setPasswordResetLoading(false);
-    }
+    startPasswordResetTransition(async () => {
+      try {
+        await authService.resetPassword({
+          token: resetToken.trim(),
+          new_password: newPassword,
+        });
+        setResetToken('');
+        setNewPassword('');
+        setPasswordResetSuccess('Password reset successfully.');
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Failed to reset password';
+        setPasswordResetError(message);
+      }
+    });
   }, [newPassword, resetToken]);
 
   return {
     resetToken,
     newPassword,
-    resetEmailLoading,
-    passwordResetLoading,
+    resetEmailLoading: resetEmailPending,
+    passwordResetLoading: passwordResetPending,
     passwordResetError,
     passwordResetSuccess,
     setResetToken,

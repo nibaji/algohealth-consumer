@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useTransition } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert, Pressable } from 'react-native';
 import { Icon } from '@/components/ui/icon';
 import { Typography } from '@/components/ui/Typography';
@@ -13,14 +13,14 @@ export default function RegisterScreen(): React.JSX.Element {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const { register } = useAuth();
 
   const toggleShowPassword = useCallback((): void => {
     setShowPassword((prev) => !prev);
   }, []);
 
-  const handleRegister = async (): Promise<void> => {
+  const handleRegister = (): void => {
     if (!email.trim() || !password || !fullName.trim()) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
@@ -37,16 +37,15 @@ export default function RegisterScreen(): React.JSX.Element {
       return;
     }
     
-    setLoading(true);
-    try {
-      await register({ email: email.trim(), password, full_name: fullName.trim() });
-      // Navigation is handled by layout route guard
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'An error occurred';
-      Alert.alert('Registration Failed', message);
-    } finally {
-      setLoading(false);
-    }
+    startTransition(async () => {
+      try {
+        await register({ email: email.trim(), password, full_name: fullName.trim() });
+        // Navigation is handled by layout route guard
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'An error occurred';
+        Alert.alert('Registration Failed', message);
+      }
+    });
   };
 
   return (
@@ -108,7 +107,7 @@ export default function RegisterScreen(): React.JSX.Element {
           <Button.Primary 
             title="Register" 
             onPress={handleRegister} 
-            loading={loading}
+            loading={isPending}
           />
           
           <View style={styles.footer}>

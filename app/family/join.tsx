@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useTransition } from 'react';
 import { StyleSheet, View, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { theme } from '@/constants/theme';
@@ -15,11 +15,11 @@ export default function JoinFamily() {
   const { refreshProfile } = useAuth();
 
   const [inviteCode, setInviteCode] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const handleJoin = useCallback(async () => {
+  const handleJoin = useCallback(() => {
     const code = inviteCode.trim();
     if (!code) {
       setError('Invite code is required');
@@ -27,30 +27,29 @@ export default function JoinFamily() {
     }
     
     setError(null);
-    setLoading(true);
     setSuccess(false);
 
-    try {
-      await familyService.joinFamily({
-        invite_code: code,
-      });
+    startTransition(async () => {
+      try {
+        await familyService.joinFamily({
+          invite_code: code,
+        });
 
-      // Refetch user profile to update family_id context
-      await refreshProfile();
-      
-      // Show success screen state
-      setSuccess(true);
-      
-      // Delay navigation slightly for feedback satisfaction
-      setTimeout(() => {
-        router.replace('/');
-      }, 1500);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Invalid invite code or failed to join';
-      setError(message);
-    } finally {
-      setLoading(false);
-    }
+        // Refetch user profile to update family_id context
+        await refreshProfile();
+        
+        // Show success screen state
+        setSuccess(true);
+        
+        // Delay navigation slightly for feedback satisfaction
+        setTimeout(() => {
+          router.replace('/');
+        }, 1500);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Invalid invite code or failed to join';
+        setError(message);
+      }
+    });
   }, [inviteCode, refreshProfile, router]);
 
   const handleBack = useCallback(() => {
@@ -139,7 +138,7 @@ export default function JoinFamily() {
               <Button.Primary
                 title="Join Circle"
                 onPress={handleJoin}
-                loading={loading}
+                loading={isPending}
                 style={styles.submitButton}
               />
             </View>

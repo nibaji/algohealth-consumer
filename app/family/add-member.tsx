@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useTransition } from 'react';
 import { StyleSheet, View, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { theme } from '@/constants/theme';
@@ -33,7 +33,7 @@ export default function AddMember() {
     mobile?: string;
   }>({});
 
-  const [loading, setLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
@@ -189,7 +189,7 @@ export default function AddMember() {
   }, []);
 
   // Form submission handler
-  const handleAddMember = useCallback(async () => {
+  const handleAddMember = useCallback(() => {
     const isNameValid = validateField('name', memberName);
     const isDobValid = validateField('dob', memberDob);
     const isEmailValid = validateField('email', memberEmail);
@@ -201,50 +201,49 @@ export default function AddMember() {
     }
 
     setError(null);
-    setLoading(true);
     setSuccess(false);
 
-    try {
-      const dateParts = memberDob.split('-');
-      const apiDob = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
-      const payload: FamilyMemberCreate = {
-        name: memberName,
-        relation: memberRelation === 'Other' && customRelation.trim() ? customRelation.trim() : memberRelation,
-        gender: memberGender,
-        date_of_birth: apiDob,
-        email_id: memberEmail.trim() ? memberEmail : null,
-        mobile_no: memberMobile.trim() ? memberMobile : null,
-      };
+    startTransition(async () => {
+      try {
+        const dateParts = memberDob.split('-');
+        const apiDob = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+        const payload: FamilyMemberCreate = {
+          name: memberName,
+          relation: memberRelation === 'Other' && customRelation.trim() ? customRelation.trim() : memberRelation,
+          gender: memberGender,
+          date_of_birth: apiDob,
+          email_id: memberEmail.trim() ? memberEmail : null,
+          mobile_no: memberMobile.trim() ? memberMobile : null,
+        };
 
-      //### 📋 Add Family Member Form Improvements (Follow-up)
-      // - **DOB Formatter & DD-MM-YYYY Validation (`app/family/add-member.tsx`)**: Updated the Date of Birth input field to use the `DD-MM-YYYY` format.
-      //   - *On Change segment validation*: DAY digits are verified immediately (must start with 0-3 and resolve to 01-31), MONTH digits are verified immediately (must start with 0-1 and resolve to 01-12), and YEAR is verified to be in the range `[1900, currentYear]` as soon as 4 digits are completed. Also checks the completed date string to verify it is not in the future.
-      //   - *On Blur complete verification*: The entire DOB is validated for correct formatting, exact calendar validation (e.g. Feb 30th checks), and checking that the date is not in the future (using timezone-safe date-only comparison).
-      //   - *Auto-Hyphenation Formatting*: Hyphens (`-`) are appended immediately upon completing the day (`DD`) and month (`MM`) segments (e.g., typing `12` turns into `12-` immediately) while preserving natural backspace behavior so the user does not get stuck.
-      // - **Custom Relationship Option (`app/family/add-member.tsx`)**: Replaced the label "Relation to Owner" with "Relationship". Introduced a conditional "Custom Relationship" text input that appears when the user selects "Other" as the relation, allowing custom labels.
-      // - **Form-wide Input Validation on Blur & Change (`app/family/add-member.tsx`)**: Implemented robust inline error displays for Full Name, Email, and Mobile fields. Inputs validate on blur and clear/correct errors immediately on change. Form submission runs a full validate pass over all fields.
-      
-      await familyService.addFamilyMember(payload);
-      
-      // Update local profile and context
-      await refreshProfile();
-      
-      setSuccess(true);
-      
-      // Navigate back after slight delay for visual feedback
-      setTimeout(() => {
-        if (router.canGoBack()) {
-          router.back();
-        } else {
-          router.replace('/');
-        }
-      }, 1500);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to add member';
-      setError(message);
-    } finally {
-      setLoading(false);
-    }
+        //### 📋 Add Family Member Form Improvements (Follow-up)
+        // - **DOB Formatter & DD-MM-YYYY Validation (`app/family/add-member.tsx`)**: Updated the Date of Birth input field to use the `DD-MM-YYYY` format.
+        //   - *On Change segment validation*: DAY digits are verified immediately (must start with 0-3 and resolve to 01-31), MONTH digits are verified immediately (must start with 0-1 and resolve to 01-12), and YEAR is verified to be in the range `[1900, currentYear]` as soon as 4 digits are completed. Also checks the completed date string to verify it is not in the future.
+        //   - *On Blur complete verification*: The entire DOB is validated for correct formatting, exact calendar validation (e.g. Feb 30th checks), and checking that the date is not in the future (using timezone-safe date-only comparison).
+        //   - *Auto-Hyphenation Formatting*: Hyphens (`-`) are appended immediately upon completing the day (`DD`) and month (`MM`) segments (e.g., typing `12` turns into `12-` immediately) while preserving natural backspace behavior so the user does not get stuck.
+        // - **Custom Relationship Option (`app/family/add-member.tsx`)**: Replaced the label "Relation to Owner" with "Relationship". Introduced a conditional "Custom Relationship" text input that appears when the user selects "Other" as the relation, allowing custom labels.
+        // - **Form-wide Input Validation on Blur & Change (`app/family/add-member.tsx`)**: Implemented robust inline error displays for Full Name, Email, and Mobile fields. Inputs validate on blur and clear/correct errors immediately on change. Form submission runs a full validate pass over all fields.
+        
+        await familyService.addFamilyMember(payload);
+        
+        // Update local profile and context
+        await refreshProfile();
+        
+        setSuccess(true);
+        
+        // Navigate back after slight delay for visual feedback
+        setTimeout(() => {
+          if (router.canGoBack()) {
+            router.back();
+          } else {
+            router.replace('/');
+          }
+        }, 1500);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Failed to add member';
+        setError(message);
+      }
+    });
   }, [memberName, memberRelation, memberGender, memberDob, memberEmail, memberMobile, customRelation, refreshProfile, router, validateField]);
 
   const handleBack = useCallback(() => {
@@ -449,7 +448,7 @@ export default function AddMember() {
               <Button.Primary
                 title="Add Member"
                 onPress={handleAddMember}
-                loading={loading}
+                loading={isPending}
                 style={styles.addButton}
               />
             </View>

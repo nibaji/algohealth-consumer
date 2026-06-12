@@ -12,7 +12,7 @@ interface ProfileDetailsCardProps {
   error: string | null;
   success: boolean;
   onFullNameChange: (value: string) => void;
-  onSave: () => Promise<void>;
+  onSave: () => void;
 }
 
 export const ProfileDetailsCard = ({
