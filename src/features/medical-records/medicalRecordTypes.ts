@@ -101,12 +101,12 @@ export interface MedicalRecordResponse {
   medications?: MedicationResponse[];
 }
 
-export interface AskBenishRequest {
+export interface ConsultRequest {
   question: string;
   family_member_id: string | null;
 }
 
-export interface AskBenishResponse {
+export interface ConsultResponse {
   response?: string;
   response_text?: string;
   text?: string;

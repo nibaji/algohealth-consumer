@@ -82,7 +82,7 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
     setIsProcessing(true);
 
     try {
-      const res = await medicalRecordService.askBenish(member.id, userText);
+      const res = await medicalRecordService.consult(member.id, userText);
       
       // Defensive parsing to extract response text
       const botText = res.response || res.response_text || res.text || res.answer || "Sorry, I couldn't formulate a response.";
