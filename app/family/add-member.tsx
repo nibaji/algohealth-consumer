@@ -258,8 +258,7 @@ export default function AddMember() {
                             styles.chipText,
                             isSelected ? styles.chipTextSelected : null
                           ]}
-                          numberOfLines={1}
-                          ellipsizeMode="tail"
+                          truncate
                         >
                           {genderOption}
                         </Typography.Label>

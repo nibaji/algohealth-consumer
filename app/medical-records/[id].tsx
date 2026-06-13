@@ -336,15 +336,13 @@ export default function MedicalRecordDetail() {
                 <View style={styles.memberInfo}>
                   <Typography.Subheading 
                     style={styles.memberName}
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
+                    truncate
                   >
                     {memberName}
                   </Typography.Subheading>
                   <Typography.Label 
                     style={styles.memberRelation}
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
+                    truncate
                   >
                     {memberRelation}
                   </Typography.Label>

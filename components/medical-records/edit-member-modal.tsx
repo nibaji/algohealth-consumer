@@ -334,8 +334,7 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
                                   styles.chipText,
                                   isSelected ? styles.chipTextSelected : null
                               ]}
-                              numberOfLines={1}
-                              ellipsizeMode="tail"
+                              truncate
                             >
                               {genderOption}
                             </Typography.Label>

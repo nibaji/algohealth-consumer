@@ -81,15 +81,13 @@ export default function Profile(): React.JSX.Element {
             </View>
             <Typography.Heading 
               style={styles.userName}
-              numberOfLines={1}
-              ellipsizeMode="tail"
+              truncate
             >
               {user?.full_name || 'AlgoHealth User'}
             </Typography.Heading>
             <Typography.Paragraph 
               style={styles.userEmail}
-              numberOfLines={1}
-              ellipsizeMode="tail"
+              truncate
             >
               {user?.email}
             </Typography.Paragraph>

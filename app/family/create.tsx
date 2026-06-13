@@ -321,8 +321,7 @@ export default function CreateFamily() {
                             styles.chipText,
                             isSelected ? styles.chipTextSelected : null
                           ]}
-                          numberOfLines={1}
-                          ellipsizeMode="tail"
+                          truncate
                         >
                           {genderOption}
                         </Typography.Label>
@@ -409,15 +408,13 @@ export default function CreateFamily() {
                         <View style={styles.memberDetails}>
                           <Typography.Paragraph 
                             style={styles.memberNameText}
-                            numberOfLines={1}
-                            ellipsizeMode="tail"
+                            truncate
                           >
                             {member.name}
                           </Typography.Paragraph>
                           <Typography.Label 
                             style={styles.memberRelationText}
-                            numberOfLines={1}
-                            ellipsizeMode="tail"
+                            truncate
                           >
                             {member.relation}
                           </Typography.Label>

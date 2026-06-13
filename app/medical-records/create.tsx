@@ -406,8 +406,7 @@ export default function CreateMedicalRecord() {
                             styles.memberChipText,
                             isSelected ? styles.memberChipTextSelected : null
                           ]}
-                          numberOfLines={1}
-                          ellipsizeMode="tail"
+                          truncate
                         >
                           {member.name} ({getDisplayRelation(member, user)})
                         </Typography.Label>

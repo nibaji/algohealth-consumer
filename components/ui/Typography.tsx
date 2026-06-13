@@ -4,22 +4,43 @@ import { theme, Fonts } from '@/constants/theme';
 
 export interface TypographyProps extends TextProps {
   children: React.ReactNode;
+  truncate?: boolean;
 }
 
-const Heading = ({ style, ...props }: TypographyProps) => (
-  <Text style={[styles.heading, style]} {...props} />
+const Heading = ({ style, truncate, ...props }: TypographyProps) => (
+  <Text 
+    style={[styles.heading, style]} 
+    numberOfLines={truncate ? 1 : undefined}
+    ellipsizeMode={truncate ? 'tail' : undefined}
+    {...props} 
+  />
 );
 
-const Subheading = ({ style, ...props }: TypographyProps) => (
-  <Text style={[styles.subheading, style]} {...props} />
+const Subheading = ({ style, truncate, ...props }: TypographyProps) => (
+  <Text 
+    style={[styles.subheading, style]} 
+    numberOfLines={truncate ? 1 : undefined}
+    ellipsizeMode={truncate ? 'tail' : undefined}
+    {...props} 
+  />
 );
 
-const Paragraph = ({ style, ...props }: TypographyProps) => (
-  <Text style={[styles.paragraph, style]} {...props} />
+const Paragraph = ({ style, truncate, ...props }: TypographyProps) => (
+  <Text 
+    style={[styles.paragraph, style]} 
+    numberOfLines={truncate ? 1 : undefined}
+    ellipsizeMode={truncate ? 'tail' : undefined}
+    {...props} 
+  />
 );
 
-const Label = ({ style, ...props }: TypographyProps) => (
-  <Text style={[styles.label, style]} {...props} />
+const Label = ({ style, truncate, ...props }: TypographyProps) => (
+  <Text 
+    style={[styles.label, style]} 
+    numberOfLines={truncate ? 1 : undefined}
+    ellipsizeMode={truncate ? 'tail' : undefined}
+    {...props} 
+  />
 );
 
 export const Typography = {
