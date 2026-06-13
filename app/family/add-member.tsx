@@ -8,6 +8,7 @@ import { TextInput } from '@/components/ui/TextInput';
 import { DateInput, validateDateString, inputDateToApiDate } from '@/components/ui/DateInput';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { familyService } from '@/src/services/family/familyService';
+import { refreshTracker } from '@/src/utils/refreshTracker';
 import { FamilyMemberCreate } from '@/src/features/family/familyTypes';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Icon } from '@/components/ui/icon';
@@ -121,6 +122,7 @@ export default function AddMember() {
         
         // Update local profile and context
         await refreshProfile();
+        refreshTracker.setNeedsRefresh('family', true);
         
         setSuccess(true);
         

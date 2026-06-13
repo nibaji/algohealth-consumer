@@ -1,2 +1,3 @@
 ## Unreleased
 
+- 2026-06-13: Implemented an in-memory `refreshTracker` utility to allow individual pages (profile, add member, create/edit/delete record, join/create family) to flag what details have changed. Replaced the homepage's `useEffect` mount-loader with a `useFocusEffect` listener that checks these flags to surgically refresh only the stale data slices (profile, family, or medical records) silently in the background when returning to the homepage. Changed in `src/utils/refreshTracker.ts`, `app/index.tsx`, `app/medical-records/[id].tsx`, `app/medical-records/create.tsx`, `src/features/auth/use-profile-details.ts`, `app/family/create.tsx`, `app/family/join.tsx`, and `app/family/add-member.tsx`.

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { View, StyleSheet, ScrollView, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
@@ -11,10 +11,11 @@ import { ConsultModal } from '@/components/medical-records/consult-modal';
 import Animated, { FadeInDown, LayoutAnimationConfig } from 'react-native-reanimated';
 import * as Clipboard from 'expo-clipboard';
 import { Icon } from '@/components/ui/icon';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MemberAccordion } from '@/components/medical-records/member-accordion';
 import { EditMemberModal } from '@/components/medical-records/edit-member-modal';
+import { refreshTracker } from '@/src/utils/refreshTracker';
 
 export default function Index() {
   const { user, refreshProfile } = useAuth();
@@ -40,6 +41,37 @@ export default function Index() {
   const [isEditMemberVisible, setIsEditMemberVisible] = useState(false);
   const [activeEditMember, setActiveEditMember] = useState<FamilyMemberOut | null>(null);
 
+  // Fetch Family details
+  const loadFamilyData = useCallback(async () => {
+    try {
+      const familyData = await familyService.getMyFamily();
+      setFamily(familyData);
+
+      // Expand the first member who has records by default, or the owner
+      if (familyData.members.length > 0) {
+        const defaultExpandedId = familyData.members[0].id;
+        setExpandedMembers(prev => {
+          if (Object.keys(prev).length > 0) return prev;
+          return { [defaultExpandedId]: true };
+        });
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to load family details';
+      setError(message);
+    }
+  }, []);
+
+  // Fetch Medical Records
+  const loadRecordsData = useCallback(async () => {
+    try {
+      const recordsData = await medicalRecordService.listMedicalRecords();
+      setRecords(recordsData);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to load health records';
+      setError(message);
+    }
+  }, []);
+
   // Fetch Family details and Medical Records
   const loadDashboardData = useCallback(async () => {
     setError(null);
@@ -54,29 +86,17 @@ export default function Index() {
         return;
       }
 
-      const [familyData, recordsData] = await Promise.all([
-        familyService.getMyFamily(),
-        medicalRecordService.listMedicalRecords(),
+      await Promise.all([
+        loadFamilyData(),
+        loadRecordsData(),
       ]);
-      
-      setFamily(familyData);
-      setRecords(recordsData);
-
-      // Expand the first member who has records by default, or the owner
-      if (familyData.members.length > 0) {
-        const defaultExpandedId = familyData.members[0].id;
-        setExpandedMembers(prev => {
-          if (Object.keys(prev).length > 0) return prev;
-          return { [defaultExpandedId]: true };
-        });
-      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to load health records';
       setError(message);
     } finally {
       setLoading(false);
     }
-  }, [refreshProfile]);
+  }, [refreshProfile, loadFamilyData, loadRecordsData]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -84,18 +104,50 @@ export default function Index() {
     setRefreshing(false);
   }, [loadDashboardData]);
 
-  useEffect(() => {
-    let ignore = false;
-    const init = async () => {
-      await Promise.resolve();
-      if (ignore) return;
-      loadDashboardData();
-    };
-    init();
-    return () => {
-      ignore = true;
-    };
-  }, [loadDashboardData]);
+  const isInitial = useRef(true);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (isInitial.current) {
+        isInitial.current = false;
+        loadDashboardData();
+        return;
+      }
+
+      const needsProfile = refreshTracker.getAndReset('profile');
+      const needsFamily = refreshTracker.getAndReset('family');
+      const needsRecords = refreshTracker.getAndReset('records');
+
+      if (needsProfile || needsFamily || needsRecords) {
+        const performSurgicalRefresh = async () => {
+          try {
+            let currentFamilyId = family?.id;
+            
+            if (needsProfile) {
+              const updatedUser = await refreshProfile();
+              if (updatedUser?.family_id !== currentFamilyId) {
+                // If family ID has changed, we must reload everything!
+                loadDashboardData();
+                return;
+              }
+            }
+
+            // If we need to refresh family or the profile changed (which might affect member list names/details)
+            if (needsFamily || needsProfile) {
+              await loadFamilyData();
+            }
+
+            if (needsRecords) {
+              await loadRecordsData();
+            }
+          } catch (err) {
+            console.error('Surgical refresh failed:', err);
+          }
+        };
+        performSurgicalRefresh();
+      }
+    }, [loadDashboardData, refreshProfile, loadFamilyData, loadRecordsData, family])
+  );
 
   // Toggle Accordion
   const toggleExpand = useCallback((memberId: string) => {

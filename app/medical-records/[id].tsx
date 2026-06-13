@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/src/contexts/AuthContext';
 import { getDisplayRelation } from '@/src/utils/relation';
+import { refreshTracker } from '@/src/utils/refreshTracker';
 
 export default function MedicalRecordDetail() {
   const router = useRouter();
@@ -120,6 +121,7 @@ export default function MedicalRecordDetail() {
           chief_complaint: chiefComplaint.trim() ? chiefComplaint.trim() : null,
           notes: notes.trim() ? notes.trim() : null,
         });
+        refreshTracker.setNeedsRefresh('records', true);
         setRecord(updated);
         setIsEditing(false);
       } catch (err: unknown) {
@@ -137,6 +139,7 @@ export default function MedicalRecordDetail() {
       setLoading(true);
       try {
         await medicalRecordService.deleteMedicalRecord(record.id);
+        refreshTracker.setNeedsRefresh('records', true);
         setDeleteSuccess(true);
         setTimeout(() => {
           router.replace('/');

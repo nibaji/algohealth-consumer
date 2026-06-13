@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { familyService } from '@/src/services/family/familyService';
+import { refreshTracker } from '@/src/utils/refreshTracker';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Icon } from '@/components/ui/icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -40,6 +41,9 @@ export default function JoinFamily() {
 
         // Refetch user profile to update family_id context
         await refreshProfile();
+        refreshTracker.setNeedsRefresh('family', true);
+        refreshTracker.setNeedsRefresh('profile', true);
+        refreshTracker.setNeedsRefresh('records', true);
         
         // Show success screen state
         setSuccess(true);

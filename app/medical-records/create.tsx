@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { getDisplayRelation } from '@/src/utils/relation';
+import { refreshTracker } from '@/src/utils/refreshTracker';
 import {
   useAudioRecorder,
   useAudioRecorderState,
@@ -294,6 +295,7 @@ export default function CreateMedicalRecord() {
         }
 
         await medicalRecordService.createMedicalRecord(formData);
+        refreshTracker.setNeedsRefresh('records', true);
         setSuccess(true);
         
         setTimeout(() => {

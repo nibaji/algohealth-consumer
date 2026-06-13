@@ -8,6 +8,7 @@ import { TextInput } from '@/components/ui/TextInput';
 import { DateInput, validateDateString, inputDateToApiDate } from '@/components/ui/DateInput';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { familyService } from '@/src/services/family/familyService';
+import { refreshTracker } from '@/src/utils/refreshTracker';
 import { FamilyOut, FamilyMemberCreate } from '@/src/features/family/familyTypes';
 import Animated, { FadeInDown, FadeInUp, LayoutAnimationConfig } from 'react-native-reanimated';
 import * as Clipboard from 'expo-clipboard';
@@ -147,6 +148,9 @@ export default function CreateFamily() {
   // Complete onboarding / Navigate to Home
   const handleFinish = useCallback(async () => {
     await refreshProfile();
+    refreshTracker.setNeedsRefresh('family', true);
+    refreshTracker.setNeedsRefresh('profile', true);
+    refreshTracker.setNeedsRefresh('records', true);
     router.replace('/');
   }, [refreshProfile, router]);
 

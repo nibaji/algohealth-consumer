@@ -1,5 +1,6 @@
 import { useCallback, useState, useTransition } from 'react';
 import { authService } from '@/src/services/auth/authService';
+import { refreshTracker } from '@/src/utils/refreshTracker';
 
 interface UseProfileDetailsReturn {
   fullName: string;
@@ -40,6 +41,7 @@ export const useProfileDetails = (
           full_name: fullName.trim(),
         });
         await refreshProfile();
+        refreshTracker.setNeedsRefresh('family', true);
         setSuccess(true);
         setTimeout((): void => setSuccess(false), 3000);
       } catch (err: unknown) {
