@@ -302,49 +302,46 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
                     error={errors.name}
                   />
 
-                  <View style={styles.formRow}>
-                    {/* DOB INPUT */}
-                    <View style={styles.flexHalf}>
-                      <DateInput
-                        label="Date of Birth"
-                        value={memberDob}
-                        onChangeText={(text) => {
-                          setMemberDob(text);
-                          if (errors.dob) validateField('dob', text);
-                        }}
-                        onBlur={() => validateField('dob', memberDob)}
-                        error={errors.dob}
-                      />
-                    </View>
-                    
-                    {/* GENDER SELECTION CHIPS */}
-                    <View style={styles.flexHalf}>
-                      <Typography.Label style={styles.selectLabel}>Gender</Typography.Label>
-                      <View style={styles.chipsRow}>
-                        {(['Male', 'Female', 'Other'] as GenderType[]).map((genderOption) => {
-                          const isSelected = memberGender === genderOption;
-                          return (
-                            <Pressable
-                              key={genderOption}
-                              onPress={() => setMemberGender(genderOption)}
+                  <DateInput
+                    label="Date of Birth"
+                    value={memberDob}
+                    onChangeText={(text) => {
+                      setMemberDob(text);
+                      if (errors.dob) validateField('dob', text);
+                    }}
+                    onBlur={() => validateField('dob', memberDob)}
+                    error={errors.dob}
+                  />
+                  
+                  {/* GENDER SELECTION CHIPS */}
+                  <View style={styles.formGroup}>
+                    <Typography.Label style={styles.selectLabel}>Gender</Typography.Label>
+                    <View style={styles.chipsRow}>
+                      {(['Male', 'Female', 'Other'] as GenderType[]).map((genderOption) => {
+                        const isSelected = memberGender === genderOption;
+                        return (
+                          <Pressable
+                            key={genderOption}
+                            onPress={() => setMemberGender(genderOption)}
+                            style={[
+                              styles.chip,
+                              isSelected ? styles.chipSelected : null,
+                              { borderCurve: 'continuous' }
+                            ]}
+                          >
+                            <Typography.Label 
                               style={[
-                                styles.chip,
-                                isSelected ? styles.chipSelected : null,
-                                { borderCurve: 'continuous' }
-                              ]}
-                            >
-                              <Typography.Label 
-                                style={[
                                   styles.chipText,
                                   isSelected ? styles.chipTextSelected : null
-                                ]}
-                              >
-                                {genderOption}
-                              </Typography.Label>
-                            </Pressable>
-                          );
-                        })}
-                      </View>
+                              ]}
+                              numberOfLines={1}
+                              ellipsizeMode="tail"
+                            >
+                              {genderOption}
+                            </Typography.Label>
+                          </Pressable>
+                        );
+                      })}
                     </View>
                   </View>
 

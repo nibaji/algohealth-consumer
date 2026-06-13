@@ -52,10 +52,18 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
             </Typography.Label>
           </View>
           <View style={styles.memberInfo}>
-            <Typography.Paragraph style={styles.memberName}>
+            <Typography.Paragraph 
+              style={styles.memberName}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {member.name}
             </Typography.Paragraph>
-            <Typography.Label style={styles.memberRelation}>
+            <Typography.Label 
+              style={styles.memberRelation}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {getDisplayRelation(member, user)} • {records.length} {records.length === 1 ? 'Record' : 'Records'}
             </Typography.Label>
           </View>

@@ -79,10 +79,18 @@ export default function Profile(): React.JSX.Element {
                 {user?.full_name ? user.full_name.charAt(0).toUpperCase() : (user?.email ? user.email.charAt(0).toUpperCase() : '?')}
               </Typography.Heading>
             </View>
-            <Typography.Heading style={styles.userName}>
+            <Typography.Heading 
+              style={styles.userName}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {user?.full_name || 'AlgoHealth User'}
             </Typography.Heading>
-            <Typography.Paragraph style={styles.userEmail}>
+            <Typography.Paragraph 
+              style={styles.userEmail}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {user?.email}
             </Typography.Paragraph>
           </View>

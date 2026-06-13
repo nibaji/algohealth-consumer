@@ -177,11 +177,19 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
                 {member.name.charAt(0).toUpperCase()}
               </Typography.Label>
             </View>
-            <View>
-              <Typography.Subheading style={styles.headerTitle}>
+            <View style={{ flex: 1 }}>
+              <Typography.Subheading 
+                style={styles.headerTitle}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
                 Health Consultant
               </Typography.Subheading>
-              <Typography.Label style={styles.headerSubtitle}>
+              <Typography.Label 
+                style={styles.headerSubtitle}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
                 Health AI • {member.name}
               </Typography.Label>
             </View>

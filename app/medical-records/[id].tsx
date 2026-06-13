@@ -334,10 +334,18 @@ export default function MedicalRecordDetail() {
                   </Typography.Label>
                 </View>
                 <View style={styles.memberInfo}>
-                  <Typography.Subheading style={styles.memberName}>
+                  <Typography.Subheading 
+                    style={styles.memberName}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
                     {memberName}
                   </Typography.Subheading>
-                  <Typography.Label style={styles.memberRelation}>
+                  <Typography.Label 
+                    style={styles.memberRelation}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
                     {memberRelation}
                   </Typography.Label>
                 </View>
