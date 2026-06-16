@@ -2,7 +2,7 @@
   "expo": {
     "name": "AlgoHealth Plus",
     "slug": "algohealth-consumer",
-    "version": "20260612.6",
+    "version": "20260613.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "algohealthconsumer",
