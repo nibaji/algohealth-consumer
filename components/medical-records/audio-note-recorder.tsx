@@ -152,12 +152,12 @@ export const AudioNoteRecorder: React.FC<AudioNoteRecorderProps> = React.memo(({
 
   const handleRemoveAudio = useCallback(() => {
     try {
-      if (player.playing) {
+      if (playerStatus.playing) {
         player.pause();
       }
     } catch {}
     onAudioChange(null);
-  }, [player, onAudioChange]);
+  }, [player, playerStatus.playing, onAudioChange]);
 
   const handlePlayPause = useCallback(() => {
     if (playerStatus.playing) {
