@@ -20,8 +20,10 @@ import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import * as Sharing from 'expo-sharing';
 import * as IntentLauncher from 'expo-intent-launcher';
 import * as FileSystem from 'expo-file-system/legacy';
+import * as DocumentPicker from 'expo-document-picker';
 import { fileService } from '@/src/services/medical-records/fileService';
 import { AudioPlayerView } from '@/components/medical-records/audio-player-view';
+import { AudioNoteRecorder } from '@/components/medical-records/audio-note-recorder';
 import { ENV } from '@/src/utils/config/env';
 
 export default function MedicalRecordDetail() {
@@ -187,6 +189,10 @@ export default function MedicalRecordDetail() {
   const [isPending, startTransition] = useTransition();
   const [editError, setEditError] = useState<string | null>(null);
 
+  // New attachments state (edit mode only — these are staged before save)
+  const [newDocuments, setNewDocuments] = useState<DocumentPicker.DocumentPickerAsset[]>([]);
+  const [newAudioFile, setNewAudioFile] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
+
   // Load record and member details
   const loadData = useCallback(async (isCancelled?: () => boolean) => {
     if (!id) return;
@@ -243,6 +249,37 @@ export default function MedicalRecordDetail() {
     setRefreshing(false);
   }, [loadData]);
 
+  // Pick additional documents in edit mode
+  const handlePickNewDocuments = useCallback(async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: '*/*',
+        multiple: true,
+        copyToCacheDirectory: true,
+      });
+      if (!result.canceled && result.assets) {
+        setNewDocuments(prev => {
+          const existingKeys = new Set(prev.map(d => `${d.name}-${d.size}`));
+          const unique: DocumentPicker.DocumentPickerAsset[] = [];
+          for (const asset of result.assets) {
+            const key = `${asset.name}-${asset.size}`;
+            if (!existingKeys.has(key)) {
+              unique.push(asset);
+              existingKeys.add(key);
+            }
+          }
+          return [...prev, ...unique];
+        });
+      }
+    } catch (err) {
+      console.error('Failed to pick documents', err);
+    }
+  }, []);
+
+  const removeNewDocument = useCallback((idx: number) => {
+    setNewDocuments(prev => prev.filter((_, i) => i !== idx));
+  }, []);
+
   // Edit form submission
   const handleSave = useCallback(async () => {
     if (!record) return;
@@ -261,21 +298,37 @@ export default function MedicalRecordDetail() {
 
     startTransition(async () => {
       try {
+        // 1. Upload any new attachments first
+        if (newDocuments.length > 0 || newAudioFile !== null) {
+          await medicalRecordService.addAttachmentsToRecord(
+            record.id,
+            record.family_member_id,
+            newDocuments.map(d => ({ uri: d.uri, name: d.name, mimeType: d.mimeType, size: d.size })),
+            newAudioFile
+              ? [{ uri: newAudioFile.uri, name: newAudioFile.name, mimeType: newAudioFile.mimeType, size: newAudioFile.size }]
+              : []
+          );
+        }
+
+        // 2. Patch the text fields
         const updated = await medicalRecordService.updateMedicalRecord(record.id, {
           visit_date: inputDateToApiDate(visitDate),
           primary_context: primaryContext.trim(),
           chief_complaint: chiefComplaint.trim() ? chiefComplaint.trim() : null,
           notes: notes.trim() ? notes.trim() : null,
         });
+
         refreshTracker.setNeedsRefresh('records', true);
         setRecord(updated);
+        setNewDocuments([]);
+        setNewAudioFile(null);
         setIsEditing(false);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Failed to update record';
         setEditError(message);
       }
     });
-  }, [record, visitDate, primaryContext, chiefComplaint, notes]);
+  }, [record, visitDate, primaryContext, chiefComplaint, notes, newDocuments, newAudioFile]);
 
   // Deletion logic
   const handleDelete = useCallback(() => {
@@ -334,6 +387,8 @@ export default function MedicalRecordDetail() {
         setNotes(record.notes || '');
       }
       setEditError(null);
+      setNewDocuments([]);
+      setNewAudioFile(null);
       setIsEditing(false);
     } else {
       if (router.canGoBack()) {
@@ -452,6 +507,65 @@ export default function MedicalRecordDetail() {
                   numberOfLines={4}
                   style={styles.notesInput}
                 />
+
+                {/* New Attachments Section */}
+                <View style={styles.editAttachmentsSection}>
+                  <Typography.Label style={styles.editAttachmentsLabel}>Add New Attachments</Typography.Label>
+
+                  {/* Document Picker */}
+                  <Pressable
+                    onPress={handlePickNewDocuments}
+                    style={({ pressed }) => [
+                      styles.editAttachButton,
+                      pressed ? styles.editAttachButtonPressed : null,
+                    ]}
+                  >
+                    <Icon name="doc.fill" size={16} tintColor={theme.colors.primary.DEFAULT} />
+                    <Typography.Label style={styles.editAttachButtonText}>Add Documents</Typography.Label>
+                  </Pressable>
+
+                  {newDocuments.length > 0 ? (
+                    <View style={styles.editFileList}>
+                      {newDocuments.map((doc, idx) => (
+                        <Animated.View
+                          key={`new-doc-${idx}-${doc.uri}`}
+                          entering={FadeInDown.duration(200)}
+                          style={styles.editFileItem}
+                        >
+                          <View style={styles.editFileInfo}>
+                            <Icon name="paperclip" size={14} tintColor={theme.colors.text.secondary} />
+                            <View style={styles.editFileNameContainer}>
+                              <Typography.Paragraph numberOfLines={1} style={styles.editFileName}>
+                                {doc.name}
+                              </Typography.Paragraph>
+                              <Typography.Label style={styles.editFileSize}>
+                                {formatFileSize(doc.size)}
+                              </Typography.Label>
+                            </View>
+                          </View>
+                          <Pressable
+                            onPress={() => removeNewDocument(idx)}
+                            style={({ pressed }) => [
+                              styles.editDeleteFileButton,
+                              pressed ? styles.editDeleteFileButtonPressed : null,
+                            ]}
+                          >
+                            <Icon name="xmark" size={12} tintColor={theme.colors.text.secondary} />
+                          </Pressable>
+                        </Animated.View>
+                      ))}
+                    </View>
+                  ) : null}
+
+                  {/* Audio Note Recorder */}
+                  <View style={styles.editAudioSection}>
+                    <Typography.Label style={styles.editAudioLabel}>Audio Note</Typography.Label>
+                    <AudioNoteRecorder
+                      audioFile={newAudioFile}
+                      onAudioChange={setNewAudioFile}
+                    />
+                  </View>
+                </View>
 
                 <View style={styles.actionRow}>
                   <Button.Secondary
@@ -808,6 +922,96 @@ const styles = StyleSheet.create({
   },
   flexHalf: {
     flex: 1,
+  },
+
+  // Edit mode attachment styles
+  editAttachmentsSection: {
+    marginTop: theme.spacing.sm,
+    gap: theme.spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border.light,
+    paddingTop: theme.spacing.md,
+  },
+  editAttachmentsLabel: {
+    color: theme.colors.text.secondary,
+    fontWeight: '600',
+    fontSize: theme.fontSize.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  editAttachButton: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing.xs,
+    paddingVertical: theme.spacing.md,
+    backgroundColor: theme.colors.background.default,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
+    borderRadius: theme.radius.lg,
+    borderCurve: 'continuous',
+  },
+  editAttachButtonPressed: {
+    opacity: 0.6,
+  },
+  editAttachButtonText: {
+    color: theme.colors.primary.DEFAULT,
+    fontWeight: '600',
+  },
+  editFileList: {
+    gap: theme.spacing.xs,
+  },
+  editFileItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: theme.spacing.sm,
+    backgroundColor: theme.colors.background.default,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
+    borderRadius: theme.radius.md,
+    borderCurve: 'continuous',
+  },
+  editFileInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    flex: 1,
+  },
+  editFileNameContainer: {
+    flex: 1,
+    gap: 2,
+  },
+  editFileName: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.text.primary,
+    fontWeight: '500',
+  },
+  editFileSize: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.text.secondary,
+  },
+  editDeleteFileButton: {
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.background.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
+  },
+  editDeleteFileButtonPressed: {
+    opacity: 0.6,
+  },
+  editAudioSection: {
+    gap: theme.spacing.xs,
+    marginTop: theme.spacing.xs,
+  },
+  editAudioLabel: {
+    color: theme.colors.text.secondary,
+    fontWeight: '600',
   },
   errorBanner: {
     backgroundColor: '#FEF2F2',
