@@ -179,7 +179,7 @@ export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({
               >
                 <Icon name="paperplane.fill" size={16} tintColor="#FFFFFF" />
               </Pressable>
-            ) : documents.length === 0 ? (
+            ) : (
               <Pressable
                 onPress={() => setIsRecordingMode(true)}
                 disabled={disabled}
@@ -191,7 +191,7 @@ export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({
               >
                 <Icon name="mic.fill" size={18} tintColor={theme.colors.primary.DEFAULT} />
               </Pressable>
-            ) : null}
+            )}
           </>
         )}
       </View>
