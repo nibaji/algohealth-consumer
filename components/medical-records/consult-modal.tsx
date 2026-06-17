@@ -5,6 +5,14 @@ import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
 import { FamilyMemberOut } from '@/src/features/family/familyTypes';
 import { medicalRecordService } from '@/src/services/medical-records/medicalRecordService';
 import { ChatMessage, consultCache } from '@/src/utils/consultCache';
+import {
+  getSpeakingMessageId,
+  isPausedMessage,
+  isSpeakingMessage,
+  stopSpeaking as stopTts,
+  subscribeTtsState,
+  toggleMessageSpeech,
+} from '@/src/utils/ttsManager';
 import { FlashList, FlashListRef } from '@shopify/flash-list';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import * as DocumentPicker from 'expo-document-picker';
@@ -38,11 +46,20 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
   const [isProcessing, setIsProcessing] = useState(false);
   const [playingMessageId, setPlayingMessageId] = useState<string | null>(null);
 
+  // TTS state — synced from the module singleton via a subscriber
+  const [ttsSpeakingId, setTtsSpeakingId] = useState<string | null>(getSpeakingMessageId);
+
   // Centralized Audio Player
   const activePlayer = useAudioPlayer(null);
   const activePlayerStatus = useAudioPlayerStatus(activePlayer);
 
   const flashListRef = useRef<FlashListRef<ChatMessage>>(null);
+
+  // Subscribe to TTS speaking state changes
+  useEffect(() => {
+    const unsub = subscribeTtsState((id) => setTtsSpeakingId(id));
+    return unsub;
+  }, []);
 
   // Initialize chat when modal opens
   useEffect(() => {
@@ -78,7 +95,7 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
     }
   }, [messages, member]);
 
-  // AppState listener to pause audio on background/inactive
+  // AppState listener: pause audio + stop TTS on background/inactive
   useEffect(() => {
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
       if (nextAppState === 'background' || nextAppState === 'inactive') {
@@ -87,6 +104,7 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
         } catch {
           // Safe catch in case player is already released
         }
+        stopTts();
       }
     };
     const subscription = AppState.addEventListener('change', handleAppStateChange);
@@ -95,7 +113,7 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
     };
   }, [activePlayer]);
 
-  // Pause audio when modal becomes invisible
+  // Pause audio + stop TTS when modal becomes invisible
   useEffect(() => {
     if (!visible) {
       try {
@@ -103,6 +121,7 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
       } catch {
         // Safe catch in case player is already released
       }
+      stopTts();
       setPlayingMessageId(null);
     }
   }, [visible, activePlayer]);
@@ -118,6 +137,9 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
   }, []);
 
   const handlePlayPauseMessage = useCallback((messageId: string, uri: string) => {
+    // Stop TTS before playing recorded audio
+    stopTts();
+
     if (playingMessageId === messageId) {
       if (activePlayerStatus.playing) {
         activePlayer.pause();
@@ -140,6 +162,17 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
       activePlayer.seekTo(targetSeconds);
     }
   }, [playingMessageId, activePlayerStatus.duration, activePlayer]);
+
+  /** Toggle TTS speech for a bot message. Stops audio playback first. */
+  const handleToggleSpeech = useCallback(async (messageId: string, text: string) => {
+    // Stop audio player before TTS to avoid overlap
+    try {
+      activePlayer.pause();
+    } catch { /* ignore */ }
+    setPlayingMessageId(null);
+
+    await toggleMessageSpeech(messageId, text);
+  }, [activePlayer]);
 
   const handleSend = useCallback(async (
     text: string,
@@ -216,6 +249,8 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
 
   const renderMessageItem = useCallback(({ item }: { item: ChatMessage }) => {
     const isCurrentPlaying = playingMessageId === item.id;
+    const isSpeaking = isSpeakingMessage(item.id);
+    const isPaused = isPausedMessage(item.id);
     return (
       <ConsultMessage
         item={item}
@@ -228,9 +263,12 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
           }
         }}
         onSeek={(percentage) => handleSeekMessage(item.id, percentage)}
+        isSpeaking={isSpeaking}
+        isSpeechPaused={isPaused}
+        onToggleSpeech={() => handleToggleSpeech(item.id, item.text || '')}
       />
     );
-  }, [playingMessageId, activePlayerStatus.playing, activePlayerStatus.currentTime, activePlayerStatus.duration, handlePlayPauseMessage, handleSeekMessage]);
+  }, [playingMessageId, activePlayerStatus.playing, activePlayerStatus.currentTime, activePlayerStatus.duration, handlePlayPauseMessage, handleSeekMessage, handleToggleSpeech]);
 
   const keyExtractor = useCallback((item: ChatMessage) => item.id, []);
 
@@ -294,7 +332,7 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
             keyExtractor={keyExtractor}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
-            extraData={{ playingMessageId, activePlayerStatus }}
+            extraData={{ playingMessageId, activePlayerStatus, ttsSpeakingId }}
           />
 
           {isProcessing ? (

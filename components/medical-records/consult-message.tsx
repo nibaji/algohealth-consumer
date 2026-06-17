@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, Dimensions } from 'react-native';
+import { StyleSheet, View, Dimensions, Pressable } from 'react-native';
 import { Icon } from '@/components/ui/icon';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
@@ -13,6 +13,10 @@ interface ConsultMessageProps {
   duration: number; // in seconds
   onPlayPause: () => void;
   onSeek: (percentage: number) => void;
+  // TTS props — only relevant for bot messages
+  isSpeaking: boolean;
+  isSpeechPaused: boolean;
+  onToggleSpeech: () => void;
 }
 
 export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({
@@ -22,8 +26,12 @@ export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({
   duration,
   onPlayPause,
   onSeek,
+  isSpeaking,
+  isSpeechPaused,
+  onToggleSpeech,
 }) => {
   const isUser = item.sender === 'user';
+  const hasText = Boolean(item.text && item.text.trim() !== '');
 
   return (
     <View style={[styles.messageBubbleRow, isUser ? styles.rowUser : styles.rowBot]}>
@@ -53,7 +61,7 @@ export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({
           </View>
         ) : null}
 
-        {item.text ? (
+        {hasText ? (
           <Typography.Paragraph style={isUser ? styles.textUser : styles.textBot}>
             {item.text}
           </Typography.Paragraph>
@@ -76,9 +84,48 @@ export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({
           </View>
         ) : null}
 
-        <Typography.Label style={isUser ? styles.timeUser : styles.timeBot}>
-          {item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
-        </Typography.Label>
+        {/* Bottom row: timestamp + TTS button (bot only) */}
+        <View style={[styles.bottomRow, isUser ? styles.bottomRowUser : styles.bottomRowBot]}>
+          <Typography.Label style={isUser ? styles.timeUser : styles.timeBot}>
+            {item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+          </Typography.Label>
+
+          {/* Speak button — only for bot messages that have text */}
+          {!isUser && hasText ? (
+            <Pressable
+              onPress={onToggleSpeech}
+              style={({ pressed }) => [
+                styles.speakButton,
+                (isSpeaking || isSpeechPaused) ? styles.speakButtonActive : null,
+                pressed ? styles.speakButtonPressed : null,
+                { borderCurve: 'continuous' },
+              ]}
+              accessibilityLabel={
+                isSpeaking
+                  ? 'Pause speaking'
+                  : isSpeechPaused
+                  ? 'Resume speaking'
+                  : 'Read message aloud'
+              }
+            >
+              <Icon
+                name={
+                  isSpeaking
+                    ? 'pause.fill'
+                    : isSpeechPaused
+                    ? 'play.fill'
+                    : 'speaker.wave.2.fill'
+                }
+                size={10}
+                tintColor={
+                  isSpeaking || isSpeechPaused
+                    ? theme.colors.primary.DEFAULT
+                    : theme.colors.text.tertiary
+                }
+              />
+            </Pressable>
+          ) : null}
+        </View>
       </View>
     </View>
   );
@@ -136,6 +183,17 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     lineHeight: theme.lineHeight.md,
   },
+  bottomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  bottomRowBot: {
+    justifyContent: 'space-between',
+  },
+  bottomRowUser: {
+    justifyContent: 'flex-end',
+  },
   timeUser: {
     fontSize: 9,
     color: 'rgba(255, 255, 255, 0.7)',
@@ -147,6 +205,24 @@ const styles = StyleSheet.create({
     color: theme.colors.text.tertiary,
     alignSelf: 'flex-start',
     marginTop: 2,
+  },
+  // Speak button
+  speakButton: {
+    width: 22,
+    height: 22,
+    borderRadius: theme.radius.full,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: theme.colors.background.default,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
+  },
+  speakButtonActive: {
+    backgroundColor: '#EEF2FF',
+    borderColor: theme.colors.primary.DEFAULT + '50',
+  },
+  speakButtonPressed: {
+    opacity: 0.6,
   },
   documentsContainer: {
     gap: theme.spacing.xs,
