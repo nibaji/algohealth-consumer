@@ -27,10 +27,7 @@ export const medicalRecordService = {
     return apiClient.delete<void>(`/medical-records/${id}`);
   },
 
-  async consult(familyMemberId: string | null, question: string): Promise<ConsultResponse> {
-    return apiClient.post<ConsultResponse>('/medical-records/ask-benish', {
-      family_member_id: familyMemberId,
-      question,
-    });
+  async consult(formData: FormData): Promise<ConsultResponse> {
+    return apiClient.post<ConsultResponse>('/medical-records/ask-benish', formData);
   }
 };

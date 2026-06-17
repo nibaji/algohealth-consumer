@@ -4,7 +4,6 @@ import {
   View, 
   Modal, 
   Pressable, 
-  TextInput, 
   ActivityIndicator, 
   KeyboardAvoidingView, 
   Platform 
@@ -18,6 +17,9 @@ import { theme } from '@/constants/theme';
 import { FamilyMemberOut } from '@/src/features/family/familyTypes';
 import { medicalRecordService } from '@/src/services/medical-records/medicalRecordService';
 import { consultCache, ChatMessage } from '@/src/utils/consultCache';
+import * as DocumentPicker from 'expo-document-picker';
+import { ConsultMessage } from './consult-message';
+import { ConsultInput } from './consult-input';
 
 interface ConsultModalProps {
   visible: boolean;
@@ -30,7 +32,6 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
   const keyboardAvoidingEnabled = useKeyboardAvoiding();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [inputText, setInputText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   
   const flashListRef = useRef<FlashListRef<ChatMessage>>(null);
@@ -50,7 +51,6 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
         };
         setMessages([welcomeMessage]);
       }
-      setInputText('');
       setIsProcessing(false);
       
       // Auto-scroll to bottom after rendering
@@ -79,17 +79,21 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
     }
   }, []);
 
-  const handleSend = useCallback(async () => {
-    if (!inputText.trim() || !member || isProcessing) return;
+  const handleSend = useCallback(async (
+    text: string, 
+    audioFile: DocumentPicker.DocumentPickerAsset | null, 
+    docs: DocumentPicker.DocumentPickerAsset[]
+  ) => {
+    if (!member || isProcessing) return;
 
-    const userText = inputText.trim();
-    setInputText('');
-
+    // Create user message
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
-      text: userText,
+      text: text,
       sender: 'user',
-      timestamp: new Date()
+      timestamp: new Date(),
+      audio_uri: audioFile?.uri || null,
+      documents: docs.map(d => ({ name: d.name, size: d.size })),
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -97,9 +101,32 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
     setIsProcessing(true);
 
     try {
-      const res = await medicalRecordService.consult(member.id, userText);
+      // Build FormData payload
+      const formData = new FormData();
+      formData.append('question', text);
+      formData.append('family_member_id', member.id);
+
+      // Append documents
+      for (const doc of docs) {
+        formData.append('files', {
+          uri: doc.uri,
+          name: doc.name,
+          type: doc.mimeType || 'application/octet-stream',
+        } as any);
+      }
+
+      // Append audio file
+      if (audioFile) {
+        formData.append('audio_files', {
+          uri: audioFile.uri,
+          name: audioFile.name,
+          type: audioFile.mimeType || 'application/octet-stream',
+        } as any);
+      }
+
+      const res = await medicalRecordService.consult(formData);
       
-      // Defensive parsing to extract response text
+      // Extract response text
       const botText = res.response || res.response_text || res.text || res.answer || "Sorry, I couldn't formulate a response.";
       
       const botMessage: ChatMessage = {
@@ -123,33 +150,10 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
       setIsProcessing(false);
       scrollToBottom();
     }
-  }, [inputText, member, isProcessing, scrollToBottom]);
+  }, [member, isProcessing, scrollToBottom]);
 
   const renderMessageItem = useCallback(({ item }: { item: ChatMessage }) => {
-    const isUser = item.sender === 'user';
-    return (
-      <View style={[styles.messageBubbleRow, isUser ? styles.rowUser : styles.rowBot]}>
-        {isUser ? null : (
-          <View style={[styles.botAvatarCircle, { borderCurve: 'continuous' }]}>
-            <Icon name="sparkles" size={12} tintColor={theme.colors.primary.DEFAULT} />
-          </View>
-        )}
-        <View 
-          style={[
-            styles.messageBubble, 
-            isUser ? styles.bubbleUser : styles.bubbleBot,
-            { borderCurve: 'continuous' }
-          ]}
-        >
-          <Typography.Paragraph style={isUser ? styles.textUser : styles.textBot}>
-            {item.text}
-          </Typography.Paragraph>
-          <Typography.Label style={isUser ? styles.timeUser : styles.timeBot}>
-            {item.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </Typography.Label>
-        </View>
-      </View>
-    );
+    return <ConsultMessage item={item} />;
   }, []);
 
   const keyExtractor = useCallback((item: ChatMessage) => item.id, []);
@@ -229,34 +233,7 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
         </View>
 
         {/* Input Bar */}
-        <View style={[styles.inputBar, { paddingBottom: Math.max(insets.bottom, theme.spacing.md) }]}>
-          <TextInput
-            placeholder={`Ask about ${member.name}'s records...`}
-            value={inputText}
-            onChangeText={setInputText}
-            style={[styles.textInput, { borderCurve: 'continuous' }]}
-            placeholderTextColor={theme.colors.text.tertiary}
-            editable={!isProcessing}
-            multiline
-            maxLength={500}
-          />
-          <Pressable
-            onPress={handleSend}
-            disabled={!inputText.trim() || isProcessing}
-            style={({ pressed }) => [
-              styles.sendButton,
-              !inputText.trim() || isProcessing ? styles.sendButtonDisabled : null,
-              pressed ? styles.sendButtonPressed : null,
-              { borderCurve: 'continuous' }
-            ]}
-          >
-            <Icon 
-              name="paperplane.fill" 
-              size={16}
-              tintColor={!inputText.trim() || isProcessing ? theme.colors.text.tertiary : theme.colors.primary.content}
-            />
-          </Pressable>
-        </View>
+        <ConsultInput onSend={handleSend} disabled={isProcessing} />
       </KeyboardAvoidingView>
     </Modal>
   );
@@ -318,11 +295,6 @@ const styles = StyleSheet.create({
   closeButtonPressed: {
     opacity: 0.6,
   },
-  closeIcon: {
-    width: 16,
-    height: 16,
-    tintColor: theme.colors.text.primary,
-  },
   chatArea: {
     flex: 1,
     backgroundColor: theme.colors.background.default,
@@ -330,20 +302,6 @@ const styles = StyleSheet.create({
   listContent: {
     padding: theme.spacing.lg,
     paddingBottom: theme.spacing.lg,
-  },
-  messageBubbleRow: {
-    flexDirection: 'row',
-    marginBottom: theme.spacing.md,
-    gap: theme.spacing.sm,
-    maxWidth: '85%',
-  },
-  rowUser: {
-    alignSelf: 'flex-end',
-    justifyContent: 'flex-end',
-  },
-  rowBot: {
-    alignSelf: 'flex-start',
-    justifyContent: 'flex-start',
   },
   botAvatarCircle: {
     width: 28,
@@ -355,45 +313,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'flex-end',
-  },
-  botAvatarIcon: {
-    width: 12,
-    height: 12,
-    tintColor: theme.colors.primary.DEFAULT,
-  },
-  messageBubble: {
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.radius.lg,
-    gap: 2,
-  },
-  bubbleUser: {
-    backgroundColor: theme.colors.primary.DEFAULT,
-    borderBottomRightRadius: 2,
-  },
-  bubbleBot: {
-    backgroundColor: theme.colors.background.surface,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-    borderBottomLeftRadius: 2,
-  },
-  textUser: {
-    color: theme.colors.primary.content,
-    lineHeight: theme.lineHeight.md,
-  },
-  textBot: {
-    color: theme.colors.text.primary,
-    lineHeight: theme.lineHeight.md,
-  },
-  timeUser: {
-    fontSize: 9,
-    color: 'rgba(255, 255, 255, 0.7)',
-    alignSelf: 'flex-end',
-  },
-  timeBot: {
-    fontSize: 9,
-    color: theme.colors.text.tertiary,
-    alignSelf: 'flex-start',
   },
   loadingBubbleRow: {
     flexDirection: 'row',
@@ -413,46 +332,5 @@ const styles = StyleSheet.create({
     width: 60,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  inputBar: {
-    flexDirection: 'row',
-    padding: theme.spacing.md,
-    backgroundColor: theme.colors.background.surface,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border.light,
-    alignItems: 'center',
-    gap: theme.spacing.md,
-  },
-  textInput: {
-    flex: 1,
-    backgroundColor: theme.colors.background.default,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-    borderRadius: theme.radius.xl,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
-    maxHeight: 100,
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.text.primary,
-  },
-  sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: theme.radius.full,
-    backgroundColor: theme.colors.primary.DEFAULT,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sendButtonDisabled: {
-    backgroundColor: theme.colors.background.default,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-  },
-  sendButtonPressed: {
-    opacity: 0.8,
-  },
-  sendIcon: {
-    width: 16,
-    height: 16,
   },
 });

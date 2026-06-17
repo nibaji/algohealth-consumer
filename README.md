@@ -4,7 +4,11 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 
 ## Features
 
-- Profile users can update their name, request a password reset code for their account email, and reset their password with the received token.
+- **Family Circles**: Create, join, and manage family circles. Delete members or leave circles based on owner/self permission guards.
+- **Onboarding Invite Flows**: Automatically detect invitations with options to Accept, Reject, or Decide Later.
+- **Pending Invites Widget**: Dashboard notification badge and modal to accept or reject pending invites at any time.
+- **AI Health Consultant**: Chat with our Health AI to query medical history. Supports voice note recording (using `expo-audio`) and multiple document attachments (using `expo-document-picker`).
+- **AI Health Summary**: Premium inline overview cards showcasing member health summaries in full above their record lists.
 
 ## Get started
 

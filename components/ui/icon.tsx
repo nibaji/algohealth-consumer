@@ -10,6 +10,8 @@ import type { SFSymbol } from 'sf-symbols-typescript';
  * Android/Web use MaterialIcons as fallback.
  */
 const MATERIAL_MAP: Record<string, keyof typeof MaterialIcons.glyphMap> = {
+  'envelope.fill': 'mail',
+  'envelope': 'mail-outline',
   'chevron.left': 'chevron-left',
   'chevron.right': 'chevron-right',
   'chevron.up': 'expand-less',

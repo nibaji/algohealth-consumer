@@ -22,11 +22,14 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
 
+import { useAuth } from '@/src/contexts/AuthContext';
+
 interface EditMemberModalProps {
   visible: boolean;
   onClose: () => void;
   member: FamilyMemberOut | null;
   onUpdateSuccess: () => void;
+  ownerId: string | null;
 }
 
 type GenderType = 'Male' | 'Female' | 'Other' | 'Unknown';
@@ -37,9 +40,15 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
   onClose,
   member,
   onUpdateSuccess,
+  ownerId,
 }) => {
   const insets = useSafeAreaInsets();
   const keyboardAvoidingEnabled = useKeyboardAvoiding();
+  const { user } = useAuth();
+
+  const isOwner = !!(user && ownerId && user.id === ownerId);
+  const isSelf = !!(user && member && (member.user_id === user.id || (member.email_id && user.email && member.email_id.toLowerCase() === user.email.toLowerCase())));
+  const canDelete = isOwner || isSelf;
 
   // Loading and error states
   const [loadingDetails, setLoadingDetails] = useState(false);
@@ -433,14 +442,16 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
                       style={styles.saveButton}
                     />
 
-                    <Button.Secondary
-                      title="Delete Family Member"
-                      onPress={handleDeleteMember}
-                      loading={deleting}
-                      disabled={saving}
-                      textStyle={{ color: theme.colors.status.error }}
-                      style={styles.deleteButton}
-                    />
+                    {canDelete ? (
+                      <Button.Secondary
+                        title="Delete Family Member"
+                        onPress={handleDeleteMember}
+                        loading={deleting}
+                        disabled={saving}
+                        textStyle={{ color: theme.colors.status.error }}
+                        style={styles.deleteButton}
+                      />
+                    ) : null}
                   </View>
                 </View>
               </Animated.View>

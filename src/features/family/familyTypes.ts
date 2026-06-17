@@ -40,6 +40,7 @@ export interface FamilyMemberOut {
   user_id?: string | null;
   email_id?: string | null;
   invite_status?: string | null;
+  health_summary?: string | null;
 }
 
 export interface FamilyOut {

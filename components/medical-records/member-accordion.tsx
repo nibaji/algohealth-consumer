@@ -101,6 +101,18 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
         <Animated.View entering={FadeInDown.duration(300)} style={styles.accordionContent}>
           <View style={styles.accordionDivider} />
           
+          {member.health_summary ? (
+            <View style={[styles.summaryCard, { borderCurve: 'continuous' }]}>
+              <View style={styles.summaryTitleRow}>
+                <Icon name="sparkles" size={14} tintColor={theme.colors.primary.DEFAULT} />
+                <Typography.Label style={styles.summaryTitle}>AI Health Summary</Typography.Label>
+              </View>
+              <Typography.Paragraph style={styles.summaryText}>
+                {member.health_summary}
+              </Typography.Paragraph>
+            </View>
+          ) : null}
+
           <View style={styles.sectionTitleContainer}>
             <Typography.Label style={styles.sectionTitle}>Medical Records</Typography.Label>
           </View>
@@ -331,5 +343,31 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.sm,
     fontWeight: '600',
     color: theme.colors.primary.DEFAULT,
+  },
+  summaryCard: {
+    backgroundColor: '#FAF5FF',
+    borderWidth: 1,
+    borderColor: '#E9D5FF',
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing.md,
+    gap: theme.spacing.xs,
+    marginBottom: theme.spacing.xs,
+  },
+  summaryTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+  },
+  summaryTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: theme.colors.primary.DEFAULT,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  summaryText: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.text.secondary,
+    lineHeight: theme.lineHeight.sm,
   },
 });

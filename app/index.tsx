@@ -15,10 +15,11 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MemberAccordion } from '@/components/medical-records/member-accordion';
 import { EditMemberModal } from '@/components/medical-records/edit-member-modal';
+import { InvitesModal } from '@/components/medical-records/invites-modal';
 import { refreshTracker } from '@/src/utils/refreshTracker';
 
 export default function Index() {
-  const { user, refreshProfile } = useAuth();
+  const { user, refreshProfile, isFamilyPending } = useAuth();
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
@@ -40,6 +41,9 @@ export default function Index() {
   // Edit member modal states
   const [isEditMemberVisible, setIsEditMemberVisible] = useState(false);
   const [activeEditMember, setActiveEditMember] = useState<FamilyMemberOut | null>(null);
+
+  // Invites modal states
+  const [isInvitesVisible, setIsInvitesVisible] = useState(false);
 
   // Fetch Family details
   const loadFamilyData = useCallback(async () => {
@@ -222,24 +226,44 @@ export default function Index() {
           AlgoHealth Plus
         </Typography.Subheading>
         
-        {/* Profile icon top right */}
-        <Pressable 
-          onPress={handleNavigateProfile}
-          style={({ pressed }) => [
-            styles.profileButton,
-            pressed ? styles.profileButtonPressed : null,
-            { borderCurve: 'continuous' }
-          ]}
-        >
-          <Icon 
-            name="person.crop.circle.fill" 
-            size={20}
-            tintColor={theme.colors.primary.DEFAULT}
-          />
-          <Typography.Label style={styles.profileText}>
-            Profile
-          </Typography.Label>
-        </Pressable>
+        <View style={styles.headerActions}>
+          {isFamilyPending ? (
+            <Pressable
+              onPress={() => setIsInvitesVisible(true)}
+              style={({ pressed }) => [
+                styles.invitesButton,
+                pressed ? styles.invitesButtonPressed : null,
+                { borderCurve: 'continuous' }
+              ]}
+            >
+              <Icon 
+                name="envelope.fill" 
+                size={20}
+                tintColor={theme.colors.primary.DEFAULT}
+              />
+              <View style={styles.badgeDot} />
+            </Pressable>
+          ) : null}
+
+          {/* Profile icon top right */}
+          <Pressable 
+            onPress={handleNavigateProfile}
+            style={({ pressed }) => [
+              styles.profileButton,
+              pressed ? styles.profileButtonPressed : null,
+              { borderCurve: 'continuous' }
+            ]}
+          >
+            <Icon 
+              name="person.crop.circle.fill" 
+              size={20}
+              tintColor={theme.colors.primary.DEFAULT}
+            />
+            <Typography.Label style={styles.profileText}>
+              Profile
+            </Typography.Label>
+          </Pressable>
+        </View>
       </View>
 
       <ScrollView 
@@ -315,9 +339,9 @@ export default function Index() {
                     <View style={styles.divider} />
 
                     {/* ACCORDION SECTION GROUPED BY FAMILY MEMBER */}
-                    {family.members.length > 0 ? (
+                    {family.members.filter(m => m.invite_status !== 'pending').length > 0 ? (
                       <View style={styles.accordionsList}>
-                        {family.members.map((member) => {
+                        {family.members.filter(m => m.invite_status !== 'pending').map((member) => {
                           const isExpanded = expandedMembers[member.id] || false;
                           
                           // Filter records for this member
@@ -438,6 +462,13 @@ export default function Index() {
         member={activeEditMember}
         onClose={handleCloseEditMember}
         onUpdateSuccess={loadDashboardData}
+        ownerId={family?.owner_id || null}
+      />
+
+      <InvitesModal
+        visible={isInvitesVisible}
+        onClose={() => setIsInvitesVisible(false)}
+        onActionSuccess={loadDashboardData}
       />
     </View>
   );
@@ -461,6 +492,36 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontWeight: '700',
     color: theme.colors.text.primary,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
+  invitesButton: {
+    width: 36,
+    height: 36,
+    backgroundColor: theme.colors.background.default,
+    borderRadius: theme.radius.full,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  invitesButtonPressed: {
+    opacity: 0.7,
+  },
+  badgeDot: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: theme.colors.status.error,
+    borderWidth: 1.5,
+    borderColor: theme.colors.background.surface,
   },
   profileButton: {
     flexDirection: 'row',

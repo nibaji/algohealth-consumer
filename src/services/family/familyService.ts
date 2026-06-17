@@ -17,6 +17,10 @@ export const familyService = {
     return apiClient.post<void>('/families/join', data);
   },
 
+  async rejectFamily(data: JoinFamilyRequest): Promise<void> {
+    return apiClient.post<void>('/families/reject', data);
+  },
+
   async addFamilyMember(data: FamilyMemberCreate): Promise<void> {
     return apiClient.post<void>('/family-members/', data);
   },

@@ -7,7 +7,7 @@ import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { theme } from '@/constants/theme';
 
 function InitialLayout() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isFamilyPending, hasSkippedOnboarding } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
@@ -25,21 +25,21 @@ function InitialLayout() {
         router.replace('/(auth)/login');
       }
     } else {
-      // User is logged in
-      if (!user.family_id) {
-        // If user is not in a family, they must go through onboarding (join/create family).
+      // User is logged in. They need onboarding if they don't have a family (or the family is pending) AND they haven't explicitly skipped it.
+      const needsOnboarding = (!user.family_id || isFamilyPending) && !hasSkippedOnboarding;
+      if (needsOnboarding) {
         if (!inOnboardingGroup) {
           router.replace('/onboarding');
         }
       } else {
-        // User is in a family.
+        // User has an active family or skipped onboarding.
         // Redirect away from auth and onboarding landing screens (and family setup/creation screens).
         if (inAuthGroup || inOnboardingGroup) {
           router.replace('/');
         }
       }
     }
-  }, [user, isLoading, segments, router]);
+  }, [user, isLoading, segments, router, isFamilyPending, hasSkippedOnboarding]);
 
   if (isLoading) {
     return (

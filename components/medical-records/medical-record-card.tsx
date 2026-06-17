@@ -37,14 +37,6 @@ export const MedicalRecordCard: React.FC<MedicalRecordCardProps> = React.memo(({
           <Icon name="chevron.right" size={14} tintColor={theme.colors.text.tertiary} />
         </View>
       </View>
-      {record.ai_summary ? (
-        <View style={styles.aiBadgeContainer}>
-          <Icon name="sparkles" size={10} tintColor={theme.colors.primary.DEFAULT} />
-          <Typography.Label numberOfLines={1} style={styles.aiBadgeText}>
-            {record.ai_summary}
-          </Typography.Label>
-        </View>
-      ) : null}
     </Pressable>
   );
 });

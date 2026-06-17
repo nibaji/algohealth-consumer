@@ -3,6 +3,9 @@ export interface ChatMessage {
   text: string;
   sender: 'user' | 'bot';
   timestamp: Date;
+  audio_uri?: string | null;
+  audio_duration?: number;
+  documents?: { name: string; size?: number }[];
 }
 
 const chatHistoryCache: Record<string, ChatMessage[]> = {};

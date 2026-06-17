@@ -1,5 +1,5 @@
 import React, { createContext, use, useState, useEffect, useCallback } from 'react';
-import { UserProfileResponse, LoginRequest, RegisterRequest, AuthResponse } from '@/src/features/auth/authTypes';
+import { UserProfileResponse, LoginRequest, RegisterRequest } from '@/src/features/auth/authTypes';
 import { authService } from '@/src/services/auth/authService';
 import { familyService } from '@/src/services/family/familyService';
 import { consultCache } from '@/src/utils/consultCache';
@@ -11,6 +11,10 @@ interface AuthContextType {
   register: typeof authService.register;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<UserProfileResponse | null>;
+  isFamilyPending: boolean;
+  setIsFamilyPending: (val: boolean) => void;
+  hasSkippedOnboarding: boolean;
+  setHasSkippedOnboarding: (val: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,21 +22,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfileResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  const autoJoinInviteIfPending = async (response: AuthResponse): Promise<string | null> => {
-    if (response.pending_invite && response.invite_family_id && response.invite_code) {
-      try {
-        await familyService.joinFamily({
-          family_id: response.invite_family_id,
-          invite_code: response.invite_code,
-        });
-        return response.invite_family_id;
-      } catch (err) {
-        console.error('Failed to auto-join family invite:', err);
-      }
-    }
-    return null;
-  };
+  const [isFamilyPending, setIsFamilyPending] = useState(false);
+  const [hasSkippedOnboarding, setHasSkippedOnboarding] = useState(false);
 
   useEffect(() => {
     const restore = async () => {
@@ -40,11 +31,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         consultCache.clear();
         const response = await authService.restoreSession();
         if (response && response.user) {
-          let familyId = response.user.family_id || response.family_id || null;
-          if (response.pending_invite) {
-            const joinedId = await autoJoinInviteIfPending(response);
-            if (joinedId) familyId = joinedId;
+          const familyId = response.user.family_id || response.family_id || response.invite_family_id || null;
+          let isPending = !!response.pending_invite;
+          
+          if (familyId) {
+            try {
+              const familyData = await familyService.getMyFamily();
+              const selfMember = familyData.members.find(m => 
+                m.user_id === response.user.id || 
+                (m.email_id && response.user.email && m.email_id.toLowerCase() === response.user.email.toLowerCase())
+              );
+              if (selfMember && selfMember.invite_status === 'pending') {
+                isPending = true;
+              }
+            } catch (err) {
+              console.error('Failed to double check pending family membership on restore:', err);
+            }
           }
+          
+          setIsFamilyPending(isPending);
           setUser({
             ...response.user,
             family_id: familyId,
@@ -62,11 +67,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (data: LoginRequest) => {
     const response = await authService.login(data);
     if (response.user) {
-      let familyId = response.user.family_id || response.family_id || null;
-      if (response.pending_invite) {
-        const joinedId = await autoJoinInviteIfPending(response);
-        if (joinedId) familyId = joinedId;
-      }
+      const familyId = response.user.family_id || response.family_id || response.invite_family_id || null;
+      setIsFamilyPending(!!response.pending_invite);
       setUser({
         ...response.user,
         family_id: familyId,
@@ -78,19 +80,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = useCallback(async (data: RegisterRequest) => {
     const response = await authService.register(data);
     if (response.user) {
-      let familyId = response.user.family_id || response.family_id || null;
-      if (response.pending_invite) {
-        const joinedId = await autoJoinInviteIfPending(response);
-        if (joinedId) familyId = joinedId;
-      }
+      const familyId = response.user.family_id || response.family_id || response.invite_family_id || null;
+      setIsFamilyPending(!!response.pending_invite);
       setUser({
         ...response.user,
         family_id: familyId,
       });
     } else {
-      // Fetch user explicitly if register endpoint doesn't return user schema
       try {
         const profile = await authService.getMyProfile();
+        let isPending = false;
+        if (profile.family_id) {
+          try {
+            const family = await familyService.getMyFamily();
+            const selfMember = family.members.find(m => 
+              m.user_id === profile.id || 
+              (m.email_id && profile.email && m.email_id.toLowerCase() === profile.email.toLowerCase())
+            );
+            if (selfMember && selfMember.invite_status === 'pending') {
+              isPending = true;
+            }
+          } catch {}
+        }
+        setIsFamilyPending(isPending);
         setUser(profile);
       } catch {}
     }
@@ -100,12 +112,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(async () => {
     await authService.logout();
     consultCache.clear();
+    setIsFamilyPending(false);
+    setHasSkippedOnboarding(false);
     setUser(null);
   }, []);
 
   const refreshProfile = useCallback(async (): Promise<UserProfileResponse | null> => {
     try {
       const profile = await authService.getMyProfile();
+      let isPending = false;
+      if (profile.family_id) {
+        try {
+          const family = await familyService.getMyFamily();
+          const selfMember = family.members.find(m => 
+            m.user_id === profile.id || 
+            (m.email_id && profile.email && m.email_id.toLowerCase() === profile.email.toLowerCase())
+          );
+          if (selfMember && selfMember.invite_status === 'pending') {
+            isPending = true;
+          }
+        } catch {}
+      }
+      setIsFamilyPending(isPending);
       setUser(profile);
       return profile;
     } catch {
@@ -120,6 +148,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     register,
     logout,
     refreshProfile,
+    isFamilyPending,
+    setIsFamilyPending,
+    hasSkippedOnboarding,
+    setHasSkippedOnboarding,
   };
 
   return <AuthContext value={value}>{children}</AuthContext>;
