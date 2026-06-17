@@ -114,7 +114,7 @@ export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({
                     ? 'pause.fill'
                     : isSpeechPaused
                     ? 'play.fill'
-                    : 'speaker.wave.2.fill'
+                      : 'waveform'
                 }
                 size={10}
                 tintColor={
