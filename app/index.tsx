@@ -49,11 +49,32 @@ export default function Index() {
   const loadFamilyData = useCallback(async () => {
     try {
       const familyData = await familyService.getMyFamily();
-      setFamily(familyData);
+      
+      // Fetch members list to populate summaries
+      let membersWithSummaries: any[] = [];
+      try {
+        membersWithSummaries = await familyService.getFamilyMembers();
+      } catch (err) {
+        console.error('Failed to load family member summaries:', err);
+      }
+
+      // Merge health summaries
+      const mergedMembers = familyData.members.map(member => {
+        const matchingMember = membersWithSummaries.find(m => m.id === member.id);
+        return {
+          ...member,
+          health_summary: matchingMember?.health_summary || member.health_summary || null,
+        };
+      });
+
+      setFamily({
+        ...familyData,
+        members: mergedMembers,
+      });
 
       // Expand the first member who has records by default, or the owner
-      if (familyData.members.length > 0) {
-        const defaultExpandedId = familyData.members[0].id;
+      if (mergedMembers.length > 0) {
+        const defaultExpandedId = mergedMembers[0].id;
         setExpandedMembers(prev => {
           if (Object.keys(prev).length > 0) return prev;
           return { [defaultExpandedId]: true };

@@ -29,6 +29,10 @@ export const familyService = {
     return apiClient.get<FamilyOut>('/families/me');
   },
 
+  async getFamilyMembers(): Promise<FamilyMemberResponse[]> {
+    return apiClient.get<FamilyMemberResponse[]>('/family-members/');
+  },
+
   async getFamilyMember(memberId: string): Promise<FamilyMemberResponse> {
     return apiClient.get<FamilyMemberResponse>(`/family-members/${memberId}`);
   },
