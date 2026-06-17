@@ -1,79 +1,24 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, View, TextInput, Pressable, ScrollView, Alert } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { StyleSheet, View, TextInput, Pressable, ScrollView } from 'react-native';
 import { Icon } from '@/components/ui/icon';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
 import * as DocumentPicker from 'expo-document-picker';
-import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence } from 'react-native-reanimated';
-import { AudioPlayerView } from './audio-player-view';
-import {
-  useAudioRecorder,
-  useAudioRecorderState,
-  RecordingPresets,
-  requestRecordingPermissionsAsync,
-  getRecordingPermissionsAsync
-} from 'expo-audio';
-
-const formatTime = (seconds: number): string => {
-  if (isNaN(seconds) || seconds < 0) return '00:00';
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-};
+import { AudioNoteRecorder } from './audio-note-recorder';
 
 interface ConsultInputProps {
   onSend: (text: string, audioFile: DocumentPicker.DocumentPickerAsset | null, documents: DocumentPicker.DocumentPickerAsset[]) => void;
   disabled?: boolean;
-  isPlaying: boolean;
-  currentTime: number; // in seconds
-  duration: number; // in seconds
-  onPlayPausePreview: (uri: string) => void;
-  onSeekPreview: (percentage: number) => void;
-  onDeletePreview: () => void;
 }
 
 export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({
   onSend,
   disabled,
-  isPlaying,
-  currentTime,
-  duration,
-  onPlayPausePreview,
-  onSeekPreview,
-  onDeletePreview,
 }) => {
   const [inputText, setInputText] = useState('');
   const [documents, setDocuments] = useState<DocumentPicker.DocumentPickerAsset[]>([]);
   const [audioFile, setAudioFile] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
-
-  // Audio Recorder setup
-  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
-  const recorderState = useAudioRecorderState(audioRecorder);
-
-  const pulseScale = useSharedValue(1);
-
-  // Pulse animation for recording state
-  useEffect(() => {
-    if (recorderState.isRecording) {
-      pulseScale.value = withRepeat(
-        withSequence(
-          withTiming(1.2, { duration: 600 }),
-          withTiming(1.0, { duration: 600 })
-        ),
-        -1,
-        true
-      );
-    } else {
-      pulseScale.value = withTiming(1.0, { duration: 200 });
-    }
-  }, [recorderState.isRecording, pulseScale]);
-
-  const pulsingStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: pulseScale.value }],
-      opacity: recorderState.isRecording ? 0.6 : 1.0,
-    };
-  });
+  const [showRecorder, setShowRecorder] = useState(false);
 
   const handlePickDocuments = useCallback(async () => {
     try {
@@ -105,48 +50,6 @@ export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({
     setDocuments(prev => prev.filter((_, i) => i !== indexToRemove));
   }, []);
 
-  const startRecording = useCallback(async () => {
-    try {
-      const permission = await getRecordingPermissionsAsync();
-      let granted = permission.granted;
-      
-      if (!granted) {
-        const request = await requestRecordingPermissionsAsync();
-        granted = request.granted;
-      }
-      
-      if (!granted) {
-        Alert.alert('Permission Required', 'Microphone permission is required to record audio notes');
-        return;
-      }
-      
-      await audioRecorder.prepareToRecordAsync();
-      audioRecorder.record();
-    } catch (err) {
-      console.error('Failed to start recording', err);
-    }
-  }, [audioRecorder]);
-
-  const stopRecording = useCallback(async () => {
-    try {
-      await audioRecorder.stop();
-      if (audioRecorder.uri) {
-        setAudioFile({
-          uri: audioRecorder.uri,
-          name: 'audio_note.m4a',
-          mimeType: 'audio/m4a',
-          size: 0,
-        } as any);
-      }
-    } catch (err) {
-      console.error('Failed to stop recording', err);
-    }
-  }, [audioRecorder]);
-
-  const handleRemoveAudio = useCallback(() => {
-    setAudioFile(null);
-  }, []);
-
   const handleSend = useCallback(() => {
     const textToSend = inputText.trim();
     if (!textToSend && !audioFile && documents.length === 0) return;
@@ -157,28 +60,26 @@ export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({
     setInputText('');
     setDocuments([]);
     setAudioFile(null);
+    setShowRecorder(false);
   }, [inputText, audioFile, documents, onSend]);
 
-  const hasAttachments = documents.length > 0 || !!audioFile;
+  const showAttachmentsArea = documents.length > 0 || !!audioFile || showRecorder;
 
   return (
     <View style={styles.inputContainer}>
       {/* Picked attachments list */}
-      {hasAttachments ? (
+      {showAttachmentsArea ? (
         <View style={styles.attachmentsArea}>
-          {audioFile ? (
-            <View style={styles.audioPlayerWrapper}>
-              <AudioPlayerView
-                isPlaying={isPlaying}
-                currentTime={currentTime}
-                duration={duration}
-                onPlayPause={() => onPlayPausePreview(audioFile.uri)}
-                onSeek={onSeekPreview}
-                onDelete={() => {
-                  handleRemoveAudio();
-                  onDeletePreview();
+          {showRecorder || audioFile ? (
+            <View style={styles.audioRecorderWrapper}>
+              <AudioNoteRecorder
+                audioFile={audioFile}
+                onAudioChange={(file) => {
+                  setAudioFile(file);
+                  if (!file) {
+                    setShowRecorder(false);
+                  }
                 }}
-                variant="default"
               />
             </View>
           ) : null}
@@ -188,7 +89,7 @@ export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({
               horizontal 
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.attachmentsList}
-              style={audioFile ? { marginTop: theme.spacing.sm } : null}
+              style={audioFile || showRecorder ? { marginTop: theme.spacing.sm } : null}
             >
               {documents.map((doc, index) => (
                 <View key={index} style={[styles.attachmentChip, { borderCurve: 'continuous' }]}>
@@ -208,76 +109,57 @@ export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({
 
       {/* Input bar */}
       <View style={styles.inputBar}>
-        {recorderState.isRecording ? (
-          <View style={styles.recordingRow}>
-            <View style={styles.recordingStatus}>
-              <Animated.View style={[styles.recordDot, pulsingStyle]} />
-              <Typography.Paragraph style={styles.recordingText}>
-                Recording... {formatTime(recorderState.durationMillis / 1000)}
-              </Typography.Paragraph>
-            </View>
-            <Pressable 
-              onPress={stopRecording}
-              style={({ pressed }) => [
-                styles.stopRecordingButton,
-                pressed ? styles.actionButtonPressed : null,
-                { borderCurve: 'continuous' }
-              ]}
-            >
-              <Icon name="xmark" size={16} tintColor={theme.colors.status.error} />
-            </Pressable>
-          </View>
-        ) : (
-          <>
-            <Pressable
-              onPress={handlePickDocuments}
-              disabled={disabled}
-              style={({ pressed }) => [
-                styles.actionBtn,
-                pressed ? styles.actionBtnPressed : null,
-                { borderCurve: 'continuous' }
-              ]}
-            >
-              <Icon name="paperclip" size={18} tintColor={theme.colors.text.secondary} />
-            </Pressable>
+        <Pressable
+          onPress={handlePickDocuments}
+          disabled={disabled}
+          style={({ pressed }) => [
+            styles.actionBtn,
+            pressed ? styles.actionBtnPressed : null,
+            { borderCurve: 'continuous' }
+          ]}
+        >
+          <Icon name="paperclip" size={18} tintColor={theme.colors.text.secondary} />
+        </Pressable>
 
-            <TextInput
-              placeholder={audioFile ? 'Voice note attached' : 'Type or record a question...'}
-              value={inputText}
-              onChangeText={setInputText}
-              style={[styles.textInput, { borderCurve: 'continuous' }]}
-              placeholderTextColor={theme.colors.text.tertiary}
-              editable={!disabled}
-              multiline
-              maxLength={500}
+        <TextInput
+          placeholder={audioFile ? 'Voice note attached' : 'Type or record a question...'}
+          value={inputText}
+          onChangeText={setInputText}
+          style={[styles.textInput, { borderCurve: 'continuous' }]}
+          placeholderTextColor={theme.colors.text.tertiary}
+          editable={!disabled}
+          multiline
+          maxLength={500}
+        />
+
+        {!inputText.trim() && !audioFile && documents.length === 0 ? (
+          <Pressable
+            onPress={() => setShowRecorder(prev => !prev)}
+            disabled={disabled}
+            style={({ pressed }) => [
+              styles.actionBtn,
+              pressed ? styles.actionBtnPressed : null,
+              { borderCurve: 'continuous' }
+            ]}
+          >
+            <Icon 
+              name={showRecorder ? 'mic.slash.fill' : 'mic.fill'} 
+              size={18} 
+              tintColor={showRecorder ? theme.colors.status.error : theme.colors.primary.DEFAULT} 
             />
-
-            {!inputText.trim() && !audioFile && documents.length === 0 ? (
-              <Pressable
-                onPress={startRecording}
-                disabled={disabled}
-                style={({ pressed }) => [
-                  styles.actionBtn,
-                  pressed ? styles.actionBtnPressed : null,
-                  { borderCurve: 'continuous' }
-                ]}
-              >
-                <Icon name="mic.fill" size={18} tintColor={theme.colors.primary.DEFAULT} />
-              </Pressable>
-            ) : (
-              <Pressable
-                onPress={handleSend}
-                disabled={disabled}
-                style={({ pressed }) => [
-                  styles.sendButton,
-                  pressed ? styles.sendButtonPressed : null,
-                  { borderCurve: 'continuous' }
-                ]}
-              >
-                <Icon name="paperplane.fill" size={16} tintColor="#FFFFFF" />
-              </Pressable>
-            )}
-          </>
+          </Pressable>
+        ) : (
+          <Pressable
+            onPress={handleSend}
+            disabled={disabled}
+            style={({ pressed }) => [
+              styles.sendButton,
+              pressed ? styles.sendButtonPressed : null,
+              { borderCurve: 'continuous' }
+            ]}
+          >
+            <Icon name="paperplane.fill" size={16} tintColor="#FFFFFF" />
+          </Pressable>
         )}
       </View>
     </View>
@@ -322,7 +204,7 @@ const styles = StyleSheet.create({
   chipRemoveBtn: {
     padding: 2,
   },
-  audioPlayerWrapper: {
+  audioRecorderWrapper: {
     paddingVertical: theme.spacing.xs,
     width: '100%',
   },
@@ -364,40 +246,5 @@ const styles = StyleSheet.create({
   },
   sendButtonPressed: {
     opacity: 0.8,
-  },
-  recordingRow: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FEF2F2',
-    borderColor: '#FCA5A5',
-    borderWidth: 1,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.radius.xl,
-    height: 40,
-  },
-  recordingStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-  },
-  recordDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: theme.colors.status.error,
-  },
-  recordingText: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.status.error,
-    fontWeight: '600',
-  },
-  stopRecordingButton: {
-    padding: 4,
-  },
-  actionButtonPressed: {
-    opacity: 0.5,
   },
 });

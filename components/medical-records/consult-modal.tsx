@@ -313,17 +313,6 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
         <ConsultInput
           onSend={handleSend}
           disabled={isProcessing}
-          isPlaying={playingMessageId === 'input-preview' ? activePlayerStatus.playing : false}
-          currentTime={playingMessageId === 'input-preview' ? activePlayerStatus.currentTime : 0}
-          duration={playingMessageId === 'input-preview' ? activePlayerStatus.duration : 0}
-          onPlayPausePreview={(uri) => handlePlayPauseMessage('input-preview', uri)}
-          onSeekPreview={(percentage) => handleSeekMessage('input-preview', percentage)}
-          onDeletePreview={() => {
-            if (playingMessageId === 'input-preview') {
-              activePlayer.pause();
-              setPlayingMessageId(null);
-            }
-          }}
         />
       </KeyboardAvoidingView>
     </Modal>

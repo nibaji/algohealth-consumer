@@ -9,7 +9,7 @@ import { DateInput, validateDateString, inputDateToApiDate } from '@/components/
 import { familyService } from '@/src/services/family/familyService';
 import { medicalRecordService } from '@/src/services/medical-records/medicalRecordService';
 import { FamilyMemberOut } from '@/src/features/family/familyTypes';
-import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence } from 'react-native-reanimated';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Icon } from '@/components/ui/icon';
 import * as DocumentPicker from 'expo-document-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,26 +17,9 @@ import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { getDisplayRelation } from '@/src/utils/relation';
 import { refreshTracker } from '@/src/utils/refreshTracker';
-import {
-  useAudioRecorder,
-  useAudioRecorderState,
-  RecordingPresets,
-  useAudioPlayer,
-  useAudioPlayerStatus,
-  requestRecordingPermissionsAsync,
-  getRecordingPermissionsAsync
-} from 'expo-audio';
+import { AudioNoteRecorder } from '@/components/medical-records/audio-note-recorder';
 
-const formatTime = (seconds: number): string => {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-};
 
-const formatDuration = (millis: number): string => {
-  const totalSeconds = millis / 1000;
-  return formatTime(totalSeconds);
-};
 
 export default function CreateMedicalRecord() {
   const router = useRouter();
@@ -63,45 +46,7 @@ export default function CreateMedicalRecord() {
   const [documents, setDocuments] = useState<DocumentPicker.DocumentPickerAsset[]>([]);
   const [audioFiles, setAudioFiles] = useState<DocumentPicker.DocumentPickerAsset[]>([]);
 
-  // Audio Note Recording states & hooks
-  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
-  const recorderState = useAudioRecorderState(audioRecorder);
-  const recordingUri = audioFiles[0]?.uri || null;
-  const player = useAudioPlayer(recordingUri);
-  const playerStatus = useAudioPlayerStatus(player);
-  const [progressBarWidth, setProgressBarWidth] = useState(0);
 
-  // Pulse animation for recording state
-  const pulseScale = useSharedValue(1);
-
-  useEffect(() => {
-    if (recorderState.isRecording) {
-      pulseScale.value = withRepeat(
-        withSequence(
-          withTiming(1.2, { duration: 600 }),
-          withTiming(1.0, { duration: 600 })
-        ),
-        -1,
-        true
-      );
-    } else {
-      pulseScale.value = withTiming(1.0, { duration: 200 });
-    }
-  }, [recorderState.isRecording, pulseScale]);
-
-  const pulsingStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: pulseScale.value }],
-      opacity: recorderState.isRecording ? 0.8 : 1.0,
-    };
-  });
-
-  // Sync player source when uri changes
-  useEffect(() => {
-    if (recordingUri) {
-      player.replace(recordingUri);
-    }
-  }, [recordingUri, player]);
 
   // Page states
   const [membersLoading, setMembersLoading] = useState(true);
@@ -170,79 +115,7 @@ export default function CreateMedicalRecord() {
     setDocuments(prev => prev.filter((_, i) => i !== indexToRemove));
   }, []);
 
-  const startRecording = useCallback(async () => {
-    try {
-      const permission = await getRecordingPermissionsAsync();
-      let granted = permission.granted;
-      
-      if (!granted) {
-        const request = await requestRecordingPermissionsAsync();
-        granted = request.granted;
-      }
-      
-      if (!granted) {
-        setError('Microphone permission is required to record audio notes');
-        return;
-      }
-      
-      setError(null);
-      await audioRecorder.prepareToRecordAsync();
-      audioRecorder.record();
-    } catch (err) {
-      console.error('Failed to start recording', err);
-      setError('Failed to access microphone or start recording');
-    }
-  }, [audioRecorder]);
 
-  const stopRecording = useCallback(async () => {
-    try {
-      await audioRecorder.stop();
-      if (audioRecorder.uri) {
-        setAudioFiles([
-          {
-            uri: audioRecorder.uri,
-            name: 'audio_note.m4a',
-            mimeType: 'audio/m4a',
-            size: 0,
-          } as any,
-        ]);
-      }
-    } catch (err) {
-      console.error('Failed to stop recording', err);
-      setError('Failed to save audio recording');
-    }
-  }, [audioRecorder]);
-
-  const handleRemoveAudio = useCallback(() => {
-    if (player.playing) {
-      player.pause();
-    }
-    setAudioFiles([]);
-  }, [player]);
-
-  const handlePlayPause = useCallback(() => {
-    if (playerStatus.playing) {
-      player.pause();
-    } else {
-      if (playerStatus.duration > 0 && playerStatus.currentTime >= playerStatus.duration - 0.1) {
-        player.seekTo(0);
-      }
-      player.play();
-    }
-  }, [player, playerStatus.playing, playerStatus.duration, playerStatus.currentTime]);
-
-  const handleProgressBarLayout = useCallback((e: any) => {
-    setProgressBarWidth(e.nativeEvent.layout.width);
-  }, []);
-
-  const handleProgressBarPress = useCallback((event: any) => {
-    const { locationX } = event.nativeEvent;
-    if (progressBarWidth > 0 && playerStatus.duration > 0) {
-      const percentage = locationX / progressBarWidth;
-      const targetSeconds = percentage * playerStatus.duration;
-      player.seekTo(targetSeconds);
-    }
-  }, [progressBarWidth, playerStatus.duration, player]);
 
   // Form submission
   const handleSubmit = useCallback(async () => {
@@ -505,127 +378,10 @@ export default function CreateMedicalRecord() {
                 {/* Audio Note Sub-section */}
                 <View style={styles.audioNoteContainer}>
                   <Typography.Label style={styles.audioNoteLabel}>Audio Note</Typography.Label>
-
-                  {audioFiles.length === 0 ? (
-                    // Recording State: Idle or Recording
-                    <View style={styles.recorderPanel}>
-                      {recorderState.isRecording ? (
-                        <View style={styles.recordingStateRow}>
-                          {/* Pulsing indicator */}
-                          <Animated.View style={[styles.pulseCircle, pulsingStyle]}>
-                            <Icon name="mic.fill" size={20} tintColor="#EF4444" />
-                          </Animated.View>
-                          
-                          <View style={styles.recordingTimerContainer}>
-                            <Typography.Paragraph style={styles.recordingText}>
-                              Recording Note...
-                            </Typography.Paragraph>
-                            <Typography.Label style={styles.recordingDuration}>
-                              {formatDuration(recorderState.durationMillis)}
-                            </Typography.Label>
-                          </View>
-
-                          <Pressable
-                            onPress={stopRecording}
-                            style={({ pressed }) => [
-                              styles.stopButton,
-                              pressed ? styles.stopButtonPressed : null,
-                            ]}
-                          >
-                            <View style={styles.stopIconSquare} />
-                          </Pressable>
-                        </View>
-                      ) : (
-                        <View style={styles.idleStateRow}>
-                          <Pressable
-                            onPress={startRecording}
-                            style={({ pressed }) => [
-                              styles.recordMicButton,
-                              pressed ? styles.recordMicButtonPressed : null,
-                            ]}
-                          >
-                            <Icon name="mic.fill" size={24} tintColor="#FFF" />
-                          </Pressable>
-                          <View style={styles.idleTextContainer}>
-                            <Typography.Paragraph style={styles.audioNoteTitle}>
-                              Record Audio Note
-                            </Typography.Paragraph>
-                            <Typography.Label style={styles.audioNoteSubtitle}>
-                              Tap microphone to start recording
-                            </Typography.Label>
-                          </View>
-                        </View>
-                      )}
-                    </View>
-                  ) : (
-                    // Playback State: Played / Paused
-                    <View style={styles.playerPanel}>
-                      <View style={styles.playerControlsRow}>
-                        <Pressable
-                          onPress={handlePlayPause}
-                          style={({ pressed }) => [
-                            styles.playPauseButton,
-                            pressed ? styles.playPauseButtonPressed : null,
-                          ]}
-                        >
-                          <Icon 
-                            name={playerStatus.playing ? "pause.fill" : "play.fill"} 
-                            size={18} 
-                            tintColor={theme.colors.primary.DEFAULT} 
-                          />
-                        </Pressable>
-
-                        <View style={styles.seekerContainer}>
-                          {/* Seeker Progress Bar */}
-                          <Pressable
-                            onLayout={handleProgressBarLayout}
-                            onPress={handleProgressBarPress}
-                            style={styles.progressBarBg}
-                          >
-                            <View 
-                              style={[
-                                styles.progressBarFill, 
-                                { 
-                                  width: `${playerStatus.duration > 0 
-                                    ? (playerStatus.currentTime / playerStatus.duration) * 100 
-                                    : 0}%` 
-                                }
-                              ]} 
-                            />
-                            <View 
-                              style={[
-                                styles.progressBarThumb, 
-                                { 
-                                  left: `${playerStatus.duration > 0 
-                                    ? (playerStatus.currentTime / playerStatus.duration) * 100 
-                                    : 0}%` 
-                                }
-                              ]} 
-                            />
-                          </Pressable>
-                          
-                          <View style={styles.timeLabelRow}>
-                            <Typography.Label style={styles.timeLabel}>
-                              {formatTime(playerStatus.currentTime)}
-                            </Typography.Label>
-                            <Typography.Label style={styles.timeLabel}>
-                              {formatTime(playerStatus.duration)}
-                            </Typography.Label>
-                          </View>
-                        </View>
-
-                        <Pressable
-                          onPress={handleRemoveAudio}
-                          style={({ pressed }) => [
-                            styles.deleteAudioButton,
-                            pressed ? styles.deleteAudioButtonPressed : null,
-                          ]}
-                        >
-                          <Icon name="trash.fill" size={16} tintColor={theme.colors.text.secondary} />
-                        </Pressable>
-                      </View>
-                    </View>
-                  )}
+                  <AudioNoteRecorder
+                    audioFile={audioFiles[0] || null}
+                    onAudioChange={(file) => setAudioFiles(file ? [file] : [])}
+                  />
                 </View>
               </View>
 
