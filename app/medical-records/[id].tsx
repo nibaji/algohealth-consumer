@@ -16,6 +16,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { getDisplayRelation } from '@/src/utils/relation';
 import { refreshTracker } from '@/src/utils/refreshTracker';
+import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
+import * as WebBrowser from 'expo-web-browser';
+import { fileService } from '@/src/services/medical-records/fileService';
+import { AudioPlayerView } from '@/components/medical-records/audio-player-view';
+import { ENV } from '@/src/utils/config/env';
 
 export default function MedicalRecordDetail() {
   const router = useRouter();
@@ -32,6 +37,118 @@ export default function MedicalRecordDetail() {
   const [isEditing, setIsEditing] = useState(false);
   const [deleteSuccess, setDeleteSuccess] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Audio Note & Document state
+  const [localAudioUri, setLocalAudioUri] = useState<string | null>(null);
+  const [loadingAudio, setLoadingAudio] = useState(false);
+
+  const player = useAudioPlayer(localAudioUri);
+  const playerStatus = useAudioPlayerStatus(player);
+
+  const formatFileSize = useCallback((bytes?: number): string => {
+    if (bytes === undefined || bytes === null) return '0 B';
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+  }, []);
+
+  const handleDownloadFile = useCallback(async (blobName: string, bucket: string, filename: string) => {
+    try {
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Downloading ${filename}...</title>
+            <style>
+              body { font-family: -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background-color: #f9f9f9; }
+              .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; borderRadius: 50%; width: 40px; height: 40px; animation: spin 2s linear infinite; }
+              @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+            </style>
+          </head>
+          <body>
+            <div style="text-align: center;">
+              <div class="loader" style="margin: 0 auto 20px;"></div>
+              <p>Downloading <strong>${filename}</strong>...</p>
+            </div>
+            <form id="downloadForm" method="POST" action="${ENV.API_BASE_URL}/utils/get-file">
+              <input type="hidden" name="blob_name" value="${blobName}" />
+              <input type="hidden" name="bucket" value="${bucket}" />
+            </form>
+            <script>
+              setTimeout(function() {
+                document.getElementById('downloadForm').submit();
+              }, 500);
+            </script>
+          </body>
+        </html>
+      `;
+      const dataUrl = `data:text/html;charset=utf-8,${encodeURIComponent(htmlContent)}`;
+      await WebBrowser.openBrowserAsync(dataUrl);
+    } catch (err) {
+      console.error('Failed to open download browser', err);
+      Alert.alert('Error', 'Failed to open file in browser');
+    }
+  }, []);
+
+  const handlePlayPauseAudio = useCallback(() => {
+    if (playerStatus.playing) {
+      player.pause();
+    } else {
+      if (playerStatus.duration > 0 && playerStatus.currentTime >= playerStatus.duration - 0.1) {
+        player.seekTo(0);
+      }
+      player.play();
+    }
+  }, [player, playerStatus.playing, playerStatus.duration, playerStatus.currentTime]);
+
+  const handleSeekAudio = useCallback((percentage: number) => {
+    if (playerStatus.duration > 0) {
+      player.seekTo(percentage * playerStatus.duration);
+    }
+  }, [player, playerStatus.duration]);
+
+  // Load local audio URI when audio is available in the record
+  useEffect(() => {
+    const downloadAudio = async () => {
+      const audioItem = record?.audio?.[0];
+      if (audioItem && !localAudioUri) {
+        setLoadingAudio(true);
+        try {
+          const uri = await fileService.getLocalFileUri(
+            audioItem.blob_name || '',
+            audioItem.bucket || '',
+            audioItem.filename
+          );
+          setLocalAudioUri(uri);
+        } catch (err) {
+          console.error('Failed to download audio file', err);
+        } finally {
+          setLoadingAudio(false);
+        }
+      }
+    };
+    downloadAudio();
+  }, [record, localAudioUri]);
+
+  // Pause audio on unmount or when navigating away
+  useEffect(() => {
+    return () => {
+      try {
+        player.pause();
+      } catch {}
+    };
+  }, [player]);
+
+  // Sync player source when local uri changes
+  useEffect(() => {
+    if (localAudioUri) {
+      try {
+        player.replace(localAudioUri);
+      } catch {}
+    }
+  }, [localAudioUri, player]);
 
   // Edit form states
   const [visitDate, setVisitDate] = useState('');
@@ -380,6 +497,60 @@ export default function MedicalRecordDetail() {
                 </View>
               </View>
 
+              {/* Audio Note Player */}
+              {(record.audio || []).length > 0 ? (
+                <View style={[styles.audioCard, { borderCurve: 'continuous' }]}>
+                  <Typography.Label style={styles.sectionLabel}>Audio Note</Typography.Label>
+                  {loadingAudio ? (
+                    <View style={styles.audioLoader}>
+                      <ActivityIndicator size="small" color={theme.colors.primary.DEFAULT} />
+                      <Typography.Label style={styles.loadingAudioText}>Loading audio...</Typography.Label>
+                    </View>
+                  ) : localAudioUri ? (
+                    <AudioPlayerView
+                      isPlaying={playerStatus.playing}
+                      currentTime={playerStatus.currentTime}
+                      duration={playerStatus.duration}
+                      onPlayPause={handlePlayPauseAudio}
+                      onSeek={handleSeekAudio}
+                    />
+                  ) : (
+                    <Typography.Label style={styles.errorText}>Failed to load audio</Typography.Label>
+                  )}
+                </View>
+              ) : null}
+
+              {/* Attachments Section */}
+              {(record.files || []).length > 0 ? (
+                <View style={[styles.filesCard, { borderCurve: 'continuous' }]}>
+                  <Typography.Label style={styles.sectionLabel}>Attachments</Typography.Label>
+                  <View style={styles.filesGrid}>
+                    {record.files?.map((file) => (
+                      <Pressable
+                        key={file.id}
+                        onPress={() => handleDownloadFile(file.blob_name || '', file.bucket || '', file.filename)}
+                        style={({ pressed }) => [
+                          styles.fileChip,
+                          pressed ? styles.fileChipPressed : null,
+                          { borderCurve: 'continuous' }
+                        ]}
+                      >
+                        <Icon name="doc.fill" size={16} tintColor={theme.colors.primary.DEFAULT} />
+                        <View style={styles.fileChipInfo}>
+                          <Typography.Paragraph numberOfLines={1} style={styles.fileChipName}>
+                            {file.filename}
+                          </Typography.Paragraph>
+                          <Typography.Label style={styles.fileChipSize}>
+                            {formatFileSize(file.size || 0)}
+                          </Typography.Label>
+                        </View>
+                        <Icon name="arrow.down.to.line" size={14} tintColor={theme.colors.text.secondary} />
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+              ) : null}
+
               {/* AI Summary Section */}
               {record.ai_summary ? (
                 <View style={[styles.aiSummaryCard, { borderCurve: 'continuous' }]}>
@@ -643,5 +814,70 @@ const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
     fontSize: theme.fontSize.md,
     lineHeight: theme.lineHeight.md,
+  },
+  audioCard: {
+    backgroundColor: theme.colors.background.surface,
+    padding: theme.spacing.lg,
+    borderRadius: theme.radius.xl,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
+    gap: theme.spacing.sm,
+    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+  },
+  sectionLabel: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.text.tertiary,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  audioLoader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    paddingVertical: theme.spacing.sm,
+  },
+  loadingAudioText: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.text.secondary,
+  },
+  filesCard: {
+    backgroundColor: theme.colors.background.surface,
+    padding: theme.spacing.lg,
+    borderRadius: theme.radius.xl,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
+    gap: theme.spacing.md,
+    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+  },
+  filesGrid: {
+    gap: theme.spacing.sm,
+  },
+  fileChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.background.default,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
+    borderRadius: theme.radius.lg,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    gap: theme.spacing.md,
+  },
+  fileChipPressed: {
+    backgroundColor: theme.colors.border.light,
+  },
+  fileChipInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  fileChipName: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.text.primary,
+    fontWeight: '500',
+  },
+  fileChipSize: {
+    fontSize: 10,
+    color: theme.colors.text.tertiary,
   },
 });

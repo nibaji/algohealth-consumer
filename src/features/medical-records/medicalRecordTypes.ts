@@ -87,6 +87,21 @@ export interface MedicalRecordUpdate {
   health_summary?: string | null;
 }
 
+export interface MedicalRecordFile {
+  id: string;
+  filename: string;
+  stored_name: string | null;
+  blob_name: string | null;
+  bucket: string | null;
+  url: string | null;
+  mime_type: string | null;
+  content_type: string | null;
+  size: number | null;
+  user_id: string;
+  family_member_id: string | null;
+  medical_record_id: string | null;
+}
+
 export interface MedicalRecordResponse {
   id: string;
   user_id: string;
@@ -99,6 +114,8 @@ export interface MedicalRecordResponse {
   vitals?: VitalResponse[];
   diagnoses?: DiagnosisResponse[];
   medications?: MedicationResponse[];
+  files?: MedicalRecordFile[];
+  audio?: MedicalRecordFile[];
 }
 
 export interface ConsultRequest {

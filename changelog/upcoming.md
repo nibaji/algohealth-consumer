@@ -1,5 +1,6 @@
 ## Unreleased
 
+- 2026-06-17: Implemented retrieval, playback, and download support for audio notes and document attachments in the Medical Record Details screen. Integrated a custom `fileService` using `expo-file-system/legacy` to pull secure items via the `/utils/get-file` POST endpoint and cache them locally, playing back audio with `AudioPlayerView` and downloading documents via dynamic form submission in the browser. Changed in `app/medical-records/[id].tsx`, `src/features/medical-records/medicalRecordTypes.ts`, `src/services/medical-records/fileService.ts`.
 - 2026-06-17: Fixed a missing `Dimensions` import compilation issue in `consult-message.tsx` following styling changes.
 - 2026-06-17: Simplified consult chatbot input buttons. The mic button is now shown always unless the user starts typing or has a recorded audio file. The send button is shown whenever there is typed text or a recorded audio file, regardless of whether document attachments are present. The mic button correctly reappears when the user clears the text input or deletes the recorded audio.
 - 2026-06-17: Configured chatbot input buttons so that the record button is hidden if document attachments are added. The send button is only shown when the user has typed text or recorded audio input.

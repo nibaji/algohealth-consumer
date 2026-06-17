@@ -9,6 +9,7 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 - **Pending Invites Widget**: Dashboard notification badge and modal to accept or reject pending invites at any time.
 - **AI Health Consultant**: Chat with our Health AI to query medical history. Supports voice note recording (using `expo-audio`) and multiple document attachments (using `expo-document-picker`).
 - **AI Health Summary**: Premium inline overview cards showcasing member health summaries in full above their record lists.
+- **Medical Record Attachments**: Securely retrieves, plays back, and downloads voice notes and document attachments within the medical record detail view.
 
 ## Get started
 
