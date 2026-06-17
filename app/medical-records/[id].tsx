@@ -692,9 +692,7 @@ export default function MedicalRecordDetail() {
                           </View>
                           {isDownloading ? (
                             <ActivityIndicator size="small" color={theme.colors.primary.DEFAULT} />
-                          ) : (
-                            <Icon name="arrow.down.to.line" size={14} tintColor={theme.colors.text.secondary} />
-                          )}
+                          ) : null}
                         </Pressable>
                       );
                     })}
