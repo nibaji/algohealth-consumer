@@ -359,6 +359,25 @@ export default function Index() {
 
                     <View style={styles.divider} />
 
+                    {/* Add Family Member CTA */}
+                    <Pressable
+                      onPress={handleNavigateAddMember}
+                      style={({ pressed }) => [
+                        styles.addMemberButton,
+                        pressed ? styles.addMemberButtonPressed : null,
+                        { borderCurve: 'continuous' }
+                      ]}
+                    >
+                      <Icon 
+                        name="person.badge.plus" 
+                        size={18}
+                        tintColor={theme.colors.primary.DEFAULT}
+                      />
+                      <Typography.Label style={styles.addMemberText}>
+                        Add Family Member
+                      </Typography.Label>
+                    </Pressable>
+
                     {/* ACCORDION SECTION GROUPED BY FAMILY MEMBER */}
                     {family.members.filter(m => m.invite_status !== 'pending').length > 0 ? (
                       <View style={styles.accordionsList}>
@@ -392,25 +411,6 @@ export default function Index() {
                         </Typography.Paragraph>
                       </View>
                     )}
-
-                    {/* Add Family Member CTA */}
-                    <Pressable
-                      onPress={handleNavigateAddMember}
-                      style={({ pressed }) => [
-                        styles.addMemberButton,
-                        pressed ? styles.addMemberButtonPressed : null,
-                        { borderCurve: 'continuous' }
-                      ]}
-                    >
-                      <Icon 
-                        name="person.badge.plus" 
-                        size={18}
-                        tintColor={theme.colors.primary.DEFAULT}
-                      />
-                      <Typography.Label style={styles.addMemberText}>
-                        Add Family Member
-                      </Typography.Label>
-                    </Pressable>
                   </View>
                 ) : (
                   <View style={styles.errorContainer}>
