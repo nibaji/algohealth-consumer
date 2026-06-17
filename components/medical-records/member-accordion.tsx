@@ -64,6 +64,15 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
             >
               {getDisplayRelation(member, user)} • {records.length} {records.length === 1 ? 'Record' : 'Records'}
             </Typography.Label>
+            {member.health_summary ? (
+              <Typography.Label 
+                style={styles.memberSummary}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {member.health_summary}
+              </Typography.Label>
+            ) : null}
           </View>
         </Pressable>
 
@@ -369,5 +378,10 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.sm,
     color: theme.colors.text.secondary,
     lineHeight: theme.lineHeight.sm,
+  },
+  memberSummary: {
+    fontSize: 11,
+    color: theme.colors.text.tertiary,
+    marginTop: 2,
   },
 });

@@ -5,12 +5,11 @@ import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
 import * as DocumentPicker from 'expo-document-picker';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence } from 'react-native-reanimated';
+import { AudioPlayerView } from './audio-player-view';
 import {
   useAudioRecorder,
   useAudioRecorderState,
   RecordingPresets,
-  useAudioPlayer,
-  useAudioPlayerStatus,
   requestRecordingPermissionsAsync,
   getRecordingPermissionsAsync
 } from 'expo-audio';
@@ -25,9 +24,24 @@ const formatTime = (seconds: number): string => {
 interface ConsultInputProps {
   onSend: (text: string, audioFile: DocumentPicker.DocumentPickerAsset | null, documents: DocumentPicker.DocumentPickerAsset[]) => void;
   disabled?: boolean;
+  isPlaying: boolean;
+  currentTime: number; // in seconds
+  duration: number; // in seconds
+  onPlayPausePreview: (uri: string) => void;
+  onSeekPreview: (percentage: number) => void;
+  onDeletePreview: () => void;
 }
 
-export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({ onSend, disabled }) => {
+export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({
+  onSend,
+  disabled,
+  isPlaying,
+  currentTime,
+  duration,
+  onPlayPausePreview,
+  onSeekPreview,
+  onDeletePreview,
+}) => {
   const [inputText, setInputText] = useState('');
   const [documents, setDocuments] = useState<DocumentPicker.DocumentPickerAsset[]>([]);
   const [audioFile, setAudioFile] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
@@ -35,11 +49,6 @@ export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({ onSend, d
   // Audio Recorder setup
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(audioRecorder);
-  const recordingUri = audioFile?.uri || null;
-
-  // Audio Player setup
-  const player = useAudioPlayer(recordingUri);
-  const playerStatus = useAudioPlayerStatus(player);
 
   const pulseScale = useSharedValue(1);
 
@@ -65,13 +74,6 @@ export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({ onSend, d
       opacity: recorderState.isRecording ? 0.6 : 1.0,
     };
   });
-
-  // Sync player source when uri changes
-  useEffect(() => {
-    if (recordingUri) {
-      player.replace(recordingUri);
-    }
-  }, [recordingUri, player]);
 
   const handlePickDocuments = useCallback(async () => {
     try {
@@ -142,19 +144,8 @@ export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({ onSend, d
   }, [audioRecorder]);
 
   const handleRemoveAudio = useCallback(() => {
-    if (player.playing) {
-      player.pause();
-    }
     setAudioFile(null);
-  }, [player]);
-
-  const handlePlayPause = useCallback(() => {
-    if (playerStatus.playing) {
-      player.pause();
-    } else {
-      player.play();
-    }
-  }, [player, playerStatus.playing]);
+  }, []);
 
   const handleSend = useCallback(() => {
     const textToSend = inputText.trim();
@@ -172,44 +163,46 @@ export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({ onSend, d
 
   return (
     <View style={styles.inputContainer}>
-      {/* List of picked documents and audio notes */}
+      {/* Picked attachments list */}
       {hasAttachments ? (
         <View style={styles.attachmentsArea}>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.attachmentsList}
-          >
-            {audioFile ? (
-              <View style={[styles.attachmentChip, styles.audioChip, { borderCurve: 'continuous' }]}>
-                <Pressable onPress={handlePlayPause} style={styles.chipPlayBtn}>
-                  <Icon 
-                    name={playerStatus.playing ? 'pause.fill' : 'play.fill'} 
-                    size={10} 
-                    tintColor={theme.colors.primary.DEFAULT} 
-                  />
-                </Pressable>
-                <Typography.Label style={styles.attachmentLabel} numberOfLines={1}>
-                  Voice Note ({formatTime(playerStatus.duration / 1000)})
-                </Typography.Label>
-                <Pressable onPress={handleRemoveAudio} style={styles.chipRemoveBtn}>
-                  <Icon name="xmark" size={10} tintColor={theme.colors.text.tertiary} />
-                </Pressable>
-              </View>
-            ) : null}
+          {audioFile ? (
+            <View style={styles.audioPlayerWrapper}>
+              <AudioPlayerView
+                isPlaying={isPlaying}
+                currentTime={currentTime}
+                duration={duration}
+                onPlayPause={() => onPlayPausePreview(audioFile.uri)}
+                onSeek={onSeekPreview}
+                onDelete={() => {
+                  handleRemoveAudio();
+                  onDeletePreview();
+                }}
+                variant="default"
+              />
+            </View>
+          ) : null}
 
-            {documents.map((doc, index) => (
-              <View key={index} style={[styles.attachmentChip, { borderCurve: 'continuous' }]}>
-                <Icon name="doc.fill" size={10} tintColor={theme.colors.text.secondary} />
-                <Typography.Label style={styles.attachmentLabel} numberOfLines={1}>
-                  {doc.name}
-                </Typography.Label>
-                <Pressable onPress={() => removeDocument(index)} style={styles.chipRemoveBtn}>
-                  <Icon name="xmark" size={10} tintColor={theme.colors.text.tertiary} />
-                </Pressable>
-              </View>
-            ))}
-          </ScrollView>
+          {documents.length > 0 ? (
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.attachmentsList}
+              style={audioFile ? { marginTop: theme.spacing.sm } : null}
+            >
+              {documents.map((doc, index) => (
+                <View key={index} style={[styles.attachmentChip, { borderCurve: 'continuous' }]}>
+                  <Icon name="doc.fill" size={10} tintColor={theme.colors.text.secondary} />
+                  <Typography.Label style={styles.attachmentLabel} numberOfLines={1}>
+                    {doc.name}
+                  </Typography.Label>
+                  <Pressable onPress={() => removeDocument(index)} style={styles.chipRemoveBtn}>
+                    <Icon name="xmark" size={10} tintColor={theme.colors.text.tertiary} />
+                  </Pressable>
+                </View>
+              ))}
+            </ScrollView>
+          ) : null}
         </View>
       ) : null}
 
@@ -321,15 +314,6 @@ const styles = StyleSheet.create({
     gap: theme.spacing.xs,
     maxWidth: 160,
   },
-  audioChip: {
-    borderColor: '#E9D5FF',
-    backgroundColor: '#FAF5FF',
-  },
-  chipPlayBtn: {
-    padding: 2,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   attachmentLabel: {
     fontSize: 11,
     color: theme.colors.text.secondary,
@@ -337,6 +321,10 @@ const styles = StyleSheet.create({
   },
   chipRemoveBtn: {
     padding: 2,
+  },
+  audioPlayerWrapper: {
+    paddingVertical: theme.spacing.xs,
+    width: '100%',
   },
   inputBar: {
     flexDirection: 'row',

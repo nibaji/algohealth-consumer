@@ -1,93 +1,28 @@
-import React, { useState, useCallback } from 'react';
-import { StyleSheet, View, Pressable } from 'react-native';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
 import { Icon } from '@/components/ui/icon';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
 import { ChatMessage } from '@/src/utils/consultCache';
-import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
-
-const formatTime = (seconds: number): string => {
-  if (isNaN(seconds) || seconds < 0) return '00:00';
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-};
-
-const MessageAudioPlayer = ({ uri }: { uri: string }) => {
-  const player = useAudioPlayer(uri);
-  const playerStatus = useAudioPlayerStatus(player);
-  const [progressBarWidth, setProgressBarWidth] = useState(0);
-
-  const handlePlayPause = useCallback(() => {
-    if (playerStatus.playing) {
-      player.pause();
-    } else {
-      player.play();
-    }
-  }, [player, playerStatus.playing]);
-
-  const handleProgressBarLayout = useCallback((e: any) => {
-    setProgressBarWidth(e.nativeEvent.layout.width);
-  }, []);
-
-  const handleProgressBarPress = useCallback((event: any) => {
-    const { locationX } = event.nativeEvent;
-    if (progressBarWidth > 0 && playerStatus.duration > 0) {
-      const percentage = locationX / progressBarWidth;
-      const targetSeconds = percentage * (playerStatus.duration / 1000);
-      player.seekTo(targetSeconds);
-    }
-  }, [progressBarWidth, playerStatus.duration, player]);
-
-  const durationSecs = playerStatus.duration / 1000;
-  const currentSecs = playerStatus.currentTime / 1000;
-
-  return (
-    <View style={styles.playerContainer}>
-      <Pressable
-        onPress={handlePlayPause}
-        style={styles.playPauseBtn}
-      >
-        <Icon 
-          name={playerStatus.playing ? 'pause.fill' : 'play.fill'} 
-          size={16} 
-          tintColor="#FFFFFF" 
-        />
-      </Pressable>
-
-      <View style={styles.playerSeeker}>
-        <Pressable
-          onLayout={handleProgressBarLayout}
-          onPress={handleProgressBarPress}
-          style={styles.progressBarBg}
-        >
-          <View 
-            style={[
-              styles.progressBarFill, 
-              { 
-                width: `${durationSecs > 0 ? (currentSecs / durationSecs) * 100 : 0}%` 
-              }
-            ]} 
-          />
-        </Pressable>
-        <View style={styles.timeLabelRow}>
-          <Typography.Label style={styles.timeLabel}>
-            {formatTime(currentSecs)}
-          </Typography.Label>
-          <Typography.Label style={styles.timeLabel}>
-            {formatTime(durationSecs)}
-          </Typography.Label>
-        </View>
-      </View>
-    </View>
-  );
-};
+import { AudioPlayerView } from './audio-player-view';
 
 interface ConsultMessageProps {
   item: ChatMessage;
+  isPlaying: boolean;
+  currentTime: number; // in seconds
+  duration: number; // in seconds
+  onPlayPause: () => void;
+  onSeek: (percentage: number) => void;
 }
 
-export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({ item }) => {
+export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({
+  item,
+  isPlaying,
+  currentTime,
+  duration,
+  onPlayPause,
+  onSeek,
+}) => {
   const isUser = item.sender === 'user';
 
   return (
@@ -106,7 +41,14 @@ export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({ item 
         ]}
       >
         {item.audio_uri ? (
-          <MessageAudioPlayer uri={item.audio_uri} />
+          <AudioPlayerView
+            isPlaying={isPlaying}
+            currentTime={currentTime}
+            duration={duration}
+            onPlayPause={onPlayPause}
+            onSeek={onSeek}
+            variant="user"
+          />
         ) : null}
 
         {item.text ? (
@@ -203,43 +145,6 @@ const styles = StyleSheet.create({
     color: theme.colors.text.tertiary,
     alignSelf: 'flex-start',
     marginTop: 2,
-  },
-  playerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-    width: 220,
-    paddingVertical: theme.spacing.xs,
-  },
-  playPauseBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: theme.radius.full,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  playerSeeker: {
-    flex: 1,
-    gap: 4,
-  },
-  progressBarBg: {
-    height: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: '#FFFFFF',
-  },
-  timeLabelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  timeLabel: {
-    fontSize: 9,
-    color: 'rgba(255, 255, 255, 0.7)',
   },
   documentsContainer: {
     gap: theme.spacing.xs,

@@ -6,7 +6,9 @@ import {
   Pressable, 
   ActivityIndicator, 
   KeyboardAvoidingView, 
-  Platform 
+  Platform,
+  AppState,
+  AppStateStatus
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
@@ -20,6 +22,7 @@ import { consultCache, ChatMessage } from '@/src/utils/consultCache';
 import * as DocumentPicker from 'expo-document-picker';
 import { ConsultMessage } from './consult-message';
 import { ConsultInput } from './consult-input';
+import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 
 interface ConsultModalProps {
   visible: boolean;
@@ -33,6 +36,11 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [playingMessageId, setPlayingMessageId] = useState<string | null>(null);
+
+  // Centralized Audio Player
+  const activePlayer = useAudioPlayer(null);
+  const activePlayerStatus = useAudioPlayerStatus(activePlayer);
   
   const flashListRef = useRef<FlashListRef<ChatMessage>>(null);
 
@@ -52,6 +60,7 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
         setMessages([welcomeMessage]);
       }
       setIsProcessing(false);
+      setPlayingMessageId(null);
       
       // Auto-scroll to bottom after rendering
       setTimeout(() => {
@@ -69,6 +78,35 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
     }
   }, [messages, member]);
 
+  // AppState listener to pause audio on background/inactive
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'background' || nextAppState === 'inactive') {
+        try {
+          activePlayer.pause();
+        } catch {
+          // Safe catch in case player is already released
+        }
+      }
+    };
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => {
+      subscription.remove();
+    };
+  }, [activePlayer]);
+
+  // Pause audio when modal becomes invisible
+  useEffect(() => {
+    if (!visible) {
+      try {
+        activePlayer.pause();
+      } catch {
+        // Safe catch in case player is already released
+      }
+      setPlayingMessageId(null);
+    }
+  }, [visible, activePlayer]);
+
   // Auto scroll to bottom
   const scrollToBottom = useCallback(() => {
     const currentRef = flashListRef.current;
@@ -78,6 +116,27 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
       }, 100);
     }
   }, []);
+
+  const handlePlayPauseMessage = useCallback((messageId: string, uri: string) => {
+    if (playingMessageId === messageId) {
+      if (activePlayerStatus.playing) {
+        activePlayer.pause();
+      } else {
+        activePlayer.play();
+      }
+    } else {
+      setPlayingMessageId(messageId);
+      activePlayer.replace(uri);
+      activePlayer.play();
+    }
+  }, [playingMessageId, activePlayerStatus.playing, activePlayer]);
+
+  const handleSeekMessage = useCallback((messageId: string, percentage: number) => {
+    if (playingMessageId === messageId && activePlayerStatus.duration > 0) {
+      const targetSeconds = percentage * activePlayerStatus.duration;
+      activePlayer.seekTo(targetSeconds);
+    }
+  }, [playingMessageId, activePlayerStatus.duration, activePlayer]);
 
   const handleSend = useCallback(async (
     text: string, 
@@ -153,8 +212,22 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
   }, [member, isProcessing, scrollToBottom]);
 
   const renderMessageItem = useCallback(({ item }: { item: ChatMessage }) => {
-    return <ConsultMessage item={item} />;
-  }, []);
+    const isCurrentPlaying = playingMessageId === item.id;
+    return (
+      <ConsultMessage 
+        item={item} 
+        isPlaying={isCurrentPlaying ? activePlayerStatus.playing : false}
+        currentTime={isCurrentPlaying ? activePlayerStatus.currentTime : 0}
+        duration={isCurrentPlaying ? activePlayerStatus.duration : (item.audio_duration || 0)}
+        onPlayPause={() => {
+          if (item.audio_uri) {
+            handlePlayPauseMessage(item.id, item.audio_uri);
+          }
+        }}
+        onSeek={(percentage) => handleSeekMessage(item.id, percentage)}
+      />
+    );
+  }, [playingMessageId, activePlayerStatus.playing, activePlayerStatus.currentTime, activePlayerStatus.duration, handlePlayPauseMessage, handleSeekMessage]);
 
   const keyExtractor = useCallback((item: ChatMessage) => item.id, []);
 
@@ -218,6 +291,7 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
             keyExtractor={keyExtractor}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
+            extraData={{ playingMessageId, activePlayerStatus }}
           />
           
           {isProcessing ? (
@@ -233,7 +307,21 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
         </View>
 
         {/* Input Bar */}
-        <ConsultInput onSend={handleSend} disabled={isProcessing} />
+        <ConsultInput 
+          onSend={handleSend} 
+          disabled={isProcessing}
+          isPlaying={playingMessageId === 'input-preview' ? activePlayerStatus.playing : false}
+          currentTime={playingMessageId === 'input-preview' ? activePlayerStatus.currentTime : 0}
+          duration={playingMessageId === 'input-preview' ? activePlayerStatus.duration : 0}
+          onPlayPausePreview={(uri) => handlePlayPauseMessage('input-preview', uri)}
+          onSeekPreview={(percentage) => handleSeekMessage('input-preview', percentage)}
+          onDeletePreview={() => {
+            if (playingMessageId === 'input-preview') {
+              activePlayer.pause();
+              setPlayingMessageId(null);
+            }
+          }}
+        />
       </KeyboardAvoidingView>
     </Modal>
   );
@@ -257,9 +345,11 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background.surface,
   },
   headerLeft: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.sm,
+    marginRight: theme.spacing.md,
   },
   avatar: {
     width: 38,

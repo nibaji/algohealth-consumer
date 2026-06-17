@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useTransition } from 'react';
-import { StyleSheet, View, Modal, Pressable, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, Modal, Pressable, ActivityIndicator, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '@/components/ui/icon';
 import { Typography } from '@/components/ui/Typography';
@@ -96,7 +96,7 @@ export const InvitesModal: React.FC<InvitesModalProps> = React.memo(({ visible, 
     >
       <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, theme.spacing.md) }]}>
         {/* Header bar */}
-        <View style={styles.headerBar}>
+        <View style={[styles.headerBar, Platform.OS !== 'ios' ? { paddingTop: insets.top, height: 56 + insets.top } : null]}>
           <Pressable 
             onPress={onClose}
             style={({ pressed }) => [
