@@ -1,5 +1,6 @@
 ## Unreleased
 
+- 2026-06-17: Configured chatbot input buttons so that the record button is hidden if document attachments are added. The send button is only shown when the user has typed text or recorded audio input.
 - 2026-06-17: Improved chatbot voice recording UX. Tapping the mic button now starts voice recording instantly, hiding the text input field. Spreading the paperclip attachments and send button only after the recording completes to show the audio playback preview inside the chat bar.
 - 2026-06-17: Extracted the premium audio recorder and playback panel UI into a reusable `AudioNoteRecorder` component. Integrated `AudioNoteRecorder` into both the medical record creation screen and the consult chatbot preview panel, reducing code duplication and unifying the recording UX.
 - 2026-06-17: Fixed a bug where recorded audio note playback was playable only once on the medical record creation screen and the consult chatbot. Added a circular thumb knob to the chatbot's progress seeker to match the premium design of the medical record creation screen.

@@ -167,19 +167,7 @@ export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({
               maxLength={500}
             />
 
-            {!inputText.trim() && documents.length === 0 ? (
-              <Pressable
-                onPress={() => setIsRecordingMode(true)}
-                disabled={disabled}
-                style={({ pressed }) => [
-                  styles.actionBtn,
-                  pressed ? styles.actionBtnPressed : null,
-                  { borderCurve: 'continuous' }
-                ]}
-              >
-                <Icon name="mic.fill" size={18} tintColor={theme.colors.primary.DEFAULT} />
-              </Pressable>
-            ) : (
+            {inputText.trim() !== '' ? (
               <Pressable
                 onPress={handleSend}
                 disabled={disabled}
@@ -191,7 +179,19 @@ export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({
               >
                 <Icon name="paperplane.fill" size={16} tintColor="#FFFFFF" />
               </Pressable>
-            )}
+            ) : documents.length === 0 ? (
+              <Pressable
+                onPress={() => setIsRecordingMode(true)}
+                disabled={disabled}
+                style={({ pressed }) => [
+                  styles.actionBtn,
+                  pressed ? styles.actionBtnPressed : null,
+                  { borderCurve: 'continuous' }
+                ]}
+              >
+                <Icon name="mic.fill" size={18} tintColor={theme.colors.primary.DEFAULT} />
+              </Pressable>
+            ) : null}
           </>
         )}
       </View>
