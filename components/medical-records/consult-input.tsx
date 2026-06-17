@@ -18,7 +18,7 @@ export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({
   const [inputText, setInputText] = useState('');
   const [documents, setDocuments] = useState<DocumentPicker.DocumentPickerAsset[]>([]);
   const [audioFile, setAudioFile] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
-  const [showRecorder, setShowRecorder] = useState(false);
+  const [isRecordingMode, setIsRecordingMode] = useState(false);
 
   const handlePickDocuments = useCallback(async () => {
     try {
@@ -60,106 +60,139 @@ export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({
     setInputText('');
     setDocuments([]);
     setAudioFile(null);
-    setShowRecorder(false);
+    setIsRecordingMode(false);
   }, [inputText, audioFile, documents, onSend]);
-
-  const showAttachmentsArea = documents.length > 0 || !!audioFile || showRecorder;
 
   return (
     <View style={styles.inputContainer}>
       {/* Picked attachments list */}
-      {showAttachmentsArea ? (
+      {documents.length > 0 ? (
         <View style={styles.attachmentsArea}>
-          {showRecorder || audioFile ? (
-            <View style={styles.audioRecorderWrapper}>
-              <AudioNoteRecorder
-                audioFile={audioFile}
-                onAudioChange={(file) => {
-                  setAudioFile(file);
-                  if (!file) {
-                    setShowRecorder(false);
-                  }
-                }}
-              />
-            </View>
-          ) : null}
-
-          {documents.length > 0 ? (
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.attachmentsList}
-              style={audioFile || showRecorder ? { marginTop: theme.spacing.sm } : null}
-            >
-              {documents.map((doc, index) => (
-                <View key={index} style={[styles.attachmentChip, { borderCurve: 'continuous' }]}>
-                  <Icon name="doc.fill" size={10} tintColor={theme.colors.text.secondary} />
-                  <Typography.Label style={styles.attachmentLabel} numberOfLines={1}>
-                    {doc.name}
-                  </Typography.Label>
-                  <Pressable onPress={() => removeDocument(index)} style={styles.chipRemoveBtn}>
-                    <Icon name="xmark" size={10} tintColor={theme.colors.text.tertiary} />
-                  </Pressable>
-                </View>
-              ))}
-            </ScrollView>
-          ) : null}
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.attachmentsList}
+          >
+            {documents.map((doc, index) => (
+              <View key={index} style={[styles.attachmentChip, { borderCurve: 'continuous' }]}>
+                <Icon name="doc.fill" size={10} tintColor={theme.colors.text.secondary} />
+                <Typography.Label style={styles.attachmentLabel} numberOfLines={1}>
+                  {doc.name}
+                </Typography.Label>
+                <Pressable onPress={() => removeDocument(index)} style={styles.chipRemoveBtn}>
+                  <Icon name="xmark" size={10} tintColor={theme.colors.text.tertiary} />
+                </Pressable>
+              </View>
+            ))}
+          </ScrollView>
         </View>
       ) : null}
 
       {/* Input bar */}
       <View style={styles.inputBar}>
-        <Pressable
-          onPress={handlePickDocuments}
-          disabled={disabled}
-          style={({ pressed }) => [
-            styles.actionBtn,
-            pressed ? styles.actionBtnPressed : null,
-            { borderCurve: 'continuous' }
-          ]}
-        >
-          <Icon name="paperclip" size={18} tintColor={theme.colors.text.secondary} />
-        </Pressable>
-
-        <TextInput
-          placeholder={audioFile ? 'Voice note attached' : 'Type or record a question...'}
-          value={inputText}
-          onChangeText={setInputText}
-          style={[styles.textInput, { borderCurve: 'continuous' }]}
-          placeholderTextColor={theme.colors.text.tertiary}
-          editable={!disabled}
-          multiline
-          maxLength={500}
-        />
-
-        {!inputText.trim() && !audioFile && documents.length === 0 ? (
-          <Pressable
-            onPress={() => setShowRecorder(prev => !prev)}
-            disabled={disabled}
-            style={({ pressed }) => [
-              styles.actionBtn,
-              pressed ? styles.actionBtnPressed : null,
-              { borderCurve: 'continuous' }
-            ]}
-          >
-            <Icon 
-              name={showRecorder ? 'mic.slash.fill' : 'mic.fill'} 
-              size={18} 
-              tintColor={showRecorder ? theme.colors.status.error : theme.colors.primary.DEFAULT} 
+        {isRecordingMode ? (
+          // Recording in progress: only show the recorder
+          <View style={styles.recorderContainer}>
+            <AudioNoteRecorder
+              audioFile={audioFile}
+              onAudioChange={(file) => {
+                setAudioFile(file);
+                setIsRecordingMode(false);
+              }}
+              variant="chat"
+              startRecordingOnInit={true}
             />
-          </Pressable>
+          </View>
+        ) : audioFile ? (
+          // Recorded, showing playback: show paperclip, player, and send buttons
+          <>
+            <Pressable
+              onPress={handlePickDocuments}
+              disabled={disabled}
+              style={({ pressed }) => [
+                styles.actionBtn,
+                pressed ? styles.actionBtnPressed : null,
+                { borderCurve: 'continuous' }
+              ]}
+            >
+              <Icon name="paperclip" size={18} tintColor={theme.colors.text.secondary} />
+            </Pressable>
+
+            <View style={styles.recorderContainer}>
+              <AudioNoteRecorder
+                audioFile={audioFile}
+                onAudioChange={(file) => {
+                  setAudioFile(file);
+                  setIsRecordingMode(false);
+                }}
+                variant="chat"
+              />
+            </View>
+
+            <Pressable
+              onPress={handleSend}
+              disabled={disabled}
+              style={({ pressed }) => [
+                styles.sendButton,
+                pressed ? styles.sendButtonPressed : null,
+                { borderCurve: 'continuous' }
+              ]}
+            >
+              <Icon name="paperplane.fill" size={16} tintColor="#FFFFFF" />
+            </Pressable>
+          </>
         ) : (
-          <Pressable
-            onPress={handleSend}
-            disabled={disabled}
-            style={({ pressed }) => [
-              styles.sendButton,
-              pressed ? styles.sendButtonPressed : null,
-              { borderCurve: 'continuous' }
-            ]}
-          >
-            <Icon name="paperplane.fill" size={16} tintColor="#FFFFFF" />
-          </Pressable>
+          // Normal state: paperclip, text input, mic or send
+          <>
+            <Pressable
+              onPress={handlePickDocuments}
+              disabled={disabled}
+              style={({ pressed }) => [
+                styles.actionBtn,
+                pressed ? styles.actionBtnPressed : null,
+                { borderCurve: 'continuous' }
+              ]}
+            >
+              <Icon name="paperclip" size={18} tintColor={theme.colors.text.secondary} />
+            </Pressable>
+
+            <TextInput
+              placeholder="Type or record a question..."
+              value={inputText}
+              onChangeText={setInputText}
+              style={[styles.textInput, { borderCurve: 'continuous' }]}
+              placeholderTextColor={theme.colors.text.tertiary}
+              editable={!disabled}
+              multiline
+              maxLength={500}
+            />
+
+            {!inputText.trim() && documents.length === 0 ? (
+              <Pressable
+                onPress={() => setIsRecordingMode(true)}
+                disabled={disabled}
+                style={({ pressed }) => [
+                  styles.actionBtn,
+                  pressed ? styles.actionBtnPressed : null,
+                  { borderCurve: 'continuous' }
+                ]}
+              >
+                <Icon name="mic.fill" size={18} tintColor={theme.colors.primary.DEFAULT} />
+              </Pressable>
+            ) : (
+              <Pressable
+                onPress={handleSend}
+                disabled={disabled}
+                style={({ pressed }) => [
+                  styles.sendButton,
+                  pressed ? styles.sendButtonPressed : null,
+                  { borderCurve: 'continuous' }
+                ]}
+              >
+                <Icon name="paperplane.fill" size={16} tintColor="#FFFFFF" />
+              </Pressable>
+            )}
+          </>
         )}
       </View>
     </View>
@@ -204,9 +237,9 @@ const styles = StyleSheet.create({
   chipRemoveBtn: {
     padding: 2,
   },
-  audioRecorderWrapper: {
-    paddingVertical: theme.spacing.xs,
-    width: '100%',
+  recorderContainer: {
+    flex: 1,
+    justifyContent: 'center',
   },
   inputBar: {
     flexDirection: 'row',

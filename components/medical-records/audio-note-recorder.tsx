@@ -31,12 +31,16 @@ interface AudioNoteRecorderProps {
   audioFile: DocumentPicker.DocumentPickerAsset | null;
   onAudioChange: (file: DocumentPicker.DocumentPickerAsset | null) => void;
   containerStyle?: any;
+  variant?: 'form' | 'chat';
+  startRecordingOnInit?: boolean;
 }
 
 export const AudioNoteRecorder: React.FC<AudioNoteRecorderProps> = React.memo(({
   audioFile,
   onAudioChange,
   containerStyle,
+  variant = 'form',
+  startRecordingOnInit = false,
 }) => {
   const [progressBarWidth, setProgressBarWidth] = useState(0);
 
@@ -121,6 +125,14 @@ export const AudioNoteRecorder: React.FC<AudioNoteRecorderProps> = React.memo(({
     }
   }, [audioRecorder]);
 
+  // Automatically start recording if startRecordingOnInit is set
+  useEffect(() => {
+    if (startRecordingOnInit && !recorderState.isRecording && !audioFile) {
+      startRecording();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startRecordingOnInit]);
+
   const stopRecording = useCallback(async () => {
     try {
       await audioRecorder.stop();
@@ -172,12 +184,13 @@ export const AudioNoteRecorder: React.FC<AudioNoteRecorderProps> = React.memo(({
   }, [progressBarWidth, playerStatus.duration, player]);
 
   const isRecorded = !!audioFile;
+  const isChat = variant === 'chat';
 
   return (
     <View style={[styles.container, containerStyle]}>
       {!isRecorded ? (
         // Recording State: Idle or Recording
-        <View style={styles.recorderPanel}>
+        <View style={isChat ? styles.recorderPanelChat : styles.recorderPanel}>
           {recorderState.isRecording ? (
             <View style={styles.recordingStateRow}>
               {/* Pulsing indicator */}
@@ -205,30 +218,33 @@ export const AudioNoteRecorder: React.FC<AudioNoteRecorderProps> = React.memo(({
               </Pressable>
             </View>
           ) : (
-            <View style={styles.idleStateRow}>
-              <Pressable
-                onPress={startRecording}
-                style={({ pressed }) => [
-                  styles.recordMicButton,
-                  pressed ? styles.recordMicButtonPressed : null,
-                ]}
-              >
-                <Icon name="mic.fill" size={24} tintColor="#FFF" />
-              </Pressable>
-              <View style={styles.idleTextContainer}>
-                <Typography.Paragraph style={styles.audioNoteTitle}>
-                  Record Audio Note
-                </Typography.Paragraph>
-                <Typography.Label style={styles.audioNoteSubtitle}>
-                  Tap microphone to start recording
-                </Typography.Label>
+            // Only show Idle UI for non-chat layout
+            !isChat ? (
+              <View style={styles.idleStateRow}>
+                <Pressable
+                  onPress={startRecording}
+                  style={({ pressed }) => [
+                    styles.recordMicButton,
+                    pressed ? styles.recordMicButtonPressed : null,
+                  ]}
+                >
+                  <Icon name="mic.fill" size={24} tintColor="#FFF" />
+                </Pressable>
+                <View style={styles.idleTextContainer}>
+                  <Typography.Paragraph style={styles.audioNoteTitle}>
+                    Record Audio Note
+                  </Typography.Paragraph>
+                  <Typography.Label style={styles.audioNoteSubtitle}>
+                    Tap microphone to start recording
+                  </Typography.Label>
+                </View>
               </View>
-            </View>
+            ) : null
           )}
         </View>
       ) : (
         // Playback State: Played / Paused
-        <View style={styles.playerPanel}>
+        <View style={isChat ? styles.playerPanelChat : styles.playerPanel}>
           <View style={styles.playerControlsRow}>
             <Pressable
               onPress={handlePlayPause}
@@ -313,6 +329,11 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
     padding: theme.spacing.md,
   },
+  recorderPanelChat: {
+    backgroundColor: 'transparent',
+    padding: 0,
+    width: '100%',
+  },
   idleStateRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -395,6 +416,11 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.lg,
     borderCurve: 'continuous',
     padding: theme.spacing.md,
+  },
+  playerPanelChat: {
+    backgroundColor: 'transparent',
+    padding: 0,
+    width: '100%',
   },
   playerControlsRow: {
     flexDirection: 'row',
