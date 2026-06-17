@@ -1,22 +1,22 @@
-import React, { useState, useCallback, useRef } from 'react';
-import { View, StyleSheet, ScrollView, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
+import { ConsultModal } from '@/components/medical-records/consult-modal';
+import { EditMemberModal } from '@/components/medical-records/edit-member-modal';
+import { InvitesModal } from '@/components/medical-records/invites-modal';
+import { MemberAccordion } from '@/components/medical-records/member-accordion';
+import { Icon } from '@/components/ui/icon';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { FamilyMemberOut, FamilyOut } from '@/src/features/family/familyTypes';
+import { MedicalRecordResponse } from '@/src/features/medical-records/medicalRecordTypes';
 import { familyService } from '@/src/services/family/familyService';
 import { medicalRecordService } from '@/src/services/medical-records/medicalRecordService';
-import { FamilyOut, FamilyMemberOut } from '@/src/features/family/familyTypes';
-import { MedicalRecordResponse } from '@/src/features/medical-records/medicalRecordTypes';
-import { ConsultModal } from '@/components/medical-records/consult-modal';
-import Animated, { FadeInDown, LayoutAnimationConfig } from 'react-native-reanimated';
-import * as Clipboard from 'expo-clipboard';
-import { Icon } from '@/components/ui/icon';
-import { useRouter, useFocusEffect } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MemberAccordion } from '@/components/medical-records/member-accordion';
-import { EditMemberModal } from '@/components/medical-records/edit-member-modal';
-import { InvitesModal } from '@/components/medical-records/invites-modal';
 import { refreshTracker } from '@/src/utils/refreshTracker';
+import * as Clipboard from 'expo-clipboard';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useRef, useState } from 'react';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import Animated, { FadeInDown, LayoutAnimationConfig } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function Index() {
   const { user, refreshProfile, isFamilyPending } = useAuth();
@@ -49,7 +49,7 @@ export default function Index() {
   const loadFamilyData = useCallback(async () => {
     try {
       const familyData = await familyService.getMyFamily();
-      
+
       // Fetch members list to populate summaries
       let membersWithSummaries: any[] = [];
       try {
@@ -103,7 +103,7 @@ export default function Index() {
     try {
       // Refresh user profile first to ensure we have the latest family_id
       const updatedUser = await refreshProfile();
-      
+
       if (!updatedUser?.family_id) {
         setFamily(null);
         setRecords([]);
@@ -147,7 +147,7 @@ export default function Index() {
         const performSurgicalRefresh = async () => {
           try {
             let currentFamilyId = family?.id;
-            
+
             if (needsProfile) {
               const updatedUser = await refreshProfile();
               if (updatedUser?.family_id !== currentFamilyId) {
@@ -246,7 +246,7 @@ export default function Index() {
         <Typography.Subheading style={styles.headerTitle}>
           AlgoHealth Plus
         </Typography.Subheading>
-        
+
         <View style={styles.headerActions}>
           {isFamilyPending ? (
             <Pressable
@@ -257,8 +257,8 @@ export default function Index() {
                 { borderCurve: 'continuous' }
               ]}
             >
-              <Icon 
-                name="envelope.fill" 
+              <Icon
+                name="envelope.fill"
                 size={20}
                 tintColor={theme.colors.primary.DEFAULT}
               />
@@ -267,7 +267,7 @@ export default function Index() {
           ) : null}
 
           {/* Profile icon top right */}
-          <Pressable 
+          <Pressable
             onPress={handleNavigateProfile}
             style={({ pressed }) => [
               styles.profileButton,
@@ -275,8 +275,8 @@ export default function Index() {
               { borderCurve: 'continuous' }
             ]}
           >
-            <Icon 
-              name="person.crop.circle.fill" 
+            <Icon
+              name="person.crop.circle.fill"
               size={20}
               tintColor={theme.colors.primary.DEFAULT}
             />
@@ -287,7 +287,7 @@ export default function Index() {
         </View>
       </View>
 
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
         contentInsetAdjustmentBehavior="automatic"
@@ -316,7 +316,7 @@ export default function Index() {
         ) : (
           <LayoutAnimationConfig>
             <Animated.View entering={FadeInDown.duration(500).delay(100)} style={styles.dashboardBody}>
-              
+
               <View style={styles.sectionsContainer}>
                 {/* Active Family Circle Card */}
                 {family ? (
@@ -331,9 +331,9 @@ export default function Index() {
                             Tap a family member to view their medical records.
                           </Typography.Paragraph>
                         </View>
-                        
+
                         {/* Share invite code pill */}
-                        <Pressable 
+                        <Pressable
                           onPress={handleCopyCode}
                           style={({ pressed }) => [
                             styles.inviteBadge,
@@ -341,8 +341,8 @@ export default function Index() {
                             { borderCurve: 'continuous' }
                           ]}
                         >
-                          <Icon 
-                            name={copied ? "checkmark" : "doc.on.doc.fill"} 
+                          <Icon
+                            name={copied ? "checkmark" : "doc.on.doc.fill"}
                             size={14}
                             tintColor={copied ? theme.colors.status.success : theme.colors.primary.DEFAULT}
                           />
@@ -368,8 +368,8 @@ export default function Index() {
                         { borderCurve: 'continuous' }
                       ]}
                     >
-                      <Icon 
-                        name="person.badge.plus" 
+                      <Icon
+                        name="person.badge.plus"
                         size={18}
                         tintColor={theme.colors.primary.DEFAULT}
                       />
@@ -383,7 +383,7 @@ export default function Index() {
                       <View style={styles.accordionsList}>
                         {family.members.filter(m => m.invite_status !== 'pending').map((member) => {
                           const isExpanded = expandedMembers[member.id] || false;
-                          
+
                           // Filter records for this member
                           const memberRecords = records.filter(
                             (r) => r.family_member_id === member.id
@@ -435,7 +435,7 @@ export default function Index() {
                       Need to switch? Start a new family or join another family using a different invite code.
                     </Typography.Paragraph>
                     <View style={styles.actionsRow}>
-                      <Pressable 
+                      <Pressable
                         onPress={handleNavigateCreateFamily}
                         style={({ pressed }) => [
                           styles.actionButton,
@@ -449,7 +449,7 @@ export default function Index() {
                         </Typography.Label>
                       </Pressable>
 
-                      <Pressable 
+                      <Pressable
                         onPress={handleNavigateJoinFamily}
                         style={({ pressed }) => [
                           styles.actionButton,
@@ -719,7 +719,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border.light,
     gap: theme.spacing.xs,
-    marginTop: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
     marginHorizontal: theme.spacing.lg,
   },
   addMemberButtonPressed: {
