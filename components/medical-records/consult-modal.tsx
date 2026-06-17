@@ -1,28 +1,28 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { 
-  StyleSheet, 
-  View, 
-  Modal, 
-  Pressable, 
-  ActivityIndicator, 
-  KeyboardAvoidingView, 
-  Platform,
-  AppState,
-  AppStateStatus
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
 import { Icon } from '@/components/ui/icon';
-import { FlashList, FlashListRef } from '@shopify/flash-list';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
+import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
 import { FamilyMemberOut } from '@/src/features/family/familyTypes';
 import { medicalRecordService } from '@/src/services/medical-records/medicalRecordService';
-import { consultCache, ChatMessage } from '@/src/utils/consultCache';
-import * as DocumentPicker from 'expo-document-picker';
-import { ConsultMessage } from './consult-message';
-import { ConsultInput } from './consult-input';
+import { ChatMessage, consultCache } from '@/src/utils/consultCache';
+import { FlashList, FlashListRef } from '@shopify/flash-list';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
+import * as DocumentPicker from 'expo-document-picker';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  AppState,
+  AppStateStatus,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ConsultInput } from './consult-input';
+import { ConsultMessage } from './consult-message';
 
 interface ConsultModalProps {
   visible: boolean;
@@ -41,7 +41,7 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
   // Centralized Audio Player
   const activePlayer = useAudioPlayer(null);
   const activePlayerStatus = useAudioPlayerStatus(activePlayer);
-  
+
   const flashListRef = useRef<FlashListRef<ChatMessage>>(null);
 
   // Initialize chat when modal opens
@@ -61,7 +61,7 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
       }
       setIsProcessing(false);
       setPlayingMessageId(null);
-      
+
       // Auto-scroll to bottom after rendering
       setTimeout(() => {
         if (flashListRef.current) {
@@ -142,8 +142,8 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
   }, [playingMessageId, activePlayerStatus.duration, activePlayer]);
 
   const handleSend = useCallback(async (
-    text: string, 
-    audioFile: DocumentPicker.DocumentPickerAsset | null, 
+    text: string,
+    audioFile: DocumentPicker.DocumentPickerAsset | null,
     docs: DocumentPicker.DocumentPickerAsset[]
   ) => {
     if (!member || isProcessing) return;
@@ -187,10 +187,10 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
       }
 
       const res = await medicalRecordService.consult(formData);
-      
+
       // Extract response text
       const botText = res.response || res.response_text || res.text || res.answer || "Sorry, I couldn't formulate a response.";
-      
+
       const botMessage: ChatMessage = {
         id: `bot-${Date.now()}`,
         text: botText,
@@ -217,8 +217,8 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
   const renderMessageItem = useCallback(({ item }: { item: ChatMessage }) => {
     const isCurrentPlaying = playingMessageId === item.id;
     return (
-      <ConsultMessage 
-        item={item} 
+      <ConsultMessage
+        item={item}
         isPlaying={isCurrentPlaying ? activePlayerStatus.playing : false}
         currentTime={isCurrentPlaying ? activePlayerStatus.currentTime : 0}
         duration={isCurrentPlaying ? activePlayerStatus.duration : (item.audio_duration || 0)}
@@ -243,8 +243,8 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      <KeyboardAvoidingView 
-        style={[styles.modalContainer, { paddingTop: insets.top }]}
+      <KeyboardAvoidingView
+        style={[styles.modalContainer, { paddingTop: insets.top, marginBottom: insets.bottom }]}
         behavior="padding"
         enabled={keyboardAvoidingEnabled}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
@@ -258,13 +258,13 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
               </Typography.Label>
             </View>
             <View style={{ flex: 1 }}>
-              <Typography.Subheading 
+              <Typography.Subheading
                 style={styles.headerTitle}
                 truncate
               >
                 Health Consultant
               </Typography.Subheading>
-              <Typography.Label 
+              <Typography.Label
                 style={styles.headerSubtitle}
                 truncate
               >
@@ -272,8 +272,8 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
               </Typography.Label>
             </View>
           </View>
-          
-          <Pressable 
+
+          <Pressable
             onPress={onClose}
             style={({ pressed }) => [
               styles.closeButton,
@@ -296,7 +296,7 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
             showsVerticalScrollIndicator={false}
             extraData={{ playingMessageId, activePlayerStatus }}
           />
-          
+
           {isProcessing ? (
             <View style={styles.loadingBubbleRow}>
               <View style={[styles.botAvatarCircle, { borderCurve: 'continuous' }]}>
@@ -310,8 +310,8 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
         </View>
 
         {/* Input Bar */}
-        <ConsultInput 
-          onSend={handleSend} 
+        <ConsultInput
+          onSend={handleSend}
           disabled={isProcessing}
           isPlaying={playingMessageId === 'input-preview' ? activePlayerStatus.playing : false}
           currentTime={playingMessageId === 'input-preview' ? activePlayerStatus.currentTime : 0}
