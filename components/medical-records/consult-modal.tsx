@@ -122,6 +122,9 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
       if (activePlayerStatus.playing) {
         activePlayer.pause();
       } else {
+        if (activePlayerStatus.duration > 0 && activePlayerStatus.currentTime >= activePlayerStatus.duration - 0.1) {
+          activePlayer.seekTo(0);
+        }
         activePlayer.play();
       }
     } else {
@@ -129,7 +132,7 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
       activePlayer.replace(uri);
       activePlayer.play();
     }
-  }, [playingMessageId, activePlayerStatus.playing, activePlayer]);
+  }, [playingMessageId, activePlayerStatus.playing, activePlayerStatus.currentTime, activePlayerStatus.duration, activePlayer]);
 
   const handleSeekMessage = useCallback((messageId: string, percentage: number) => {
     if (playingMessageId === messageId && activePlayerStatus.duration > 0) {

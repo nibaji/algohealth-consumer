@@ -1,8 +1,12 @@
 ## Unreleased
 
+- 2026-06-17: Fixed a bug where recorded audio note playback was playable only once on the medical record creation screen and the consult chatbot. Added a circular thumb knob to the chatbot's progress seeker to match the premium design of the medical record creation screen.
 - 2026-06-17: Implemented voice note recording and document attachments in Health Consultant chatbot. Refactored chatbot modal by extracting subcomponents. Added deletion guards for family members based on owner/self permissions. Added onboarding invite reject and skip actions. Implemented dashboard invites modal with notification badge and pending member filtering. Rendered full AI health summary above member medical records and hid home page record AI badge.
 - 2026-06-17: Implemented a centralized audio playback controller (`activePlayer`) in `ConsultModal` to ensure only one audio plays at a time. Added AppState and unmount listeners to pause audio when the app background is entered or the modal closes. Created a unified, reusable `AudioPlayerView` for both recording preview and message bubble players. Adjusted `invites-modal` header styling for safe areas on non-iOS platforms. Rendered a single-line `health_summary` preview inside the collapsed accordion header. Constrained the chat modal header layout to keep the close button on screen. Integrated `/family-members/` (`getFamilyMembers()`) to query detailed summaries and merged it on the dashboard.
   Changed in:
+  - `components/medical-records/audio-player-view.tsx`
+  - `components/medical-records/consult-modal.tsx`
+  - `app/medical-records/create.tsx`
   - `src/features/family/familyTypes.ts`
   - `src/services/family/familyService.ts`
   - `src/services/medical-records/medicalRecordService.ts`

@@ -224,9 +224,12 @@ export default function CreateMedicalRecord() {
     if (playerStatus.playing) {
       player.pause();
     } else {
+      if (playerStatus.duration > 0 && playerStatus.currentTime >= playerStatus.duration - 0.1) {
+        player.seekTo(0);
+      }
       player.play();
     }
-  }, [player, playerStatus.playing]);
+  }, [player, playerStatus.playing, playerStatus.duration, playerStatus.currentTime]);
 
   const handleProgressBarLayout = useCallback((e: any) => {
     setProgressBarWidth(e.nativeEvent.layout.width);

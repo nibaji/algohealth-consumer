@@ -73,6 +73,13 @@ export const AudioPlayerView: React.FC<AudioPlayerViewProps> = React.memo(({
               { width: `${Math.max(0, Math.min(100, progressPercent))}%` }
             ]} 
           />
+          <View 
+            style={[
+              styles.progressBarThumb,
+              isUser ? styles.progressBarThumbUser : styles.progressBarThumbDefault,
+              { left: `${Math.max(0, Math.min(100, progressPercent))}%` }
+            ]}
+          />
         </Pressable>
         <View style={styles.timeLabelRow}>
           <Typography.Label style={[styles.timeLabel, isUser ? styles.timeLabelUser : styles.timeLabelDefault]}>
@@ -135,12 +142,15 @@ const styles = StyleSheet.create({
   },
   playerSeeker: {
     flex: 1,
-    gap: 4,
+    gap: 6,
+    justifyContent: 'center',
   },
   progressBarBg: {
-    height: 4,
-    borderRadius: 2,
-    overflow: 'hidden',
+    height: 6,
+    borderRadius: 3,
+    position: 'relative',
+    overflow: 'visible',
+    justifyContent: 'center',
   },
   progressBarBgUser: {
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
@@ -149,12 +159,28 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.border.light,
   },
   progressBarFill: {
-    height: '100%',
+    height: 6,
+    borderRadius: 3,
+    position: 'absolute',
+    left: 0,
   },
   progressBarFillUser: {
     backgroundColor: '#FFFFFF',
   },
   progressBarFillDefault: {
+    backgroundColor: theme.colors.primary.DEFAULT,
+  },
+  progressBarThumb: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    position: 'absolute',
+    marginLeft: -6,
+  },
+  progressBarThumbUser: {
+    backgroundColor: '#FFFFFF',
+  },
+  progressBarThumbDefault: {
     backgroundColor: theme.colors.primary.DEFAULT,
   },
   timeLabelRow: {
