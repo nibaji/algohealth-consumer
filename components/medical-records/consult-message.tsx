@@ -41,6 +41,7 @@ export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({
         ]}
       >
         {item.audio_uri ? (
+          <View style={styles.audioPlayerWrapper}>
           <AudioPlayerView
             isPlaying={isPlaying}
             currentTime={currentTime}
@@ -49,6 +50,7 @@ export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({
             onSeek={onSeek}
             variant="user"
           />
+          </View>
         ) : null}
 
         {item.text ? (
@@ -178,4 +180,5 @@ const styles = StyleSheet.create({
   docTextBot: {
     color: theme.colors.text.primary,
   },
+  audioPlayerWrapper: { marginVertical: theme.spacing.sm, width: Dimensions.get('screen').width * 0.6 }
 });

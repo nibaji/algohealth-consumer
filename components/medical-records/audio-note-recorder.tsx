@@ -200,7 +200,7 @@ export const AudioNoteRecorder: React.FC<AudioNoteRecorderProps> = React.memo(({
               
               <View style={styles.recordingTimerContainer}>
                 <Typography.Paragraph style={styles.recordingText}>
-                  Recording Note...
+                  Recording...
                 </Typography.Paragraph>
                 <Typography.Label style={styles.recordingDuration}>
                   {formatDuration(recorderState.durationMillis)}
@@ -232,7 +232,7 @@ export const AudioNoteRecorder: React.FC<AudioNoteRecorderProps> = React.memo(({
                 </Pressable>
                 <View style={styles.idleTextContainer}>
                   <Typography.Paragraph style={styles.audioNoteTitle}>
-                    Record Audio Note
+                    Record Audio
                   </Typography.Paragraph>
                   <Typography.Label style={styles.audioNoteSubtitle}>
                     Tap microphone to start recording
@@ -444,6 +444,7 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 6,
     justifyContent: 'center',
+    insetBlock: theme.spacing.xs,
   },
   progressBarBg: {
     height: 6,

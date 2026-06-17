@@ -48,7 +48,7 @@ export const AudioPlayerView: React.FC<AudioPlayerViewProps> = React.memo(({
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <View style={[styles.playerContainer, onDelete ? styles.playerContainerWide : null]}>
+    <View style={styles.playerContainer}>
       <Pressable
         onPress={onPlayPause}
         style={[styles.playPauseBtn, isUser ? styles.playPauseBtnUser : styles.playPauseBtnDefault]}
@@ -117,12 +117,9 @@ const styles = StyleSheet.create({
   playerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.sm,
-    width: 220,
-    paddingVertical: theme.spacing.xs,
-  },
-  playerContainerWide: {
+    gap: theme.spacing.md,
     width: '100%',
+    paddingVertical: theme.spacing.xs,
     paddingHorizontal: theme.spacing.xs,
   },
   playPauseBtn: {
@@ -143,6 +140,7 @@ const styles = StyleSheet.create({
   playerSeeker: {
     flex: 1,
     gap: 6,
+    insetBlock: theme.spacing.xs,
     justifyContent: 'center',
   },
   progressBarBg: {
