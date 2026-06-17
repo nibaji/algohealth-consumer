@@ -18,6 +18,8 @@ import { getDisplayRelation } from '@/src/utils/relation';
 import { refreshTracker } from '@/src/utils/refreshTracker';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import * as Sharing from 'expo-sharing';
+import * as IntentLauncher from 'expo-intent-launcher';
+import * as FileSystem from 'expo-file-system/legacy';
 import { fileService } from '@/src/services/medical-records/fileService';
 import { AudioPlayerView } from '@/components/medical-records/audio-player-view';
 import { ENV } from '@/src/utils/config/env';
@@ -55,7 +57,7 @@ export default function MedicalRecordDetail() {
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
   }, []);
 
-  const handleDownloadFile = useCallback(async (fileId: string, blobName: string, bucket: string, filename: string) => {
+  const handleDownloadFile = useCallback(async (fileId: string, blobName: string, bucket: string, filename: string, mimeType: string) => {
     if (process.env.EXPO_OS === 'web') {
       try {
         const form = document.createElement('form');
@@ -86,10 +88,29 @@ export default function MedicalRecordDetail() {
       setDownloadingFileId(fileId);
       try {
         const localUri = await fileService.getLocalFileUri(blobName, bucket, filename);
-        if (await Sharing.isAvailableAsync()) {
-          await Sharing.shareAsync(localUri);
+        if (process.env.EXPO_OS === 'android') {
+          try {
+            const contentUri = await FileSystem.getContentUriAsync(localUri);
+            await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
+              data: contentUri,
+              flags: 1, // Grant read URI permission
+              type: mimeType || 'application/octet-stream',
+            });
+          } catch (intentErr) {
+            console.error('Failed to open via intent launcher, falling back to Sharing', intentErr);
+            if (await Sharing.isAvailableAsync()) {
+              await Sharing.shareAsync(localUri);
+            } else {
+              Alert.alert('Error', 'No application found to open this file.');
+            }
+          }
         } else {
-          Alert.alert('Error', 'Sharing/Viewing is not available on this device');
+          // iOS
+          if (await Sharing.isAvailableAsync()) {
+            await Sharing.shareAsync(localUri);
+          } else {
+            Alert.alert('Error', 'Sharing/Viewing is not available on this device');
+          }
         }
       } catch (err) {
         console.error('Failed to download file natively', err);
@@ -539,7 +560,7 @@ export default function MedicalRecordDetail() {
                         <Pressable
                           key={file.id}
                           disabled={isDownloading}
-                          onPress={() => handleDownloadFile(file.id, file.blob_name || '', file.bucket || '', file.filename)}
+                          onPress={() => handleDownloadFile(file.id, file.blob_name || '', file.bucket || '', file.filename, file.mime_type || '')}
                           style={({ pressed }) => [
                             styles.fileChip,
                             pressed ? styles.fileChipPressed : null,
