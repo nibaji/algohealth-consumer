@@ -61,7 +61,8 @@
         {
           "microphonePermission": "Allow AlgoHealth Plus to access your microphone for recording audio notes."
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true,

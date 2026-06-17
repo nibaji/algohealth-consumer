@@ -17,7 +17,7 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import { getDisplayRelation } from '@/src/utils/relation';
 import { refreshTracker } from '@/src/utils/refreshTracker';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
-import * as WebBrowser from 'expo-web-browser';
+import * as Sharing from 'expo-sharing';
 import { fileService } from '@/src/services/medical-records/fileService';
 import { AudioPlayerView } from '@/components/medical-records/audio-player-view';
 import { ENV } from '@/src/utils/config/env';
@@ -41,6 +41,7 @@ export default function MedicalRecordDetail() {
   // Audio Note & Document state
   const [localAudioUri, setLocalAudioUri] = useState<string | null>(null);
   const [loadingAudio, setLoadingAudio] = useState(false);
+  const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
 
   const player = useAudioPlayer(localAudioUri);
   const playerStatus = useAudioPlayerStatus(player);
@@ -54,41 +55,48 @@ export default function MedicalRecordDetail() {
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
   }, []);
 
-  const handleDownloadFile = useCallback(async (blobName: string, bucket: string, filename: string) => {
-    try {
-      const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Downloading ${filename}...</title>
-            <style>
-              body { font-family: -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background-color: #f9f9f9; }
-              .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; borderRadius: 50%; width: 40px; height: 40px; animation: spin 2s linear infinite; }
-              @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-            </style>
-          </head>
-          <body>
-            <div style="text-align: center;">
-              <div class="loader" style="margin: 0 auto 20px;"></div>
-              <p>Downloading <strong>${filename}</strong>...</p>
-            </div>
-            <form id="downloadForm" method="POST" action="${ENV.API_BASE_URL}/utils/get-file">
-              <input type="hidden" name="blob_name" value="${blobName}" />
-              <input type="hidden" name="bucket" value="${bucket}" />
-            </form>
-            <script>
-              setTimeout(function() {
-                document.getElementById('downloadForm').submit();
-              }, 500);
-            </script>
-          </body>
-        </html>
-      `;
-      const dataUrl = `data:text/html;charset=utf-8,${encodeURIComponent(htmlContent)}`;
-      await WebBrowser.openBrowserAsync(dataUrl);
-    } catch (err) {
-      console.error('Failed to open download browser', err);
-      Alert.alert('Error', 'Failed to open file in browser');
+  const handleDownloadFile = useCallback(async (fileId: string, blobName: string, bucket: string, filename: string) => {
+    if (process.env.EXPO_OS === 'web') {
+      try {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `${ENV.API_BASE_URL}/utils/get-file`;
+        form.target = '_blank';
+
+        const inputBlobName = document.createElement('input');
+        inputBlobName.type = 'hidden';
+        inputBlobName.name = 'blob_name';
+        inputBlobName.value = blobName;
+        form.appendChild(inputBlobName);
+
+        const inputBucket = document.createElement('input');
+        inputBucket.type = 'hidden';
+        inputBucket.name = 'bucket';
+        inputBucket.value = bucket;
+        form.appendChild(inputBucket);
+
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+      } catch (err) {
+        console.error('Failed to submit form for download', err);
+        Alert.alert('Error', 'Failed to download file');
+      }
+    } else {
+      setDownloadingFileId(fileId);
+      try {
+        const localUri = await fileService.getLocalFileUri(blobName, bucket, filename);
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(localUri);
+        } else {
+          Alert.alert('Error', 'Sharing/Viewing is not available on this device');
+        }
+      } catch (err) {
+        console.error('Failed to download file natively', err);
+        Alert.alert('Error', 'Failed to download file');
+      } finally {
+        setDownloadingFileId(null);
+      }
     }
   }, []);
 
@@ -525,28 +533,36 @@ export default function MedicalRecordDetail() {
                 <View style={[styles.filesCard, { borderCurve: 'continuous' }]}>
                   <Typography.Label style={styles.sectionLabel}>Attachments</Typography.Label>
                   <View style={styles.filesGrid}>
-                    {record.files?.map((file) => (
-                      <Pressable
-                        key={file.id}
-                        onPress={() => handleDownloadFile(file.blob_name || '', file.bucket || '', file.filename)}
-                        style={({ pressed }) => [
-                          styles.fileChip,
-                          pressed ? styles.fileChipPressed : null,
-                          { borderCurve: 'continuous' }
-                        ]}
-                      >
-                        <Icon name="doc.fill" size={16} tintColor={theme.colors.primary.DEFAULT} />
-                        <View style={styles.fileChipInfo}>
-                          <Typography.Paragraph numberOfLines={1} style={styles.fileChipName}>
-                            {file.filename}
-                          </Typography.Paragraph>
-                          <Typography.Label style={styles.fileChipSize}>
-                            {formatFileSize(file.size || 0)}
-                          </Typography.Label>
-                        </View>
-                        <Icon name="arrow.down.to.line" size={14} tintColor={theme.colors.text.secondary} />
-                      </Pressable>
-                    ))}
+                    {record.files?.map((file) => {
+                      const isDownloading = downloadingFileId === file.id;
+                      return (
+                        <Pressable
+                          key={file.id}
+                          disabled={isDownloading}
+                          onPress={() => handleDownloadFile(file.id, file.blob_name || '', file.bucket || '', file.filename)}
+                          style={({ pressed }) => [
+                            styles.fileChip,
+                            pressed ? styles.fileChipPressed : null,
+                            { borderCurve: 'continuous' }
+                          ]}
+                        >
+                          <Icon name="doc.fill" size={16} tintColor={theme.colors.primary.DEFAULT} />
+                          <View style={styles.fileChipInfo}>
+                            <Typography.Paragraph numberOfLines={1} style={styles.fileChipName}>
+                              {file.filename}
+                            </Typography.Paragraph>
+                            <Typography.Label style={styles.fileChipSize}>
+                              {formatFileSize(file.size || 0)}
+                            </Typography.Label>
+                          </View>
+                          {isDownloading ? (
+                            <ActivityIndicator size="small" color={theme.colors.primary.DEFAULT} />
+                          ) : (
+                            <Icon name="arrow.down.to.line" size={14} tintColor={theme.colors.text.secondary} />
+                          )}
+                        </Pressable>
+                      );
+                    })}
                   </View>
                 </View>
               ) : null}
