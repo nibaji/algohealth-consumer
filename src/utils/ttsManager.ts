@@ -20,7 +20,7 @@ const LANGUAGE = 'en-US';
 const SPEECH_TIMEOUT_MS = 12_000;
 
 interface TtsListenerCallback {
-  (messageId: string | null): void;
+  (messageId: string | null, isPaused: boolean): void;
 }
 
 // ─── Module-level state ───────────────────────────────────────────────────────
@@ -76,7 +76,7 @@ export const subscribeTtsState = (cb: TtsListenerCallback): (() => void) => {
 };
 
 const notify = (id: string | null): void => {
-  listeners.forEach(l => l(id));
+  listeners.forEach(l => l(id, isPaused));
 };
 
 // ─── Core speech helpers ──────────────────────────────────────────────────────
@@ -159,6 +159,11 @@ const speakFromIndex = async (
  * Returns the message ID currently being spoken, or null.
  */
 export const getSpeakingMessageId = (): string | null => speakingMessageId;
+
+/**
+ * Returns true if the TTS manager is currently in a paused state.
+ */
+export const isTtsPaused = (): boolean => isPaused;
 
 /**
  * Returns true if the given message is currently being spoken.

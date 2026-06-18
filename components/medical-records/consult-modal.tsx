@@ -7,8 +7,7 @@ import { medicalRecordService } from '@/src/services/medical-records/medicalReco
 import { ChatMessage, consultCache } from '@/src/utils/consultCache';
 import {
   getSpeakingMessageId,
-  isPausedMessage,
-  isSpeakingMessage,
+  isTtsPaused,
   stopSpeaking as stopTts,
   subscribeTtsState,
   toggleMessageSpeech,
@@ -47,7 +46,10 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
   const [playingMessageId, setPlayingMessageId] = useState<string | null>(null);
 
   // TTS state — synced from the module singleton via a subscriber
-  const [ttsSpeakingId, setTtsSpeakingId] = useState<string | null>(getSpeakingMessageId);
+  const [ttsState, setTtsState] = useState({
+    speakingMessageId: getSpeakingMessageId(),
+    isPaused: isTtsPaused(),
+  });
 
   // Centralized Audio Player
   const activePlayer = useAudioPlayer(null);
@@ -57,7 +59,9 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
 
   // Subscribe to TTS speaking state changes
   useEffect(() => {
-    const unsub = subscribeTtsState((id) => setTtsSpeakingId(id));
+    const unsub = subscribeTtsState((id, isPaused) => {
+      setTtsState({ speakingMessageId: id, isPaused });
+    });
     return unsub;
   }, []);
 
@@ -251,8 +255,8 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
 
   const renderMessageItem = useCallback(({ item }: { item: ChatMessage }) => {
     const isCurrentPlaying = playingMessageId === item.id;
-    const isSpeaking = isSpeakingMessage(item.id);
-    const isPaused = isPausedMessage(item.id);
+    const isSpeaking = ttsState.speakingMessageId === item.id && !ttsState.isPaused;
+    const isPaused = ttsState.speakingMessageId === item.id && ttsState.isPaused;
     return (
       <ConsultMessage
         item={item}
@@ -270,7 +274,7 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
         onToggleSpeech={() => handleToggleSpeech(item.id, item.text || '')}
       />
     );
-  }, [playingMessageId, activePlayerStatus.playing, activePlayerStatus.currentTime, activePlayerStatus.duration, handlePlayPauseMessage, handleSeekMessage, handleToggleSpeech]);
+  }, [playingMessageId, activePlayerStatus.playing, activePlayerStatus.currentTime, activePlayerStatus.duration, ttsState, handlePlayPauseMessage, handleSeekMessage, handleToggleSpeech]);
 
   const keyExtractor = useCallback((item: ChatMessage) => item.id, []);
 
@@ -334,7 +338,7 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
             keyExtractor={keyExtractor}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
-            extraData={{ playingMessageId, activePlayerStatus, ttsSpeakingId }}
+            extraData={{ playingMessageId, activePlayerStatus, ttsState }}
           />
 
           {isProcessing ? (
