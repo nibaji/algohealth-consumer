@@ -59,12 +59,13 @@ export default function Index() {
         console.error('Failed to load family member summaries:', err);
       }
 
-      // Merge health summaries
+      // Merge health summaries and user_id
       const mergedMembers = familyData.members.map(member => {
         const matchingMember = membersWithSummaries.find(m => m.id === member.id);
         return {
           ...member,
           health_summary: matchingMember?.health_summary || member.health_summary || null,
+          user_id: matchingMember?.user_id || member.user_id || null,
         };
       });
 

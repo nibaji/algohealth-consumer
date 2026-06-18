@@ -26,7 +26,7 @@ export const useEditMemberForm = ({
   const { user } = useAuth();
 
   const isOwner = !!(user && ownerId && user.id === ownerId);
-  const isSelf = !!(user && member && (member.user_id === user.id || (member.email_id && user.email && member.email_id.toLowerCase() === user.email.toLowerCase())));
+  const isSelf = !!(user && member && member.user_id && member.user_id === user.id);
   const canDelete = isOwner || isSelf;
 
   const [loadingDetails, setLoadingDetails] = useState(false);

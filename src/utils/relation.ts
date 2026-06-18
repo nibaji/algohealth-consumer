@@ -1,17 +1,11 @@
 import { UserProfileResponse } from '@/src/features/auth/authTypes';
 
 export function isMemberSelf(
-  member: { user_id?: string | null; email_id?: string | null; relation?: string | null } | null | undefined,
+  member: { user_id?: string | null } | null | undefined,
   user: UserProfileResponse | null
 ): boolean {
-  if (!user || !member) return false;
-  if (member.user_id) {
-    return member.user_id === user.id;
-  }
-  if (member.email_id && user.email) {
-    return member.email_id.toLowerCase() === user.email.toLowerCase();
-  }
-  return (member.relation || '').toLowerCase() === 'self';
+  if (!user || !member || !member.user_id) return false;
+  return member.user_id === user.id;
 }
 
 export function getDisplayRelation(

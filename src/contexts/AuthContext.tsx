@@ -36,10 +36,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           if (familyId) {
             try {
-              const familyData = await familyService.getMyFamily();
-              const selfMember = familyData.members.find(m => 
-                m.user_id === response.user.id || 
-                (m.email_id && response.user.email && m.email_id.toLowerCase() === response.user.email.toLowerCase())
+              const members = await familyService.getFamilyMembers();
+              const selfMember = members.find(m => 
+                m.user_id === response.user.id
               );
               if (selfMember && selfMember.invite_status === 'pending') {
                 isPending = true;
@@ -92,10 +91,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         let isPending = false;
         if (profile.family_id) {
           try {
-            const family = await familyService.getMyFamily();
-            const selfMember = family.members.find(m => 
-              m.user_id === profile.id || 
-              (m.email_id && profile.email && m.email_id.toLowerCase() === profile.email.toLowerCase())
+            const members = await familyService.getFamilyMembers();
+            const selfMember = members.find(m => 
+              m.user_id === profile.id
             );
             if (selfMember && selfMember.invite_status === 'pending') {
               isPending = true;
@@ -123,10 +121,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       let isPending = false;
       if (profile.family_id) {
         try {
-          const family = await familyService.getMyFamily();
-          const selfMember = family.members.find(m => 
-            m.user_id === profile.id || 
-            (m.email_id && profile.email && m.email_id.toLowerCase() === profile.email.toLowerCase())
+          const members = await familyService.getFamilyMembers();
+          const selfMember = members.find(m => 
+            m.user_id === profile.id
           );
           if (selfMember && selfMember.invite_status === 'pending') {
             isPending = true;
