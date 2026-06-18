@@ -232,6 +232,7 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
       };
 
       setMessages((prev) => [...prev, botMessage]);
+      handleToggleSpeech(botMessage.id, botMessage.text);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error communicating with assistant';
       const errorMessage: ChatMessage = {
@@ -241,11 +242,12 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
         timestamp: new Date()
       };
       setMessages((prev) => [...prev, errorMessage]);
+      handleToggleSpeech(errorMessage.id, errorMessage.text);
     } finally {
       setIsProcessing(false);
       scrollToBottom();
     }
-  }, [member, isProcessing, scrollToBottom]);
+  }, [member, isProcessing, scrollToBottom, handleToggleSpeech]);
 
   const renderMessageItem = useCallback(({ item }: { item: ChatMessage }) => {
     const isCurrentPlaying = playingMessageId === item.id;

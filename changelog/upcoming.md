@@ -1,5 +1,6 @@
 ## Unreleased
 
+- 2026-06-18: Enabled automatic TTS playback for newly received bot response and error messages in the Health Consultant chat modal. Changed in `components/medical-records/consult-modal.tsx`.
 - 2026-06-18: Added text-to-speech (TTS) playback for bot messages in the Health Consultant chat. Each bot message now shows a small speaker button (bottom-right of the bubble) that reads the message aloud in US English. Tapping it while speaking pauses at the current sentence; tapping again resumes from where it left off. Starting TTS on a new message stops the previous one. Audio (voice note playback) and TTS are mutually exclusive — starting either stops the other. TTS is stopped when the modal closes or the app goes to background. Changed in `src/utils/ttsManager.ts` (new), `components/medical-records/consult-message.tsx`, `components/medical-records/consult-modal.tsx`, `package.json`.
 - 2026-06-18: Move "Add Family Member" button to appear above the member accordions list on the home screen. Changed in `app/index.tsx`.
 - 2026-06-17: Added ability to attach new audio recordings and additional documents when editing an existing medical record. Changed in `app/medical-records/[id].tsx`, `src/services/medical-records/medicalRecordService.ts`.
