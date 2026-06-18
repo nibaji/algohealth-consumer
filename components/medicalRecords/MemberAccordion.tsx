@@ -76,15 +76,6 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
                 ? getDisplayRelation(member, user)
                 : `${getDisplayRelation(member, user)} • ${records.length} ${records.length === 1 ? 'Record' : 'Records'}`}
             </Typography.Label>
-            {member.invite_status !== 'pending' && member.health_summary ? (
-              <Typography.Label 
-                style={styles.memberSummary}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {member.health_summary}
-              </Typography.Label>
-            ) : null}
           </View>
         </Pressable>
 
