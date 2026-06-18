@@ -3,9 +3,13 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from '@/src/contexts/AuthContext';
 import { useEffect } from 'react';
-
+import * as SplashScreen from 'expo-splash-screen';
 import { theme } from '@/constants/theme';
-import { BootSkeleton } from '@/components/ui/Skeleton';
+
+// Prevent native splash screen from auto-hiding before session is restored
+SplashScreen.preventAutoHideAsync().catch(() => {
+  /* Ignore error on web/dev */
+});
 
 function InitialLayout() {
   const { user, isLoading, isFamilyPending, hasSkippedOnboarding } = useAuth();
@@ -42,8 +46,16 @@ function InitialLayout() {
     }
   }, [user, isLoading, segments, router, isFamilyPending, hasSkippedOnboarding]);
 
+  useEffect(() => {
+    if (!isLoading) {
+      SplashScreen.hideAsync().catch(() => {
+        /* Ignore error */
+      });
+    }
+  }, [isLoading]);
+
   if (isLoading) {
-    return <BootSkeleton />;
+    return null;
   }
 
   return (
