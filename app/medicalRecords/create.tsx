@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useTransition } from 'react';
-import { StyleSheet, View, ScrollView, Pressable, ActivityIndicator, KeyboardAvoidingView } from 'react-native';
+import { StyleSheet, View, ScrollView, Pressable, KeyboardAvoidingView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { theme } from '@/constants/theme';
 import { Typography } from '@/components/ui/Typography';
@@ -18,6 +18,7 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import { getDisplayRelation } from '@/src/utils/relation';
 import { refreshTracker } from '@/src/utils/refreshTracker';
 import { AudioNoteRecorder } from '@/components/medicalRecords/AudioNoteRecorder';
+import { MemberChipsSkeleton } from '@/components/ui/Skeleton';
 
 
 
@@ -259,7 +260,7 @@ export default function CreateMedicalRecord() {
             <View style={styles.formGroup}>
               <Typography.Label style={styles.selectLabel}>Select Family Member</Typography.Label>
               {membersLoading ? (
-                <ActivityIndicator size="small" color={theme.colors.primary.DEFAULT} style={styles.loader} />
+                <MemberChipsSkeleton />
               ) : (
                 <ScrollView 
                   horizontal 
@@ -453,10 +454,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
     fontWeight: '600',
   },
-  loader: {
-    alignSelf: 'flex-start',
-    padding: theme.spacing.md,
-  },
+
   membersRow: {
     gap: theme.spacing.xs,
     paddingRight: theme.spacing.xl,

@@ -158,6 +158,29 @@ export const ChatMessageSkeleton: React.FC = () => {
   );
 };
 
+export const ChatMessageBotSkeleton: React.FC = () => {
+  return (
+    <View style={[styles.chatBubbleRow, styles.alignStart, { maxWidth: '100%' }]}>
+      <Skeleton width={28} height={28} borderRadius={theme.radius.full} />
+      <View style={[styles.chatBubble, styles.bubbleBotSkeleton]}>
+        <Skeleton width={120} height={14} />
+        <Skeleton width={80} height={14} style={{ marginTop: theme.spacing.xs }} />
+        <Skeleton width={40} height={10} style={{ marginTop: theme.spacing.xs }} />
+      </View>
+    </View>
+  );
+};
+
+export const MemberChipsSkeleton: React.FC = () => {
+  return (
+    <View style={[styles.flexRowGap, { paddingVertical: 2, gap: theme.spacing.xs }]}>
+      <Skeleton width={80} height={34} borderRadius={theme.radius.full} />
+      <Skeleton width={110} height={34} borderRadius={theme.radius.full} />
+      <Skeleton width={90} height={34} borderRadius={theme.radius.full} />
+    </View>
+  );
+};
+
 // 4. Edit Member Fields Skeleton
 export const EditMemberSkeleton: React.FC = () => {
   return (

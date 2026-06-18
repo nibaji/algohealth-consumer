@@ -1,6 +1,5 @@
 import React, { useCallback } from 'react';
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Modal,
   Pressable,
@@ -19,6 +18,7 @@ import { ChatMessage } from '@/src/utils/consultCache';
 import { useConsult } from '@/src/features/medicalRecords/useConsult';
 import { ConsultInput } from './ConsultInput';
 import { ConsultMessage } from './ConsultMessage';
+import { ChatMessageBotSkeleton } from '@/components/ui/Skeleton';
 
 interface ConsultModalProps {
   visible: boolean;
@@ -141,13 +141,8 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
           />
 
           {isProcessing ? (
-            <View style={styles.loadingBubbleRow}>
-              <View style={[styles.botAvatarCircle, { borderCurve: 'continuous' }]}>
-                <Icon name="sparkles" size={12} tintColor={theme.colors.primary.DEFAULT} />
-              </View>
-              <View style={[styles.loadingBubble, { borderCurve: 'continuous' }]}>
-                <ActivityIndicator size="small" color={theme.colors.primary.DEFAULT} />
-              </View>
+            <View style={{ paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.lg }}>
+              <ChatMessageBotSkeleton />
             </View>
           ) : null}
         </View>
