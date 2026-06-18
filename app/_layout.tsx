@@ -3,6 +3,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from '@/src/contexts/AuthContext';
 import { useEffect } from 'react';
+import { View, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
 import * as SplashScreen from 'expo-splash-screen';
 import { theme } from '@/constants/theme';
 
@@ -55,7 +57,7 @@ function InitialLayout() {
   }, [isLoading]);
 
   if (isLoading) {
-    return null;
+    return <SplashLoader />;
   }
 
   return (
@@ -88,5 +90,30 @@ export default function RootLayout() {
     </SafeAreaProvider>
   );
 }
+
+function SplashLoader() {
+  return (
+    <View style={styles.splashContainer}>
+      <Image
+        source={require('@/assets/images/splash-icon.png')}
+        style={styles.splashImage}
+        contentFit="contain"
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  splashContainer: {
+    flex: 1,
+    backgroundColor: '#2D0E5A',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  splashImage: {
+    width: 200,
+    height: 200,
+  },
+});
 
 
