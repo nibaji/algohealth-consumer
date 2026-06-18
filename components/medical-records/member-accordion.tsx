@@ -43,8 +43,9 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
       {/* Accordion Header */}
       <View style={styles.accordionHeader}>
         <Pressable 
-          onPress={onToggleExpand}
+          onPress={member.invite_status === 'pending' ? undefined : onToggleExpand}
           style={styles.headerPressable}
+          disabled={member.invite_status === 'pending'}
         >
           <View style={styles.avatar}>
             <Typography.Label style={styles.avatarText}>
@@ -52,19 +53,30 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
             </Typography.Label>
           </View>
           <View style={styles.memberInfo}>
-            <Typography.Paragraph 
-              style={styles.memberName}
-              truncate
-            >
-              {member.name}
-            </Typography.Paragraph>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs, flexWrap: 'wrap' }}>
+              <Typography.Paragraph 
+                style={styles.memberName}
+                truncate
+              >
+                {member.name}
+              </Typography.Paragraph>
+              {member.invite_status === 'pending' ? (
+                <View style={[styles.pendingTag, { borderCurve: 'continuous' }]}>
+                  <Typography.Label style={styles.pendingTagText}>
+                    Pending
+                  </Typography.Label>
+                </View>
+              ) : null}
+            </View>
             <Typography.Label 
               style={styles.memberRelation}
               truncate
             >
-              {getDisplayRelation(member, user)} • {records.length} {records.length === 1 ? 'Record' : 'Records'}
+              {member.invite_status === 'pending'
+                ? getDisplayRelation(member, user)
+                : `${getDisplayRelation(member, user)} • ${records.length} ${records.length === 1 ? 'Record' : 'Records'}`}
             </Typography.Label>
-            {member.health_summary ? (
+            {member.invite_status !== 'pending' && member.health_summary ? (
               <Typography.Label 
                 style={styles.memberSummary}
                 numberOfLines={1}
@@ -76,33 +88,37 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
           </View>
         </Pressable>
 
-        <Pressable
-          onPress={onConsult}
-          style={({ pressed }) => [
-            styles.consultButton,
-            pressed ? styles.consultButtonPressed : null,
-            { borderCurve: 'continuous' }
-          ]}
-        >
-          <Icon name="sparkles" size={12} tintColor={theme.colors.primary.DEFAULT} />
-          <Typography.Label style={styles.consultText}>
-            Consult
-          </Typography.Label>
-        </Pressable>
+        {member.invite_status !== 'pending' ? (
+          <Pressable
+            onPress={onConsult}
+            style={({ pressed }) => [
+              styles.consultButton,
+              pressed ? styles.consultButtonPressed : null,
+              { borderCurve: 'continuous' }
+            ]}
+          >
+            <Icon name="sparkles" size={12} tintColor={theme.colors.primary.DEFAULT} />
+            <Typography.Label style={styles.consultText}>
+              Consult
+            </Typography.Label>
+          </Pressable>
+        ) : null}
 
-        <Pressable 
-          onPress={onToggleExpand}
-          style={({ pressed }) => [
-            styles.chevronPressable,
-            pressed ? styles.chevronPressablePressed : null
-          ]}
-        >
-          <Icon 
-            name={isExpanded ? "chevron.up" : "chevron.down"} 
-            size={16}
-            tintColor={theme.colors.text.tertiary}
-          />
-        </Pressable>
+        {member.invite_status !== 'pending' ? (
+          <Pressable 
+            onPress={onToggleExpand}
+            style={({ pressed }) => [
+              styles.chevronPressable,
+              pressed ? styles.chevronPressablePressed : null
+            ]}
+          >
+            <Icon 
+              name={isExpanded ? "chevron.up" : "chevron.down"} 
+              size={16}
+              tintColor={theme.colors.text.tertiary}
+            />
+          </Pressable>
+        ) : null}
       </View>
 
       {/* Accordion Content */}
@@ -383,5 +399,19 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: theme.colors.text.tertiary,
     marginTop: 2,
+  },
+  pendingTag: {
+    paddingHorizontal: theme.spacing.xs,
+    paddingVertical: 2,
+    borderRadius: theme.radius.sm,
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  pendingTagText: {
+    color: '#D97706',
+    fontSize: 9,
+    fontWeight: '700',
+    textTransform: 'uppercase',
   },
 });

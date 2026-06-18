@@ -379,9 +379,9 @@ export default function Index() {
                     </Pressable>
 
                     {/* ACCORDION SECTION GROUPED BY FAMILY MEMBER */}
-                    {family.members.filter(m => m.invite_status !== 'pending').length > 0 ? (
+                    {family.members.length > 0 ? (
                       <View style={styles.accordionsList}>
-                        {family.members.filter(m => m.invite_status !== 'pending').map((member) => {
+                        {family.members.map((member) => {
                           const isExpanded = expandedMembers[member.id] || false;
 
                           // Filter records for this member

@@ -1,5 +1,6 @@
 ## Unreleased
 
+- 2026-06-18: Show pending family members in the home screen dashboard list. Added a styled "Pending" tag next to their name and disabled all expand/consult/edit operations for them. Changed in `app/index.tsx`, `components/medical-records/member-accordion.tsx`.
 - 2026-06-18: Fixed play/pause icon toggle state during TTS pause. Replaced direct global calls in renderMessageItem with a fully reactive state listener object (speaking ID + pause status) to force list re-rendering on speech pause/resume. Changed in `components/medical-records/consult-modal.tsx`, `src/utils/ttsManager.ts`.
 - 2026-06-18: Fixed icon visibility for the play.fill icon in the TTS speak button by increasing its size to 12. Changed in `components/medical-records/consult-message.tsx`.
 - 2026-06-18: Enabled automatic TTS playback for newly received bot response and error messages in the Health Consultant chat modal. Changed in `components/medical-records/consult-modal.tsx`.
