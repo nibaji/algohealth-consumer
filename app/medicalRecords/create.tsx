@@ -7,17 +7,17 @@ import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
 import { DateInput, validateDateString, inputDateToApiDate } from '@/components/ui/DateInput';
 import { familyService } from '@/src/services/family/familyService';
-import { medicalRecordService } from '@/src/services/medical-records/medicalRecordService';
+import { medicalRecordService } from '@/src/services/medicalRecords/medicalRecordService';
 import { FamilyMemberOut } from '@/src/features/family/familyTypes';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Icon } from '@/components/ui/icon';
+import { Icon } from '@/components/ui/Icon';
 import * as DocumentPicker from 'expo-document-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { getDisplayRelation } from '@/src/utils/relation';
 import { refreshTracker } from '@/src/utils/refreshTracker';
-import { AudioNoteRecorder } from '@/components/medical-records/audio-note-recorder';
+import { AudioNoteRecorder } from '@/components/medicalRecords/AudioNoteRecorder';
 
 
 

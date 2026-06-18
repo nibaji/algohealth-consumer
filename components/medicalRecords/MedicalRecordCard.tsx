@@ -1,9 +1,9 @@
 import React from 'react';
 import { StyleSheet, View, Pressable } from 'react-native';
-import { Icon } from '@/components/ui/icon';
+import { Icon } from '@/components/ui/Icon';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
-import { MedicalRecordResponse } from '@/src/features/medical-records/medicalRecordTypes';
+import { MedicalRecordResponse } from '@/src/features/medicalRecords/medicalRecordTypes';
 import { apiDateToInputDate } from '@/components/ui/DateInput';
 
 interface MedicalRecordCardProps {

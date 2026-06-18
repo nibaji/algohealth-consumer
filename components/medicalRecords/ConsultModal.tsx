@@ -10,15 +10,15 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
 
-import { Icon } from '@/components/ui/icon';
+import { Icon } from '@/components/ui/Icon';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
 import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
 import { FamilyMemberOut } from '@/src/features/family/familyTypes';
 import { ChatMessage } from '@/src/utils/consultCache';
-import { useConsult } from '@/src/features/medical-records/useConsult';
-import { ConsultInput } from './consult-input';
-import { ConsultMessage } from './consult-message';
+import { useConsult } from '@/src/features/medicalRecords/useConsult';
+import { ConsultInput } from './ConsultInput';
+import { ConsultMessage } from './ConsultMessage';
 
 interface ConsultModalProps {
   visible: boolean;

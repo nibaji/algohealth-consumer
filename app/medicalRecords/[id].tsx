@@ -6,11 +6,12 @@ import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { validateDateString, apiDateToInputDate, inputDateToApiDate } from '@/components/ui/DateInput';
 import { familyService } from '@/src/services/family/familyService';
-import { medicalRecordService } from '@/src/services/medical-records/medicalRecordService';
-import { MedicalRecordResponse } from '@/src/features/medical-records/medicalRecordTypes';
+import { medicalRecordService } from '@/src/services/medicalRecords/medicalRecordService';
+import { MedicalRecordResponse } from '@/src/features/medicalRecords/medicalRecordTypes';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Icon } from '@/components/ui/icon';
+import { Icon } from '@/components/ui/Icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { RecordDetailSkeleton } from '@/components/ui/Skeleton';
 
 import { useAuth } from '@/src/contexts/AuthContext';
 import { getDisplayRelation } from '@/src/utils/relation';
@@ -20,9 +21,9 @@ import * as Sharing from 'expo-sharing';
 import * as IntentLauncher from 'expo-intent-launcher';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as DocumentPicker from 'expo-document-picker';
-import { fileService } from '@/src/services/medical-records/fileService';
-import { AudioPlayerView } from '@/components/medical-records/audio-player-view';
-import { EditRecordForm } from '@/components/medical-records/edit-record-form';
+import { fileService } from '@/src/services/medicalRecords/fileService';
+import { AudioPlayerView } from '@/components/medicalRecords/AudioPlayerView';
+import { EditRecordForm } from '@/components/medicalRecords/EditRecordForm';
 import { formatFileSize } from '@/src/utils/file';
 import { ENV } from '@/src/utils/config/env';
 
@@ -430,9 +431,7 @@ export default function MedicalRecordDetail() {
         }
       >
         {loading ? (
-          <View style={styles.loaderContainer}>
-            <ActivityIndicator size="large" color={theme.colors.primary.DEFAULT} />
-          </View>
+          <RecordDetailSkeleton />
         ) : deleteSuccess ? (
           // Success Deleted Screen
           <Animated.View entering={FadeInDown.duration(500)} style={styles.successContainer}>

@@ -4,12 +4,11 @@ import {
   Modal, 
   Pressable, 
   ScrollView, 
-  ActivityIndicator, 
   KeyboardAvoidingView,
   Platform
 } from 'react-native';
-import { styles } from './edit-member-modal.styles';
-import { Icon } from '@/components/ui/icon';
+import { styles } from './editMemberModalStyles';
+import { Icon } from '@/components/ui/Icon';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
@@ -18,10 +17,11 @@ import { theme } from '@/constants/theme';
 import { FamilyMemberOut } from '@/src/features/family/familyTypes';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { EditMemberSkeleton } from '@/components/ui/Skeleton';
 import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
 import { useEditMemberForm } from '@/src/features/family/useEditMemberForm';
-import { GenderSelector } from './gender-selector';
-import { RelationSelector } from './relation-selector';
+import { GenderSelector } from './GenderSelector';
+import { RelationSelector } from './RelationSelector';
 
 interface EditMemberModalProps {
   visible: boolean;
@@ -102,11 +102,8 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
           style={styles.keyboardView}
         >
           {loadingDetails ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={theme.colors.primary.DEFAULT} />
-              <Typography.Paragraph style={styles.loadingText}>
-                Loading details...
-              </Typography.Paragraph>
+            <View style={{ padding: theme.spacing.lg }}>
+              <EditMemberSkeleton />
             </View>
           ) : (
             <ScrollView

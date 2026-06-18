@@ -1,10 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import { StyleSheet, View, TextInput, Pressable, ScrollView } from 'react-native';
-import { Icon } from '@/components/ui/icon';
+import { Icon } from '@/components/ui/Icon';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
 import * as DocumentPicker from 'expo-document-picker';
-import { AudioNoteRecorder } from './audio-note-recorder';
+import { AudioNoteRecorder } from './AudioNoteRecorder';
 
 interface ConsultInputProps {
   onSend: (text: string, audioFile: DocumentPicker.DocumentPickerAsset | null, documents: DocumentPicker.DocumentPickerAsset[]) => void;
@@ -95,7 +95,7 @@ export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({
           <View style={styles.recorderContainer}>
             <AudioNoteRecorder
               audioFile={audioFile}
-              onAudioChange={(file) => {
+              onAudioChange={(file: DocumentPicker.DocumentPickerAsset | null) => {
                 setAudioFile(file);
                 setIsRecordingMode(false);
               }}
@@ -121,7 +121,7 @@ export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({
             <View style={styles.recorderContainer}>
               <AudioNoteRecorder
                 audioFile={audioFile}
-                onAudioChange={(file) => {
+                onAudioChange={(file: DocumentPicker.DocumentPickerAsset | null) => {
                   setAudioFile(file);
                   setIsRecordingMode(false);
                 }}

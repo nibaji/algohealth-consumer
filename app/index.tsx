@@ -1,22 +1,23 @@
-import { ConsultModal } from '@/components/medical-records/consult-modal';
-import { EditMemberModal } from '@/components/medical-records/edit-member-modal';
-import { InvitesModal } from '@/components/medical-records/invites-modal';
-import { MemberAccordion } from '@/components/medical-records/member-accordion';
-import { Icon } from '@/components/ui/icon';
+import { ConsultModal } from '@/components/medicalRecords/ConsultModal';
+import { EditMemberModal } from '@/components/medicalRecords/EditMemberModal';
+import { InvitesModal } from '@/components/medicalRecords/InvitesModal';
+import { MemberAccordion } from '@/components/medicalRecords/MemberAccordion';
+import { Icon } from '@/components/ui/Icon';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { FamilyMemberOut, FamilyOut } from '@/src/features/family/familyTypes';
-import { MedicalRecordResponse } from '@/src/features/medical-records/medicalRecordTypes';
+import { MedicalRecordResponse } from '@/src/features/medicalRecords/medicalRecordTypes';
 import { familyService } from '@/src/services/family/familyService';
-import { medicalRecordService } from '@/src/services/medical-records/medicalRecordService';
+import { medicalRecordService } from '@/src/services/medicalRecords/medicalRecordService';
 import { refreshTracker } from '@/src/utils/refreshTracker';
 import * as Clipboard from 'expo-clipboard';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown, LayoutAnimationConfig } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { HomeSkeleton } from '@/components/ui/Skeleton';
 
 export default function Index() {
   const { user, refreshProfile, isFamilyPending } = useAuth();
@@ -218,13 +219,13 @@ export default function Index() {
 
   const handleNavigateCreateRecord = useCallback((memberId: string) => {
     router.push({
-      pathname: '/medical-records/create',
+      pathname: '/medicalRecords/create',
       params: { memberId },
     });
   }, [router]);
 
   const handleNavigateRecordDetails = useCallback((recordId: string) => {
-    router.push(`/medical-records/${recordId}`);
+    router.push(`/medicalRecords/${recordId}`);
   }, [router]);
 
   const handleNavigateCreateFamily = useCallback(() => {
@@ -310,9 +311,7 @@ export default function Index() {
         </Animated.View>
 
         {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={theme.colors.primary.DEFAULT} />
-          </View>
+          <HomeSkeleton />
         ) : (
           <LayoutAnimationConfig>
             <Animated.View entering={FadeInDown.duration(500).delay(100)} style={styles.dashboardBody}>

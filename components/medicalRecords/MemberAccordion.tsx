@@ -1,12 +1,12 @@
 import React from 'react';
 import { StyleSheet, View, Pressable } from 'react-native';
-import { Icon } from '@/components/ui/icon';
+import { Icon } from '@/components/ui/Icon';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
 import { FamilyMemberOut } from '@/src/features/family/familyTypes';
-import { MedicalRecordResponse } from '@/src/features/medical-records/medicalRecordTypes';
-import { MedicalRecordCard } from './medical-record-card';
+import { MedicalRecordResponse } from '@/src/features/medicalRecords/medicalRecordTypes';
+import { MedicalRecordCard } from './MedicalRecordCard';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { getDisplayRelation } from '@/src/utils/relation';
 

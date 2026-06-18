@@ -12,7 +12,7 @@ import { TextInput } from '@/components/ui/TextInput';
 import { theme } from '@/constants/theme';
 import { usePasswordReset } from '@/src/features/auth/use-password-reset';
 import { useRouter } from 'expo-router';
-import { Icon } from '@/components/ui/icon';
+import { Icon } from '@/components/ui/Icon';
 import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 

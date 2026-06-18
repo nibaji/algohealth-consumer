@@ -245,7 +245,7 @@ Ensure `eas.json` has proper profiles:
 
 ### Code Style
 
-- **File names**: Always use kebab-case (e.g., `comment-card.tsx`)
+- **File names**: Use PascalCase for components (e.g. `CommentCard.tsx`), camelCase for non-component files (e.g. `useComment.ts`, `commentService.ts`, `commentStyles.ts`). Use camelCase for folder names.
 - **Imports**: Always use import statements at top, prefer path aliases over relative imports
 - **Routes**: Routes belong in `app/` directory, never co-locate components there
 - **Special characters**: Never use in file names

@@ -3,8 +3,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from '@/src/contexts/AuthContext';
 import { useEffect } from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+
 import { theme } from '@/constants/theme';
+import { BootSkeleton } from '@/components/ui/Skeleton';
 
 function InitialLayout() {
   const { user, isLoading, isFamilyPending, hasSkippedOnboarding } = useAuth();
@@ -42,11 +43,7 @@ function InitialLayout() {
   }, [user, isLoading, segments, router, isFamilyPending, hasSkippedOnboarding]);
 
   if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.colors.primary.DEFAULT} />
-      </View>
-    );
+    return <BootSkeleton />;
   }
 
   return (
@@ -62,8 +59,8 @@ function InitialLayout() {
       <Stack.Screen name="family/join" />
       <Stack.Screen name="family/add-member" />
       <Stack.Screen name="profile" />
-      <Stack.Screen name="medical-records/create" />
-      <Stack.Screen name="medical-records/[id]" />
+      <Stack.Screen name="medicalRecords/create" />
+      <Stack.Screen name="medicalRecords/[id]" />
     </Stack>
   );
 }
@@ -80,11 +77,4 @@ export default function RootLayout() {
   );
 }
 
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.background.default,
-  },
-});
+

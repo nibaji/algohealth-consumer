@@ -9,7 +9,7 @@ import { ProfileDetailsCard } from '@/components/profile/profile-details-card';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useProfileDetails } from '@/src/features/auth/use-profile-details';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Icon } from '@/components/ui/icon';
+import { Icon } from '@/components/ui/Icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
 

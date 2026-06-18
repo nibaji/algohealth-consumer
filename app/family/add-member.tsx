@@ -11,7 +11,7 @@ import { familyService } from '@/src/services/family/familyService';
 import { refreshTracker } from '@/src/utils/refreshTracker';
 import { FamilyMemberCreate } from '@/src/features/family/familyTypes';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Icon } from '@/components/ui/icon';
+import { Icon } from '@/components/ui/Icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
 

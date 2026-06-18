@@ -4,7 +4,7 @@ import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import * as DocumentPicker from 'expo-document-picker';
 import { FamilyMemberOut } from '@/src/features/family/familyTypes';
 import { ChatMessage, consultCache } from '@/src/utils/consultCache';
-import { medicalRecordService } from '@/src/services/medical-records/medicalRecordService';
+import { medicalRecordService } from '@/src/services/medicalRecords/medicalRecordService';
 import { FlashListRef } from '@shopify/flash-list';
 import {
   getSpeakingMessageId,

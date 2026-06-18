@@ -1,12 +1,12 @@
 import React from 'react';
 import { View, Pressable } from 'react-native';
-import { styles } from './audio-note-recorder.styles';
+import { styles } from './audioNoteRecorderStyles';
 import { theme } from '@/constants/theme';
-import { Icon } from '@/components/ui/icon';
+import { Icon } from '@/components/ui/Icon';
 import { Typography } from '@/components/ui/Typography';
 import Animated from 'react-native-reanimated';
 import * as DocumentPicker from 'expo-document-picker';
-import { useAudioNoteRecording } from '@/src/features/medical-records/useAudioNoteRecording';
+import { useAudioNoteRecording } from '@/src/features/medicalRecords/useAudioNoteRecording';
 import { formatTime, formatDuration } from '@/src/utils/time';
 
 interface AudioNoteRecorderProps {

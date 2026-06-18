@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { Icon } from '@/components/ui/icon';
+import { Icon } from '@/components/ui/Icon';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
 import { Typography } from '@/components/ui/Typography';

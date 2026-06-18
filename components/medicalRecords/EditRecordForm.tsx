@@ -7,10 +7,10 @@ import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
 import { DateInput } from '@/components/ui/DateInput';
-import { Icon } from '@/components/ui/icon';
-import { AudioNoteRecorder } from '@/components/medical-records/audio-note-recorder';
+import { Icon } from '@/components/ui/Icon';
+import { AudioNoteRecorder } from '@/components/medicalRecords/AudioNoteRecorder';
 import { formatFileSize } from '@/src/utils/file';
-import { styles } from './edit-record-form.styles';
+import { styles } from './editRecordFormStyles';
 
 interface EditRecordFormProps {
   visitDate: string;

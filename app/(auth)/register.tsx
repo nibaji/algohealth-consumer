@@ -1,6 +1,6 @@
 import React, { useCallback, useState, useTransition } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, ScrollView, Alert, Pressable } from 'react-native';
-import { Icon } from '@/components/ui/icon';
+import { Icon } from '@/components/ui/Icon';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';

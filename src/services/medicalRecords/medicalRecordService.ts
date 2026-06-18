@@ -3,7 +3,7 @@ import {
   MedicalRecordResponse, 
   MedicalRecordUpdate,
   ConsultResponse
-} from '@/src/features/medical-records/medicalRecordTypes';
+} from '@/src/features/medicalRecords/medicalRecordTypes';
 
 export const medicalRecordService = {
   async listMedicalRecords(familyMemberId?: string): Promise<MedicalRecordResponse[]> {

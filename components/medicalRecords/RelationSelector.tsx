@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Pressable, ScrollView } from 'react-native';
 import { Typography } from '@/components/ui/Typography';
 import { TextInput } from '@/components/ui/TextInput';
-import { styles } from './edit-member-modal.styles';
+import { styles } from './editMemberModalStyles';
 
 export type RelationType = 'Spouse' | 'Child' | 'Parent' | 'Sibling' | 'Grandparent' | 'Other';
 

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useTransition } from 'react';
-import { StyleSheet, View, Modal, Pressable, ActivityIndicator, Platform } from 'react-native';
+import { StyleSheet, View, Modal, Pressable, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Icon } from '@/components/ui/icon';
+import { InvitesSkeleton } from '@/components/ui/Skeleton';
+import { Icon } from '@/components/ui/Icon';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { theme } from '@/constants/theme';
@@ -114,12 +115,7 @@ export const InvitesModal: React.FC<InvitesModalProps> = React.memo(({ visible, 
 
         <View style={styles.content}>
           {loading ? (
-            <View style={styles.loadingBox}>
-              <ActivityIndicator size="large" color={theme.colors.primary.DEFAULT} />
-              <Typography.Paragraph style={styles.loadingText}>
-                Loading invitation details...
-              </Typography.Paragraph>
-            </View>
+            <InvitesSkeleton />
           ) : pendingFamily ? (
             <Animated.View entering={FadeInDown.duration(400)} style={styles.inviteDetails}>
               <View style={[styles.card, { borderCurve: 'continuous' }]}>

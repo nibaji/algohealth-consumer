@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useTransition } from 'react';
-import { StyleSheet, View, ScrollView, Pressable, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { theme } from '@/constants/theme';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/src/contexts/AuthContext';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
-import { Icon } from '@/components/ui/icon';
+import { Icon } from '@/components/ui/Icon';
+import { InvitesSkeleton } from '@/components/ui/Skeleton';
 import { familyService } from '@/src/services/family/familyService';
 import { FamilyOut } from '@/src/features/family/familyTypes';
 import { refreshTracker } from '@/src/utils/refreshTracker';
@@ -117,12 +118,7 @@ export default function Onboarding() {
             </Animated.View>
 
             {loadingInvite ? (
-              <View style={styles.loadingInviteBox}>
-                <ActivityIndicator size="large" color={theme.colors.primary.DEFAULT} />
-                <Typography.Label style={styles.loadingInviteText}>
-                  Fetching invitation details...
-                </Typography.Label>
-              </View>
+              <InvitesSkeleton />
             ) : pendingFamily ? (
               <Animated.View 
                 entering={FadeInDown.duration(600).delay(200).springify()}

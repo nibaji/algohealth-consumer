@@ -12,7 +12,7 @@ import { refreshTracker } from '@/src/utils/refreshTracker';
 import { FamilyOut, FamilyMemberCreate } from '@/src/features/family/familyTypes';
 import Animated, { FadeInDown, FadeInUp, LayoutAnimationConfig } from 'react-native-reanimated';
 import * as Clipboard from 'expo-clipboard';
-import { Icon } from '@/components/ui/icon';
+import { Icon } from '@/components/ui/Icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
 

@@ -1,10 +1,10 @@
 import React from 'react';
 import { StyleSheet, View, useWindowDimensions, Pressable } from 'react-native';
-import { Icon } from '@/components/ui/icon';
+import { Icon } from '@/components/ui/Icon';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
 import { ChatMessage } from '@/src/utils/consultCache';
-import { AudioPlayerView } from './audio-player-view';
+import { AudioPlayerView } from './AudioPlayerView';
 
 interface ConsultMessageProps {
   item: ChatMessage;

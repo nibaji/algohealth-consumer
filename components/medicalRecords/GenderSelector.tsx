@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Pressable } from 'react-native';
 import { Typography } from '@/components/ui/Typography';
-import { styles } from './edit-member-modal.styles';
+import { styles } from './editMemberModalStyles';
 
 export type GenderType = 'Male' | 'Female' | 'Other' | 'Unknown';
 
