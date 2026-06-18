@@ -4,8 +4,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { theme } from '@/constants/theme';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
-import { TextInput } from '@/components/ui/TextInput';
-import { DateInput, validateDateString, apiDateToInputDate, inputDateToApiDate } from '@/components/ui/DateInput';
+import { validateDateString, apiDateToInputDate, inputDateToApiDate } from '@/components/ui/DateInput';
 import { familyService } from '@/src/services/family/familyService';
 import { medicalRecordService } from '@/src/services/medical-records/medicalRecordService';
 import { MedicalRecordResponse } from '@/src/features/medical-records/medicalRecordTypes';
@@ -23,7 +22,8 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as DocumentPicker from 'expo-document-picker';
 import { fileService } from '@/src/services/medical-records/fileService';
 import { AudioPlayerView } from '@/components/medical-records/audio-player-view';
-import { AudioNoteRecorder } from '@/components/medical-records/audio-note-recorder';
+import { EditRecordForm } from '@/components/medical-records/edit-record-form';
+import { formatFileSize } from '@/src/utils/file';
 import { ENV } from '@/src/utils/config/env';
 
 export default function MedicalRecordDetail() {
@@ -50,14 +50,7 @@ export default function MedicalRecordDetail() {
   const player = useAudioPlayer(localAudioUri);
   const playerStatus = useAudioPlayerStatus(player);
 
-  const formatFileSize = useCallback((bytes?: number): string => {
-    if (bytes === undefined || bytes === null) return '0 B';
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
-  }, []);
+
 
   const handleDownloadFile = useCallback(async (fileId: string, blobName: string, bucket: string, filename: string, mimeType: string) => {
     if (process.env.EXPO_OS === 'web') {
@@ -443,7 +436,7 @@ export default function MedicalRecordDetail() {
         ) : deleteSuccess ? (
           // Success Deleted Screen
           <Animated.View entering={FadeInDown.duration(500)} style={styles.successContainer}>
-            <View style={[styles.successIconCircle, { backgroundColor: '#FEE2E2', borderCurve: 'continuous' }]}>
+            <View style={[styles.successIconCircle, { backgroundColor: theme.colors.background.errorLight, borderCurve: 'continuous' }]}>
               <Icon 
                 name="trash.fill" 
                 size={40}
@@ -467,121 +460,25 @@ export default function MedicalRecordDetail() {
           </View>
         ) : record ? (
           isEditing ? (
-            // EDIT VIEW MODE
-            <Animated.View entering={FadeInDown.duration(400)} style={styles.viewContainer}>
-              {editError ? (
-                <View style={styles.errorBanner}>
-                  <Typography.Label style={styles.errorBannerText}>
-                    {editError}
-                  </Typography.Label>
-                </View>
-              ) : null}
-
-              <View style={styles.cardForm}>
-                <DateInput
-                  label="Visit Date"
-                  value={visitDate}
-                  onChangeText={setVisitDate}
-                />
-
-                <TextInput
-                  label="Primary Context / Location"
-                  placeholder="e.g. City General Hospital"
-                  value={primaryContext}
-                  onChangeText={setPrimaryContext}
-                />
-
-                <TextInput
-                  label="Chief Complaint"
-                  placeholder="e.g. Cough and cold"
-                  value={chiefComplaint}
-                  onChangeText={setChiefComplaint}
-                />
-
-                <TextInput
-                  label="Notes"
-                  placeholder="Additional details..."
-                  value={notes}
-                  onChangeText={setNotes}
-                  multiline
-                  numberOfLines={4}
-                  style={styles.notesInput}
-                />
-
-                {/* New Attachments Section */}
-                <View style={styles.editAttachmentsSection}>
-                  <Typography.Label style={styles.editAttachmentsLabel}>Add New Attachments</Typography.Label>
-
-                  {/* Document Picker */}
-                  <Pressable
-                    onPress={handlePickNewDocuments}
-                    style={({ pressed }) => [
-                      styles.editAttachButton,
-                      pressed ? styles.editAttachButtonPressed : null,
-                    ]}
-                  >
-                    <Icon name="doc.fill" size={16} tintColor={theme.colors.primary.DEFAULT} />
-                    <Typography.Label style={styles.editAttachButtonText}>Add Documents</Typography.Label>
-                  </Pressable>
-
-                  {newDocuments.length > 0 ? (
-                    <View style={styles.editFileList}>
-                      {newDocuments.map((doc, idx) => (
-                        <Animated.View
-                          key={`new-doc-${idx}-${doc.uri}`}
-                          entering={FadeInDown.duration(200)}
-                          style={styles.editFileItem}
-                        >
-                          <View style={styles.editFileInfo}>
-                            <Icon name="paperclip" size={14} tintColor={theme.colors.text.secondary} />
-                            <View style={styles.editFileNameContainer}>
-                              <Typography.Paragraph numberOfLines={1} style={styles.editFileName}>
-                                {doc.name}
-                              </Typography.Paragraph>
-                              <Typography.Label style={styles.editFileSize}>
-                                {formatFileSize(doc.size)}
-                              </Typography.Label>
-                            </View>
-                          </View>
-                          <Pressable
-                            onPress={() => removeNewDocument(idx)}
-                            style={({ pressed }) => [
-                              styles.editDeleteFileButton,
-                              pressed ? styles.editDeleteFileButtonPressed : null,
-                            ]}
-                          >
-                            <Icon name="xmark" size={12} tintColor={theme.colors.text.secondary} />
-                          </Pressable>
-                        </Animated.View>
-                      ))}
-                    </View>
-                  ) : null}
-
-                  {/* Audio Note Recorder */}
-                  <View style={styles.editAudioSection}>
-                    <Typography.Label style={styles.editAudioLabel}>Audio Note</Typography.Label>
-                    <AudioNoteRecorder
-                      audioFile={newAudioFile}
-                      onAudioChange={setNewAudioFile}
-                    />
-                  </View>
-                </View>
-
-                <View style={styles.actionRow}>
-                  <Button.Secondary
-                    title="Cancel"
-                    onPress={handleBack}
-                    style={styles.flexHalf}
-                  />
-                  <Button.Primary
-                    title="Save Changes"
-                    onPress={handleSave}
-                    loading={isPending}
-                    style={styles.flexHalf}
-                  />
-                </View>
-              </View>
-            </Animated.View>
+            <EditRecordForm
+              visitDate={visitDate}
+              setVisitDate={setVisitDate}
+              primaryContext={primaryContext}
+              setPrimaryContext={setPrimaryContext}
+              chiefComplaint={chiefComplaint}
+              setChiefComplaint={setChiefComplaint}
+              notes={notes}
+              setNotes={setNotes}
+              editError={editError}
+              newDocuments={newDocuments}
+              handlePickNewDocuments={handlePickNewDocuments}
+              removeNewDocument={removeNewDocument}
+              newAudioFile={newAudioFile}
+              setNewAudioFile={setNewAudioFile}
+              handleBack={handleBack}
+              handleSave={handleSave}
+              isPending={isPending}
+            />
           ) : (
             // DETAIL VIEW MODE
             <Animated.View entering={FadeInDown.duration(400)} style={styles.viewContainer}>
@@ -813,7 +710,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: theme.radius.full,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: theme.colors.background.infoLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -863,9 +760,9 @@ const styles = StyleSheet.create({
   
   // AI summary style
   aiSummaryCard: {
-    backgroundColor: '#FAF5FF',
+    backgroundColor: theme.colors.background.primaryLight,
     borderWidth: 1,
-    borderColor: '#E9D5FF',
+    borderColor: theme.colors.border.primaryLight,
     borderRadius: theme.radius.xl,
     padding: theme.spacing.lg,
     gap: theme.spacing.sm,
@@ -897,131 +794,7 @@ const styles = StyleSheet.create({
   },
   actionBtn: {
     width: '100%',
-  },
-  
-  // Edit Form Styles
-  cardForm: {
-    backgroundColor: theme.colors.background.surface,
-    padding: theme.spacing.lg,
-    borderRadius: theme.radius.xl,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-    gap: theme.spacing.md,
-    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
-  },
-  notesInput: {
-    minHeight: 100,
-    textAlignVertical: 'top',
-  },
-  actionRow: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-    marginTop: theme.spacing.md,
-  },
-  flexHalf: {
-    flex: 1,
-  },
 
-  // Edit mode attachment styles
-  editAttachmentsSection: {
-    marginTop: theme.spacing.sm,
-    gap: theme.spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border.light,
-    paddingTop: theme.spacing.md,
-  },
-  editAttachmentsLabel: {
-    color: theme.colors.text.secondary,
-    fontWeight: '600',
-    fontSize: theme.fontSize.xs,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  editAttachButton: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: theme.spacing.xs,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: theme.colors.background.default,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-    borderRadius: theme.radius.lg,
-    borderCurve: 'continuous',
-  },
-  editAttachButtonPressed: {
-    opacity: 0.6,
-  },
-  editAttachButtonText: {
-    color: theme.colors.primary.DEFAULT,
-    fontWeight: '600',
-  },
-  editFileList: {
-    gap: theme.spacing.xs,
-  },
-  editFileItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: theme.spacing.sm,
-    backgroundColor: theme.colors.background.default,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-    borderRadius: theme.radius.md,
-    borderCurve: 'continuous',
-  },
-  editFileInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-    flex: 1,
-  },
-  editFileNameContainer: {
-    flex: 1,
-    gap: 2,
-  },
-  editFileName: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.text.primary,
-    fontWeight: '500',
-  },
-  editFileSize: {
-    fontSize: theme.fontSize.xs,
-    color: theme.colors.text.secondary,
-  },
-  editDeleteFileButton: {
-    width: 24,
-    height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: theme.radius.full,
-    backgroundColor: theme.colors.background.surface,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-  },
-  editDeleteFileButtonPressed: {
-    opacity: 0.6,
-  },
-  editAudioSection: {
-    gap: theme.spacing.xs,
-    marginTop: theme.spacing.xs,
-  },
-  editAudioLabel: {
-    color: theme.colors.text.secondary,
-    fontWeight: '600',
-  },
-  errorBanner: {
-    backgroundColor: '#FEF2F2',
-    borderWidth: 1,
-    borderColor: theme.colors.status.error,
-    borderRadius: theme.radius.md,
-    padding: theme.spacing.md,
-    alignItems: 'center',
-  },
-  errorBannerText: {
-    color: theme.colors.text.error,
-    fontWeight: '600',
   },
   
   // Success state

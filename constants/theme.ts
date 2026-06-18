@@ -29,6 +29,10 @@ export const theme = {
       default: neutral.white,
       surface: neutral.white,
       inverse: neutral.gray900,
+      primaryLight: '#FAF5FF',
+      infoLight: '#EEF2FF',
+      warningLight: '#FEF3C7',
+      errorLight: '#FEE2E2',
     },
     text: {
       primary: neutral.gray900,
@@ -38,11 +42,14 @@ export const theme = {
       error: '#EF4444',
       success: '#10B981',
       warning: '#F59E0B',
+      warningDark: '#D97706',
     },
     border: {
       light: neutral.gray200,
       default: neutral.gray300,
       dark: neutral.gray400,
+      primaryLight: '#E9D5FF',
+      warningLight: '#FDE68A',
     },
     status: {
       error: '#EF4444',

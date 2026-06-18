@@ -3,13 +3,7 @@ import { StyleSheet, View, Pressable } from 'react-native';
 import { Icon } from '@/components/ui/icon';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
-
-const formatTime = (seconds: number): string => {
-  if (isNaN(seconds) || seconds < 0) return '00:00';
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-};
+import { formatTime } from '@/src/utils/time';
 
 interface AudioPlayerViewProps {
   isPlaying: boolean;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, Dimensions, Pressable } from 'react-native';
+import { StyleSheet, View, useWindowDimensions, Pressable } from 'react-native';
 import { Icon } from '@/components/ui/icon';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
@@ -30,6 +30,7 @@ export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({
   isSpeechPaused,
   onToggleSpeech,
 }) => {
+  const { width } = useWindowDimensions();
   const isUser = item.sender === 'user';
   const hasText = Boolean(item.text && item.text.trim() !== '');
 
@@ -49,15 +50,15 @@ export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({
         ]}
       >
         {item.audio_uri ? (
-          <View style={styles.audioPlayerWrapper}>
-          <AudioPlayerView
-            isPlaying={isPlaying}
-            currentTime={currentTime}
-            duration={duration}
-            onPlayPause={onPlayPause}
-            onSeek={onSeek}
-            variant="user"
-          />
+          <View style={[styles.audioPlayerWrapper, { width: width * 0.6 }]}>
+            <AudioPlayerView
+              isPlaying={isPlaying}
+              currentTime={currentTime}
+              duration={duration}
+              onPlayPause={onPlayPause}
+              onSeek={onSeek}
+              variant="user"
+            />
           </View>
         ) : null}
 
@@ -152,9 +153,9 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: theme.radius.full,
-    backgroundColor: '#FAF5FF',
+    backgroundColor: theme.colors.background.primaryLight,
     borderWidth: 1,
-    borderColor: '#E9D5FF',
+    borderColor: theme.colors.border.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'flex-end',
@@ -218,8 +219,8 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border.light,
   },
   speakButtonActive: {
-    backgroundColor: '#EEF2FF',
-    borderColor: theme.colors.primary.DEFAULT + '50',
+    backgroundColor: theme.colors.background.infoLight,
+    borderColor: theme.colors.border.primaryLight,
   },
   speakButtonPressed: {
     opacity: 0.6,
@@ -256,5 +257,7 @@ const styles = StyleSheet.create({
   docTextBot: {
     color: theme.colors.text.primary,
   },
-  audioPlayerWrapper: { marginVertical: theme.spacing.sm, width: Dimensions.get('screen').width * 0.6 }
+  audioPlayerWrapper: {
+    marginVertical: theme.spacing.sm,
+  },
 });

@@ -1,33 +1,22 @@
-import { Icon } from '@/components/ui/icon';
-import { Typography } from '@/components/ui/Typography';
-import { theme } from '@/constants/theme';
-import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
-import { FamilyMemberOut } from '@/src/features/family/familyTypes';
-import { medicalRecordService } from '@/src/services/medical-records/medicalRecordService';
-import { ChatMessage, consultCache } from '@/src/utils/consultCache';
-import {
-  getSpeakingMessageId,
-  isTtsPaused,
-  stopSpeaking as stopTts,
-  subscribeTtsState,
-  toggleMessageSpeech,
-} from '@/src/utils/ttsManager';
-import { FlashList, FlashListRef } from '@shopify/flash-list';
-import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
-import * as DocumentPicker from 'expo-document-picker';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback } from 'react';
 import {
   ActivityIndicator,
-  AppState,
-  AppStateStatus,
   KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
   StyleSheet,
   View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FlashList } from '@shopify/flash-list';
+
+import { Icon } from '@/components/ui/icon';
+import { Typography } from '@/components/ui/Typography';
+import { theme } from '@/constants/theme';
+import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
+import { FamilyMemberOut } from '@/src/features/family/familyTypes';
+import { ChatMessage } from '@/src/utils/consultCache';
+import { useConsult } from '@/src/features/medical-records/useConsult';
 import { ConsultInput } from './consult-input';
 import { ConsultMessage } from './consult-message';
 
@@ -41,217 +30,18 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
   const insets = useSafeAreaInsets();
   const keyboardAvoidingEnabled = useKeyboardAvoiding();
 
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [playingMessageId, setPlayingMessageId] = useState<string | null>(null);
-
-  // TTS state — synced from the module singleton via a subscriber
-  const [ttsState, setTtsState] = useState({
-    speakingMessageId: getSpeakingMessageId(),
-    isPaused: isTtsPaused(),
-  });
-
-  // Centralized Audio Player
-  const activePlayer = useAudioPlayer(null);
-  const activePlayerStatus = useAudioPlayerStatus(activePlayer);
-
-  const flashListRef = useRef<FlashListRef<ChatMessage>>(null);
-
-  // Subscribe to TTS speaking state changes
-  useEffect(() => {
-    const unsub = subscribeTtsState((id, isPaused) => {
-      setTtsState({ speakingMessageId: id, isPaused });
-    });
-    return unsub;
-  }, []);
-
-  // Initialize chat when modal opens
-  useEffect(() => {
-    if (visible && member) {
-      const cached = consultCache.get(member.id);
-      if (cached && cached.length > 0) {
-        setMessages(cached);
-      } else {
-        const welcomeMessage: ChatMessage = {
-          id: 'welcome',
-          text: `Hi! I am your Health Consultant, your AlgoHealth assistant. I have loaded ${member.name}'s medical records. How can I help you today?`,
-          sender: 'bot',
-          timestamp: new Date()
-        };
-        setMessages([welcomeMessage]);
-      }
-      setIsProcessing(false);
-      setPlayingMessageId(null);
-
-      // Auto-scroll to bottom after rendering
-      setTimeout(() => {
-        if (flashListRef.current) {
-          flashListRef.current.scrollToEnd({ animated: false });
-        }
-      }, 150);
-    }
-  }, [visible, member]);
-
-  // Synchronize messages with cache
-  useEffect(() => {
-    if (member && messages.length > 0) {
-      consultCache.set(member.id, messages);
-    }
-  }, [messages, member]);
-
-  // AppState listener: pause audio + stop TTS on background/inactive
-  useEffect(() => {
-    const handleAppStateChange = (nextAppState: AppStateStatus) => {
-      if (nextAppState === 'background' || nextAppState === 'inactive') {
-        try {
-          activePlayer.pause();
-        } catch {
-          // Safe catch in case player is already released
-        }
-        stopTts();
-      }
-    };
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
-    return () => {
-      subscription.remove();
-    };
-  }, [activePlayer]);
-
-  // Pause audio + stop TTS when modal becomes invisible
-  useEffect(() => {
-    if (!visible) {
-      try {
-        activePlayer.pause();
-      } catch {
-        // Safe catch in case player is already released
-      }
-      stopTts();
-      setPlayingMessageId(null);
-    }
-  }, [visible, activePlayer]);
-
-  // Auto scroll to bottom
-  const scrollToBottom = useCallback(() => {
-    const currentRef = flashListRef.current;
-    if (currentRef) {
-      setTimeout(() => {
-        currentRef.scrollToEnd({ animated: true });
-      }, 100);
-    }
-  }, []);
-
-  const handlePlayPauseMessage = useCallback((messageId: string, uri: string) => {
-    // Stop TTS before playing recorded audio
-    stopTts();
-
-    if (playingMessageId === messageId) {
-      if (activePlayerStatus.playing) {
-        activePlayer.pause();
-      } else {
-        if (activePlayerStatus.duration > 0 && activePlayerStatus.currentTime >= activePlayerStatus.duration - 0.1) {
-          activePlayer.seekTo(0);
-        }
-        activePlayer.play();
-      }
-    } else {
-      setPlayingMessageId(messageId);
-      activePlayer.replace(uri);
-      activePlayer.play();
-    }
-  }, [playingMessageId, activePlayerStatus.playing, activePlayerStatus.currentTime, activePlayerStatus.duration, activePlayer]);
-
-  const handleSeekMessage = useCallback((messageId: string, percentage: number) => {
-    if (playingMessageId === messageId && activePlayerStatus.duration > 0) {
-      const targetSeconds = percentage * activePlayerStatus.duration;
-      activePlayer.seekTo(targetSeconds);
-    }
-  }, [playingMessageId, activePlayerStatus.duration, activePlayer]);
-
-  /** Toggle TTS speech for a bot message. Stops audio playback first. */
-  const handleToggleSpeech = useCallback(async (messageId: string, text: string) => {
-    // Stop audio player before TTS to avoid overlap
-    try {
-      activePlayer.pause();
-    } catch { /* ignore */ }
-    setPlayingMessageId(null);
-
-    await toggleMessageSpeech(messageId, text);
-  }, [activePlayer]);
-
-  const handleSend = useCallback(async (
-    text: string,
-    audioFile: DocumentPicker.DocumentPickerAsset | null,
-    docs: DocumentPicker.DocumentPickerAsset[]
-  ) => {
-    if (!member || isProcessing) return;
-
-    // Create user message
-    const userMessage: ChatMessage = {
-      id: `user-${Date.now()}`,
-      text: text,
-      sender: 'user',
-      timestamp: new Date(),
-      audio_uri: audioFile?.uri || null,
-      documents: docs.map(d => ({ name: d.name, size: d.size })),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    scrollToBottom();
-    setIsProcessing(true);
-
-    try {
-      // Build FormData payload
-      const formData = new FormData();
-      formData.append('question', text);
-      formData.append('family_member_id', member.id);
-
-      // Append documents
-      for (const doc of docs) {
-        formData.append('files', {
-          uri: doc.uri,
-          name: doc.name,
-          type: doc.mimeType || 'application/octet-stream',
-        } as any);
-      }
-
-      // Append audio file
-      if (audioFile) {
-        formData.append('audio_files', {
-          uri: audioFile.uri,
-          name: audioFile.name,
-          type: audioFile.mimeType || 'application/octet-stream',
-        } as any);
-      }
-
-      const res = await medicalRecordService.consult(formData);
-
-      // Extract response text
-      const botText = res.response || res.response_text || res.text || res.answer || "Sorry, I couldn't formulate a response.";
-
-      const botMessage: ChatMessage = {
-        id: `bot-${Date.now()}`,
-        text: botText,
-        sender: 'bot',
-        timestamp: new Date()
-      };
-
-      setMessages((prev) => [...prev, botMessage]);
-      handleToggleSpeech(botMessage.id, botMessage.text);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error communicating with assistant';
-      const errorMessage: ChatMessage = {
-        id: `error-${Date.now()}`,
-        text: `Error: ${message}`,
-        sender: 'bot',
-        timestamp: new Date()
-      };
-      setMessages((prev) => [...prev, errorMessage]);
-      handleToggleSpeech(errorMessage.id, errorMessage.text);
-    } finally {
-      setIsProcessing(false);
-      scrollToBottom();
-    }
-  }, [member, isProcessing, scrollToBottom, handleToggleSpeech]);
+  const {
+    messages,
+    isProcessing,
+    playingMessageId,
+    ttsState,
+    activePlayerStatus,
+    flashListRef,
+    handleSend,
+    handlePlayPauseMessage,
+    handleSeekMessage,
+    handleToggleSpeech,
+  } = useConsult({ visible, member });
 
   const renderMessageItem = useCallback(({ item }: { item: ChatMessage }) => {
     const isCurrentPlaying = playingMessageId === item.id;
@@ -274,7 +64,16 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
         onToggleSpeech={() => handleToggleSpeech(item.id, item.text || '')}
       />
     );
-  }, [playingMessageId, activePlayerStatus.playing, activePlayerStatus.currentTime, activePlayerStatus.duration, ttsState, handlePlayPauseMessage, handleSeekMessage, handleToggleSpeech]);
+  }, [
+    playingMessageId,
+    activePlayerStatus.playing,
+    activePlayerStatus.currentTime,
+    activePlayerStatus.duration,
+    ttsState,
+    handlePlayPauseMessage,
+    handleSeekMessage,
+    handleToggleSpeech,
+  ]);
 
   const keyExtractor = useCallback((item: ChatMessage) => item.id, []);
 
@@ -291,7 +90,7 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
         style={[styles.modalContainer, { paddingTop: insets.top, marginBottom: insets.bottom }]}
         behavior="padding"
         enabled={keyboardAvoidingEnabled}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+        keyboardVerticalOffset={0}
       >
         {/* Modal Header */}
         <View style={styles.header}>
@@ -391,7 +190,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: theme.radius.full,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: theme.colors.background.infoLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -433,9 +232,9 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: theme.radius.full,
-    backgroundColor: '#FAF5FF',
+    backgroundColor: theme.colors.background.primaryLight,
     borderWidth: 1,
-    borderColor: '#E9D5FF',
+    borderColor: theme.colors.border.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'flex-end',
