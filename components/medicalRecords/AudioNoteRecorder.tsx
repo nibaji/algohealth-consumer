@@ -52,7 +52,7 @@ export const AudioNoteRecorder: React.FC<AudioNoteRecorderProps> = React.memo(({
             <View style={styles.recordingStateRow}>
               {/* Pulsing indicator */}
               <Animated.View style={[styles.pulseCircle, pulsingStyle]}>
-                <Icon name={IconName.MicFill} size={20} tintColor="#EF4444" />
+                <Icon name={IconName.MicFill} size={20} tintColor={theme.colors.status.error} />
               </Animated.View>
               
               <View style={styles.recordingTimerContainer}>
@@ -85,7 +85,7 @@ export const AudioNoteRecorder: React.FC<AudioNoteRecorderProps> = React.memo(({
                     pressed ? styles.recordMicButtonPressed : null,
                   ]}
                 >
-                  <Icon name={IconName.MicFill} size={24} tintColor="#FFF" />
+                  <Icon name={IconName.MicFill} size={24} tintColor={theme.colors.common.white} />
                 </Pressable>
                 <View style={styles.idleTextContainer}>
                   <Typography.Paragraph style={styles.audioNoteTitle}>

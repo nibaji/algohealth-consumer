@@ -96,10 +96,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border.primaryLight,
     borderRadius: theme.radius.sm,
-    paddingVertical: 2,
+    paddingVertical: theme.spacing.xxs,
     paddingHorizontal: theme.spacing.xs,
     marginTop: theme.spacing.xs,
-    gap: 4,
+    gap: theme.spacing.xs,
   },
   sparklesMini: {
     width: 10,
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     tintColor: theme.colors.primary.DEFAULT,
   },
   aiBadgeText: {
-    fontSize: 10,
+    fontSize: theme.fontSize.xxs,
     color: theme.colors.primary.DEFAULT,
     flex: 1,
   },

@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
     borderRadius: theme.radius.lg,
-    gap: 6,
+    gap: theme.spacing.xs2,
   },
   bubbleUserSkeleton: {
     backgroundColor: theme.colors.primary.DEFAULT,
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
     width: 220,
   },
   opacityWhite: {
-    backgroundColor: 'rgba(255, 255, 255, 0.35)',
+    backgroundColor: theme.colors.translucent.white35,
   },
   formItemSkeleton: {
     gap: theme.spacing.xs,

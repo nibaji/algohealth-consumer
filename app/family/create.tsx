@@ -498,7 +498,7 @@ const styles = StyleSheet.create({
     ...shadows.primary,
   },
   inviteLabel: {
-    color: '#E0C3FC',
+    color: theme.colors.text.purpleLighter,
     fontWeight: '700',
     letterSpacing: 1,
   },
@@ -515,7 +515,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
   },
   copyButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: theme.colors.translucent.white20,
     flexDirection: 'row',
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
     gap: theme.spacing.xs,
   },
   copyButtonPressed: {
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: theme.colors.translucent.white30,
   },
   copyButtonText: {
     color: theme.colors.primary.content,
@@ -534,7 +534,7 @@ const styles = StyleSheet.create({
     color: theme.colors.status.success,
   },
   inviteHelp: {
-    color: '#F3E8FF',
+    color: theme.colors.background.purpleLight,
     fontSize: theme.fontSize.xs,
     lineHeight: theme.lineHeight.xs,
   },

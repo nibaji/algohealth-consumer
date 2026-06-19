@@ -50,7 +50,7 @@ export const AudioPlayerView: React.FC<AudioPlayerViewProps> = React.memo(({
         <Icon 
           name={isPlaying ? IconName.PauseFill : IconName.PlayFill} 
           size={16} 
-          tintColor={isUser ? '#FFFFFF' : theme.colors.primary.DEFAULT} 
+          tintColor={isUser ? theme.colors.common.white : theme.colors.primary.DEFAULT} 
         />
       </Pressable>
 
@@ -97,7 +97,7 @@ export const AudioPlayerView: React.FC<AudioPlayerViewProps> = React.memo(({
           <Icon 
             name={IconName.TrashFill} 
             size={14} 
-            tintColor={isUser ? '#FFFFFF' : theme.colors.status.error} 
+            tintColor={isUser ? theme.colors.common.white : theme.colors.status.error} 
           />
         </Pressable>
       ) : null}
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   playPauseBtnUser: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: theme.colors.translucent.white20,
   },
   playPauseBtnDefault: {
     backgroundColor: theme.colors.background.primaryLight,
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
   },
   playerSeeker: {
     flex: 1,
-    gap: 6,
+    gap: theme.spacing.xs2,
     insetBlock: theme.spacing.xs,
     justifyContent: 'center',
   },
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   progressBarBgUser: {
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: theme.colors.translucent.white30,
   },
   progressBarBgDefault: {
     backgroundColor: theme.colors.border.light,
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     left: 0,
   },
   progressBarFillUser: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.common.white,
   },
   progressBarFillDefault: {
     backgroundColor: theme.colors.primary.DEFAULT,
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     marginLeft: -6,
   },
   progressBarThumbUser: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.common.white,
   },
   progressBarThumbDefault: {
     backgroundColor: theme.colors.primary.DEFAULT,
@@ -180,10 +180,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   timeLabel: {
-    fontSize: 9,
+    fontSize: theme.fontSize.tiny,
   },
   timeLabelUser: {
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: theme.colors.translucent.white70,
   },
   timeLabelDefault: {
     color: theme.colors.text.tertiary,

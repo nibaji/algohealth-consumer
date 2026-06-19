@@ -167,7 +167,7 @@ export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({
                 { borderCurve: 'continuous' }
               ]}
             >
-              <Icon name={IconName.PaperplaneFill} size={16} tintColor="#FFFFFF" />
+              <Icon name={IconName.PaperplaneFill} size={16} tintColor={theme.colors.common.white} />
             </Pressable>
           </>
         ) : (
@@ -206,7 +206,7 @@ export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({
                   { borderCurve: 'continuous' }
                 ]}
               >
-                <Icon name={IconName.PaperplaneFill} size={16} tintColor="#FFFFFF" />
+                <Icon name={IconName.PaperplaneFill} size={16} tintColor={theme.colors.common.white} />
               </Pressable>
             ) : (
               <Pressable

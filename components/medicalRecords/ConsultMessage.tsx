@@ -89,7 +89,7 @@ export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({
                 <Icon
                   name={IconName.DocFill}
                   size={12}
-                  tintColor={isUser ? '#FFFFFF' : theme.colors.primary.DEFAULT}
+                  tintColor={isUser ? theme.colors.common.white : theme.colors.primary.DEFAULT}
                 />
                 <Typography.Label style={[styles.docText, isUser ? styles.docTextUser : styles.docTextBot]} numberOfLines={1}>
                   {doc.name}
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
     borderRadius: theme.radius.lg,
-    gap: 4,
+    gap: theme.spacing.xs,
   },
   bubbleUser: {
     backgroundColor: theme.colors.primary.DEFAULT,
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
   bottomRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 2,
+    marginTop: theme.spacing.xxs,
   },
   bottomRowBot: {
     justifyContent: 'space-between',
@@ -208,16 +208,16 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   timeUser: {
-    fontSize: 9,
-    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: theme.fontSize.tiny,
+    color: theme.colors.translucent.white70,
     alignSelf: 'flex-end',
-    marginTop: 2,
+    marginTop: theme.spacing.xxs,
   },
   timeBot: {
-    fontSize: 9,
+    fontSize: theme.fontSize.tiny,
     color: theme.colors.text.tertiary,
     alignSelf: 'flex-start',
-    marginTop: 2,
+    marginTop: theme.spacing.xxs,
   },
   // Speak button
   speakButton: {
@@ -252,8 +252,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   docChipUser: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    borderColor: 'rgba(255, 255, 255, 0.25)',
+    backgroundColor: theme.colors.translucent.white15,
+    borderColor: theme.colors.translucent.white25,
   },
   docChipBot: {
     backgroundColor: theme.colors.background.default,
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   docTextUser: {
-    color: '#FFFFFF',
+    color: theme.colors.common.white,
   },
   docTextBot: {
     color: theme.colors.text.primary,

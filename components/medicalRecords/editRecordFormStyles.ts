@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { theme } from '@/constants/theme';
+import { shadows, theme } from '@/constants/theme';
 
 export const styles = StyleSheet.create({
   cardForm: {
@@ -9,7 +9,7 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border.light,
     gap: theme.spacing.md,
-    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+    ...shadows.soft,
   },
   notesInput: {
     minHeight: 100,

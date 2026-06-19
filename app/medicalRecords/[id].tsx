@@ -833,7 +833,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border.light,
     gap: theme.spacing.sm,
-    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+    ...shadows.soft,
   },
   sectionLabel: {
     fontSize: theme.fontSize.xs,
@@ -859,7 +859,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border.light,
     gap: theme.spacing.md,
-    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+    ...shadows.soft,
   },
   filesGrid: {
     gap: theme.spacing.sm,

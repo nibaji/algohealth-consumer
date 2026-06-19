@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { theme } from '@/constants/theme';
+import { shadows, theme } from '@/constants/theme';
 
 export const styles = StyleSheet.create({
   container: {
@@ -30,7 +30,7 @@ export const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary.DEFAULT,
     justifyContent: 'center',
     alignItems: 'center',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+    ...shadows.md,
   },
   recordMicButtonPressed: {
     opacity: 0.8,
@@ -126,7 +126,7 @@ export const styles = StyleSheet.create({
   },
   seekerContainer: {
     flex: 1,
-    gap: 6,
+    gap: theme.spacing.xs2,
     justifyContent: 'center',
     insetBlock: theme.spacing.xs,
   },

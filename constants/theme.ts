@@ -46,6 +46,7 @@ export const theme = {
       success: '#10B981',
       warning: '#F59E0B',
       warningDark: '#D97706',
+      purpleLighter: '#E0C3FC',
     },
     border: {
       light: neutral.gray200,
@@ -56,14 +57,29 @@ export const theme = {
     },
     status: {
       error: '#EF4444',
+      errorDark: '#DC2626',
       success: '#10B981',
       warning: '#F59E0B',
       info: '#3B82F6',
     },
+    translucent: {
+      white70: 'rgba(255, 255, 255, 0.7)',
+      white35: 'rgba(255, 255, 255, 0.35)',
+      white30: 'rgba(255, 255, 255, 0.3)',
+      white25: 'rgba(255, 255, 255, 0.25)',
+      white20: 'rgba(255, 255, 255, 0.2)',
+      white15: 'rgba(255, 255, 255, 0.15)',
+    },
+    common: {
+      white: '#FFFFFF',
+      black: '#000000',
+    },
   },
   spacing: {
     none: 0,
+    xxs: 2,
     xs: 4,
+    xs2: 6,
     sm: 8,
     md: 16,
     lg: 24,
@@ -79,6 +95,8 @@ export const theme = {
     '10xl': 144,
   },
   fontSize: {
+    xxs: 10,
+    tiny: 9,
     xs: 12,
     sm: 14,
     md: 16,
@@ -111,6 +129,9 @@ export const theme = {
 export const shadows: Record<string, ViewStyle> = {
   sm: {
     boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)"
+  },
+  soft: {
+    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)"
   },
   primary: {
     boxShadow: "0 10px 15px -3px rgba(138, 43, 226, 0.2)"

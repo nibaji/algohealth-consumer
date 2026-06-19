@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.status.error,
   },
   errorPressed: {
-    backgroundColor: '#DC2626', // slightly darker red
+    backgroundColor: theme.colors.status.errorDark, // slightly darker red
   },
   errorText: {
     color: theme.colors.text.inverse,

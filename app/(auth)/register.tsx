@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   passwordInput: {
-    paddingRight: 48,
+    paddingRight: theme.spacing['3xl'],
   },
   eyeButton: {
     position: 'absolute',

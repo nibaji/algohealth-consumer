@@ -106,7 +106,7 @@ function SplashLoader() {
 const styles = StyleSheet.create({
   splashContainer: {
     flex: 1,
-    backgroundColor: '#2D0E5A',
+    backgroundColor: theme.colors.background.splash,
     justifyContent: 'center',
     alignItems: 'center',
   },
