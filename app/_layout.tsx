@@ -8,6 +8,9 @@ import { View, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import * as SplashScreen from 'expo-splash-screen';
 import { theme } from '@/constants/theme';
+import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
+
+const AnimatedImage = Animated.createAnimatedComponent(Image);
 
 // Prevent native splash screen from auto-hiding before session is restored
 SplashScreen.preventAutoHideAsync().catch(() => {
@@ -95,11 +98,29 @@ export default function RootLayout() {
 }
 
 function SplashLoader() {
+  const opacity = useSharedValue(0.5);
+
+  useEffect(() => {
+    opacity.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 800 }),
+        withTiming(0.4, { duration: 800 })
+      ),
+      -1,
+      true
+    );
+  }, [opacity]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ scale: 1 + (opacity.value - 0.4) * 0.08 }],
+  }));
+
   return (
     <View style={styles.splashContainer}>
-      <Image
+      <AnimatedImage
         source={require('@/assets/images/splash-icon.png')}
-        style={styles.splashImage}
+        style={[styles.splashImage, animatedStyle]}
         contentFit="contain"
       />
     </View>
