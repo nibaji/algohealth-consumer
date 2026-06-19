@@ -37,7 +37,7 @@ export const AlertModal: React.FC<AlertModalProps> = React.memo(({
   let iconBgColor = theme.colors.background.purpleLight;
 
   if (variant === 'success') {
-    iconName = IconName.Checkmark;
+    iconName = IconName.CheckmarkCircleFill;
     iconColor = theme.colors.status.success;
     iconBgColor = theme.colors.background.successLight;
   } else if (variant === 'warning') {
@@ -45,7 +45,7 @@ export const AlertModal: React.FC<AlertModalProps> = React.memo(({
     iconColor = theme.colors.status.warning;
     iconBgColor = theme.colors.background.warningLight;
   } else if (variant === 'danger') {
-    iconName = IconName.TrashFill;
+    iconName = IconName.XmarkCircleFill;
     iconColor = theme.colors.status.error;
     iconBgColor = theme.colors.background.errorLight;
   }
