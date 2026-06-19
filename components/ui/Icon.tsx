@@ -40,6 +40,8 @@ const MATERIAL_MAP: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   'mic.fill': 'mic',
   'play.fill': 'play-arrow',
   'pause.fill': 'pause',
+  'info.circle.fill': 'info',
+  'exclamationmark.triangle.fill': 'warning',
 };
 
 export enum IconName {
@@ -73,6 +75,8 @@ export enum IconName {
   MicFill = 'mic.fill',
   PlayFill = 'play.fill',
   PauseFill = 'pause.fill',
+  InfoCircleFill = 'info.circle.fill',
+  ExclamationmarkTriangleFill = 'exclamationmark.triangle.fill',
 }
 
 interface IconProps {

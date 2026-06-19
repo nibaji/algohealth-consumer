@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Alert } from 'react-native';
 import { FamilyMemberOut, FamilyMemberUpdate, GenderType, RelationType } from '@/src/features/family/familyTypes';
 import { familyService } from '@/src/services/family/familyService';
 import { apiDateToInputDate, inputDateToApiDate, validateDateString } from '@/src/utils/date';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { useAlert } from '@/src/contexts/AlertContext';
 
 interface UseEditMemberFormParams {
   visible: boolean;
@@ -21,6 +21,7 @@ export const useEditMemberForm = ({
   onUpdateSuccess,
 }: UseEditMemberFormParams) => {
   const { user } = useAuth();
+  const { showAlert } = useAlert();
 
   const isOwner = !!(user && ownerId && user.id === ownerId);
   const isSelf = !!(user && member && member.user_id && member.user_id === user.id);
@@ -159,21 +160,16 @@ export const useEditMemberForm = ({
       }
     };
 
-    if (process.env.EXPO_OS === 'web') {
-      if (window.confirm(`Are you sure you want to delete ${member.name}? All of their medical records will be deleted permanently. This action cannot be undone.`)) {
-        performDelete();
-      }
-    } else {
-      Alert.alert(
-        'Delete Family Member',
-        `Are you sure you want to delete ${member.name}? All of their medical records will be deleted permanently. This action cannot be undone.`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Delete', style: 'destructive', onPress: performDelete }
-        ]
-      );
-    }
-  }, [member, onUpdateSuccess, onClose]);
+    showAlert({
+      title: 'Delete Family Member',
+      message: `Are you sure you want to delete ${member.name}? All of their medical records will be deleted permanently. This action cannot be undone.`,
+      variant: 'danger',
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: performDelete }
+      ]
+    });
+  }, [member, onUpdateSuccess, onClose, showAlert]);
 
   return {
     memberName, setMemberName,

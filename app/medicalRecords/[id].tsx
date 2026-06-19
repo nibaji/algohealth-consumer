@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useTransition } from 'react';
-import { StyleSheet, View, ScrollView, Pressable, ActivityIndicator, Alert, Platform, RefreshControl } from 'react-native';
+import { StyleSheet, View, ScrollView, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { theme, shadows } from '@/constants/theme';
+import { useAlert } from '@/src/contexts/AlertContext';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { validateDateString, apiDateToInputDate, inputDateToApiDate } from '@/components/ui/DateInput';
@@ -50,6 +51,7 @@ export default function MedicalRecordDetail() {
 
   const player = useAudioPlayer(localAudioUri);
   const playerStatus = useAudioPlayerStatus(player);
+  const { showAlert } = useAlert();
 
 
 
@@ -78,7 +80,7 @@ export default function MedicalRecordDetail() {
         document.body.removeChild(form);
       } catch (err) {
         console.error('Failed to submit form for download', err);
-        Alert.alert('Error', 'Failed to download file');
+        showAlert({ title: 'Error', message: 'Failed to download file', variant: 'danger' });
       }
     } else {
       setDownloadingFileId(fileId);
@@ -97,7 +99,7 @@ export default function MedicalRecordDetail() {
             if (await Sharing.isAvailableAsync()) {
               await Sharing.shareAsync(localUri);
             } else {
-              Alert.alert('Error', 'No application found to open this file.');
+              showAlert({ title: 'Error', message: 'No application found to open this file.', variant: 'danger' });
             }
           }
         } else {
@@ -105,17 +107,17 @@ export default function MedicalRecordDetail() {
           if (await Sharing.isAvailableAsync()) {
             await Sharing.shareAsync(localUri);
           } else {
-            Alert.alert('Error', 'Sharing/Viewing is not available on this device');
+            showAlert({ title: 'Error', message: 'Sharing/Viewing is not available on this device', variant: 'warning' });
           }
         }
       } catch (err) {
         console.error('Failed to download file natively', err);
-        Alert.alert('Error', 'Failed to download file');
+        showAlert({ title: 'Error', message: 'Failed to download file', variant: 'danger' });
       } finally {
         setDownloadingFileId(null);
       }
     }
-  }, []);
+  }, [showAlert]);
 
   const handlePlayPauseAudio = useCallback(() => {
     if (playerStatus.playing) {
@@ -339,37 +341,25 @@ export default function MedicalRecordDetail() {
         }, 1500);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Failed to delete record';
-        if (Platform.OS === 'web') {
-          window.alert(message);
-        } else {
-          Alert.alert('Error', message);
-        }
+        showAlert({ title: 'Error', message, variant: 'danger' });
         setLoading(false);
       }
     };
 
-    if (Platform.OS === 'web') {
-      const confirmed = window.confirm(
-        'Are you sure you want to delete this medical record? This action is permanent and cannot be undone.'
-      );
-      if (confirmed) {
-        performDelete();
-      }
-    } else {
-      Alert.alert(
-        'Delete Record',
-        'Are you sure you want to delete this medical record? This action is permanent and cannot be undone.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { 
-            text: 'Delete', 
-            style: 'destructive',
-            onPress: performDelete
-          }
-        ]
-      );
-    }
-  }, [record, router]);
+    showAlert({
+      title: 'Delete Record',
+      message: 'Are you sure you want to delete this medical record? This action is permanent and cannot be undone.',
+      variant: 'danger',
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive',
+          onPress: performDelete
+        }
+      ]
+    });
+  }, [record, router, showAlert]);
 
   const handleBack = useCallback(() => {
     if (isEditing) {

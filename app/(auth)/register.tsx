@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useTransition } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, ScrollView, Alert, Pressable } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, ScrollView, Pressable } from 'react-native';
 import { Icon, IconName } from '@/components/ui/Icon';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
@@ -8,6 +8,7 @@ import { theme } from '@/constants/theme';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { Link } from 'expo-router';
 import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
+import { useAlert } from '@/src/contexts/AlertContext';
 
 export default function RegisterScreen(): React.JSX.Element {
   const [fullName, setFullName] = useState('');
@@ -17,6 +18,7 @@ export default function RegisterScreen(): React.JSX.Element {
   const [isPending, startTransition] = useTransition();
   const { register } = useAuth();
   const keyboardAvoidingEnabled = useKeyboardAvoiding();
+  const { showAlert } = useAlert();
 
   const toggleShowPassword = useCallback((): void => {
     setShowPassword((prev) => !prev);
@@ -24,18 +26,18 @@ export default function RegisterScreen(): React.JSX.Element {
 
   const handleRegister = useCallback((): void => {
     if (!email.trim() || !password || !fullName.trim()) {
-      Alert.alert('Error', 'Please fill in all fields');
+      showAlert({ title: 'Error', message: 'Please fill in all fields', variant: 'danger' });
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
-      Alert.alert('Error', 'Please enter a valid email address');
+      showAlert({ title: 'Error', message: 'Please enter a valid email address', variant: 'danger' });
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters long');
+      showAlert({ title: 'Error', message: 'Password must be at least 6 characters long', variant: 'danger' });
       return;
     }
     
@@ -45,10 +47,10 @@ export default function RegisterScreen(): React.JSX.Element {
         // Navigation is handled by layout route guard
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'An error occurred';
-        Alert.alert('Registration Failed', message);
+        showAlert({ title: 'Registration Failed', message, variant: 'danger' });
       }
     });
-  }, [email, password, fullName, register]);
+  }, [email, password, fullName, register, showAlert]);
 
   return (
     <KeyboardAvoidingView 

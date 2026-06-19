@@ -2,6 +2,7 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from '@/src/contexts/AuthContext';
+import { AlertProvider } from '@/src/contexts/AlertContext';
 import { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
@@ -83,10 +84,12 @@ function InitialLayout() {
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <StatusBar style="dark" />
-        <InitialLayout />
-      </AuthProvider>
+      <AlertProvider>
+        <AuthProvider>
+          <StatusBar style="dark" />
+          <InitialLayout />
+        </AuthProvider>
+      </AlertProvider>
     </SafeAreaProvider>
   );
 }

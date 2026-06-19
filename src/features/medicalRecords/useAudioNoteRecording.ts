@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Alert, AppState, AppStateStatus, LayoutChangeEvent, GestureResponderEvent } from 'react-native';
+import { AppState, AppStateStatus, LayoutChangeEvent, GestureResponderEvent } from 'react-native';
 import { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
+import { useAlert } from '@/src/contexts/AlertContext';
 import * as DocumentPicker from 'expo-document-picker';
 import {
   useAudioRecorder,
@@ -23,6 +24,7 @@ export const useAudioNoteRecording = ({
   onAudioChange,
   startRecordingOnInit = false,
 }: UseAudioNoteRecordingParams) => {
+  const { showAlert } = useAlert();
   const [progressBarWidth, setProgressBarWidth] = useState(0);
 
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
@@ -88,7 +90,11 @@ export const useAudioNoteRecording = ({
       }
       
       if (!granted) {
-        Alert.alert('Permission Required', 'Microphone permission is required to record audio notes');
+        showAlert({
+          title: 'Permission Required',
+          message: 'Microphone permission is required to record audio notes',
+          variant: 'warning',
+        });
         return;
       }
       
@@ -96,9 +102,13 @@ export const useAudioNoteRecording = ({
       audioRecorder.record();
     } catch (err) {
       console.error('Failed to start recording', err);
-      Alert.alert('Error', 'Failed to access microphone or start recording');
+      showAlert({
+        title: 'Error',
+        message: 'Failed to access microphone or start recording',
+        variant: 'danger',
+      });
     }
-  }, [audioRecorder]);
+  }, [audioRecorder, showAlert]);
 
   useEffect(() => {
     if (startRecordingOnInit && !recorderState.isRecording && !audioFile) {
@@ -120,9 +130,13 @@ export const useAudioNoteRecording = ({
       }
     } catch (err) {
       console.error('Failed to stop recording', err);
-      Alert.alert('Error', 'Failed to save audio recording');
+      showAlert({
+        title: 'Error',
+        message: 'Failed to save audio recording',
+        variant: 'danger',
+      });
     }
-  }, [audioRecorder, onAudioChange]);
+  }, [audioRecorder, onAudioChange, showAlert]);
 
   const handleRemoveAudio = useCallback(() => {
     try {
