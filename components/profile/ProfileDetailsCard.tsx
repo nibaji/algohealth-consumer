@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
+import { Icon, IconName } from '@/components/ui/Icon';
 
 interface ProfileDetailsCardProps {
   email?: string | null;
@@ -32,6 +33,11 @@ export const ProfileDetailsCard = ({
 
       {success ? (
         <View style={styles.successBanner}>
+          <Icon
+            name={IconName.CheckmarkCircleFill}
+            size={16}
+            tintColor={theme.colors.text.success}
+          />
           <Typography.Label style={styles.successBannerText}>
             Profile updated successfully!
           </Typography.Label>
@@ -39,9 +45,16 @@ export const ProfileDetailsCard = ({
       ) : null}
 
       {error ? (
-        <Typography.Label selectable style={styles.errorBannerText}>
-          {error}
-        </Typography.Label>
+        <View style={styles.errorBanner}>
+          <Icon
+            name={IconName.ExclamationmarkCircleFill}
+            size={16}
+            tintColor={theme.colors.text.error}
+          />
+          <Typography.Label selectable style={styles.errorBannerText}>
+            {error}
+          </Typography.Label>
+        </View>
       ) : null}
 
       <TextInput
@@ -91,21 +104,34 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.md,
   },
   successBanner: {
-    backgroundColor: theme.colors.background.default,
+    backgroundColor: theme.colors.background.successLight,
     borderWidth: 1,
     borderColor: theme.colors.status.success,
     borderRadius: theme.radius.md,
     padding: theme.spacing.md,
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: theme.spacing.sm,
   },
   successBannerText: {
     color: theme.colors.text.success,
     fontWeight: '600',
+    flex: 1,
+  },
+  errorBanner: {
+    backgroundColor: theme.colors.background.errorLight,
+    borderWidth: 1,
+    borderColor: theme.colors.status.error,
+    borderRadius: theme.radius.md,
+    padding: theme.spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
   },
   errorBannerText: {
     color: theme.colors.text.error,
     fontWeight: '600',
     fontSize: theme.fontSize.xs,
-    textAlign: 'center',
+    flex: 1,
   },
 });

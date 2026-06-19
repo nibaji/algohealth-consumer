@@ -105,7 +105,7 @@ export const useAudioNoteRecording = ({
       showAlert({
         title: 'Error',
         message: 'Failed to access microphone or start recording',
-        variant: 'danger',
+        variant: 'error',
       });
     }
   }, [audioRecorder, showAlert]);
@@ -133,7 +133,7 @@ export const useAudioNoteRecording = ({
       showAlert({
         title: 'Error',
         message: 'Failed to save audio recording',
-        variant: 'danger',
+        variant: 'error',
       });
     }
   }, [audioRecorder, onAudioChange, showAlert]);

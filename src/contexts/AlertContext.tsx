@@ -4,7 +4,7 @@ import { AlertModal, AlertButton } from '@/components/ui/AlertModal';
 export interface AlertOptions {
   title: string;
   message: string;
-  variant?: 'info' | 'success' | 'warning' | 'danger';
+  variant?: 'info' | 'success' | 'warning' | 'danger' | 'error';
   buttons?: AlertButton[];
 }
 

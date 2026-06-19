@@ -117,7 +117,9 @@ export const styles = StyleSheet.create({
     borderColor: theme.colors.status.error,
     borderRadius: theme.radius.md,
     padding: theme.spacing.md,
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: theme.spacing.sm,
   },
   errorBannerText: {
     color: theme.colors.text.error,

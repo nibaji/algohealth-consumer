@@ -99,6 +99,11 @@ export const EditRecordForm: React.FC<EditRecordFormProps> = ({
     <Animated.View entering={FadeInDown.duration(400)} style={{ gap: theme.spacing.lg }}>
       {editError ? (
         <View style={styles.errorBanner}>
+          <Icon
+            name={IconName.ExclamationmarkCircleFill}
+            size={16}
+            tintColor={theme.colors.text.error}
+          />
           <Typography.Label style={styles.errorBannerText}>
             {editError}
           </Typography.Label>

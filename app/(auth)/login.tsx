@@ -25,13 +25,13 @@ export default function LoginScreen(): React.JSX.Element {
 
   const handleLogin = useCallback((): void => {
     if (!email.trim() || !password) {
-      showAlert({ title: 'Error', message: 'Please fill in all fields', variant: 'danger' });
+      showAlert({ title: 'Error', message: 'Please fill in all fields', variant: 'error' });
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
-      showAlert({ title: 'Error', message: 'Please enter a valid email address', variant: 'danger' });
+      showAlert({ title: 'Error', message: 'Please enter a valid email address', variant: 'error' });
       return;
     }
     
@@ -41,7 +41,7 @@ export default function LoginScreen(): React.JSX.Element {
         // Navigation is handled by layout route guard
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'An error occurred';
-        showAlert({ title: 'Login Failed', message, variant: 'danger' });
+        showAlert({ title: 'Login Failed', message, variant: 'error' });
       }
     });
   }, [email, password, login, showAlert]);

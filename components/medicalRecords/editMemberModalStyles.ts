@@ -163,10 +163,21 @@ export const styles = StyleSheet.create({
   deleteButtonText: {
     color: theme.colors.status.error,
   },
+  errorBanner: {
+    backgroundColor: theme.colors.background.errorLight,
+    borderWidth: 1,
+    borderColor: theme.colors.status.error,
+    borderRadius: theme.radius.md,
+    padding: theme.spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
+  },
   errorBannerText: {
     color: theme.colors.text.error,
     fontWeight: '600',
     fontSize: theme.fontSize.xs,
-    textAlign: 'center',
+    flex: 1,
   },
 });

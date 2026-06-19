@@ -15,7 +15,7 @@ export interface AlertModalProps {
   visible: boolean;
   title: string;
   message: string;
-  variant?: 'info' | 'success' | 'warning' | 'danger';
+  variant?: 'info' | 'success' | 'warning' | 'danger' | 'error';
   buttons?: AlertButton[];
   onClose: () => void;
 }
@@ -46,6 +46,10 @@ export const AlertModal: React.FC<AlertModalProps> = React.memo(({
     iconBgColor = theme.colors.background.warningLight;
   } else if (variant === 'danger') {
     iconName = IconName.XmarkCircleFill;
+    iconColor = theme.colors.status.error;
+    iconBgColor = theme.colors.background.errorLight;
+  } else if (variant === 'error') {
+    iconName = IconName.ExclamationmarkCircleFill;
     iconColor = theme.colors.status.error;
     iconBgColor = theme.colors.background.errorLight;
   }

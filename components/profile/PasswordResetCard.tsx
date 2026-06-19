@@ -46,6 +46,11 @@ export const PasswordResetCard = ({ email }: PasswordResetCardProps): React.JSX.
 
       {passwordResetSuccess ? (
         <View style={styles.successBanner}>
+          <Icon
+            name={IconName.CheckmarkCircleFill}
+            size={16}
+            tintColor={theme.colors.text.success}
+          />
           <Typography.Label selectable style={styles.successBannerText}>
             {passwordResetSuccess}
           </Typography.Label>
@@ -53,9 +58,16 @@ export const PasswordResetCard = ({ email }: PasswordResetCardProps): React.JSX.
       ) : null}
 
       {passwordResetError ? (
-        <Typography.Label selectable style={styles.errorBannerText}>
-          {passwordResetError}
-        </Typography.Label>
+        <View style={styles.errorBanner}>
+          <Icon
+            name={IconName.ExclamationmarkCircleFill}
+            size={16}
+            tintColor={theme.colors.text.error}
+          />
+          <Typography.Label selectable style={styles.errorBannerText}>
+            {passwordResetError}
+          </Typography.Label>
+        </View>
       ) : null}
 
       <Button.Secondary
@@ -158,22 +170,35 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.md,
   },
   successBanner: {
-    backgroundColor: theme.colors.background.default,
+    backgroundColor: theme.colors.background.successLight,
     borderWidth: 1,
     borderColor: theme.colors.status.success,
     borderRadius: theme.radius.md,
     padding: theme.spacing.md,
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: theme.spacing.sm,
   },
   successBannerText: {
     color: theme.colors.text.success,
     fontWeight: '600',
+    flex: 1,
+  },
+  errorBanner: {
+    backgroundColor: theme.colors.background.errorLight,
+    borderWidth: 1,
+    borderColor: theme.colors.status.error,
+    borderRadius: theme.radius.md,
+    padding: theme.spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
   },
   errorBannerText: {
     color: theme.colors.text.error,
     fontWeight: '600',
     fontSize: theme.fontSize.xs,
-    textAlign: 'center',
+    flex: 1,
   },
 });
 

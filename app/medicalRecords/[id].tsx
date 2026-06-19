@@ -80,7 +80,7 @@ export default function MedicalRecordDetail() {
         document.body.removeChild(form);
       } catch (err) {
         console.error('Failed to submit form for download', err);
-        showAlert({ title: 'Error', message: 'Failed to download file', variant: 'danger' });
+        showAlert({ title: 'Error', message: 'Failed to download file', variant: 'error' });
       }
     } else {
       setDownloadingFileId(fileId);
@@ -99,7 +99,7 @@ export default function MedicalRecordDetail() {
             if (await Sharing.isAvailableAsync()) {
               await Sharing.shareAsync(localUri);
             } else {
-              showAlert({ title: 'Error', message: 'No application found to open this file.', variant: 'danger' });
+              showAlert({ title: 'Error', message: 'No application found to open this file.', variant: 'error' });
             }
           }
         } else {
@@ -112,7 +112,7 @@ export default function MedicalRecordDetail() {
         }
       } catch (err) {
         console.error('Failed to download file natively', err);
-        showAlert({ title: 'Error', message: 'Failed to download file', variant: 'danger' });
+        showAlert({ title: 'Error', message: 'Failed to download file', variant: 'error' });
       } finally {
         setDownloadingFileId(null);
       }
@@ -341,7 +341,7 @@ export default function MedicalRecordDetail() {
         }, 1500);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Failed to delete record';
-        showAlert({ title: 'Error', message, variant: 'danger' });
+        showAlert({ title: 'Error', message, variant: 'error' });
         setLoading(false);
       }
     };

@@ -345,6 +345,11 @@ export default function CreateMedicalRecord(): React.JSX.Element {
           >
             {error ? (
               <View style={styles.errorBanner}>
+                <Icon
+                  name={IconName.ExclamationmarkCircleFill}
+                  size={16}
+                  tintColor={theme.colors.text.error}
+                />
                 <Typography.Label style={styles.errorBannerText}>
                   {error}
                 </Typography.Label>
@@ -617,7 +622,9 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.status.error,
     borderRadius: theme.radius.md,
     padding: theme.spacing.md,
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: theme.spacing.sm,
     marginBottom: theme.spacing.xs,
   },
   errorBannerText: {

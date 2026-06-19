@@ -26,18 +26,18 @@ export default function RegisterScreen(): React.JSX.Element {
 
   const handleRegister = useCallback((): void => {
     if (!email.trim() || !password || !fullName.trim()) {
-      showAlert({ title: 'Error', message: 'Please fill in all fields', variant: 'danger' });
+      showAlert({ title: 'Error', message: 'Please fill in all fields', variant: 'error' });
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
-      showAlert({ title: 'Error', message: 'Please enter a valid email address', variant: 'danger' });
+      showAlert({ title: 'Error', message: 'Please enter a valid email address', variant: 'error' });
       return;
     }
 
     if (password.length < 6) {
-      showAlert({ title: 'Error', message: 'Password must be at least 6 characters long', variant: 'danger' });
+      showAlert({ title: 'Error', message: 'Password must be at least 6 characters long', variant: 'error' });
       return;
     }
     
@@ -47,7 +47,7 @@ export default function RegisterScreen(): React.JSX.Element {
         // Navigation is handled by layout route guard
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'An error occurred';
-        showAlert({ title: 'Registration Failed', message, variant: 'danger' });
+        showAlert({ title: 'Registration Failed', message, variant: 'error' });
       }
     });
   }, [email, password, fullName, register, showAlert]);

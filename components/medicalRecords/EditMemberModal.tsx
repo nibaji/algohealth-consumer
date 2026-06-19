@@ -165,9 +165,16 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
               >
                 <View style={styles.cardForm}>
                   {error ? (
-                    <Typography.Label style={styles.errorBannerText}>
-                      {error}
-                    </Typography.Label>
+                    <View style={styles.errorBanner}>
+                      <Icon
+                        name={IconName.ExclamationmarkCircleFill}
+                        size={16}
+                        tintColor={theme.colors.text.error}
+                      />
+                      <Typography.Label style={styles.errorBannerText}>
+                        {error}
+                      </Typography.Label>
+                    </View>
                   ) : null}
 
                   <TextInput

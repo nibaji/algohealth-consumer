@@ -138,9 +138,16 @@ export const InvitesModal: React.FC<InvitesModalProps> = React.memo(({ visible, 
                 </View>
 
                 {error ? (
-                  <Typography.Label style={styles.errorText}>
-                    {error}
-                  </Typography.Label>
+                  <View style={styles.errorBanner}>
+                    <Icon
+                      name={IconName.ExclamationmarkCircleFill}
+                      size={16}
+                      tintColor={theme.colors.text.error}
+                    />
+                    <Typography.Label style={styles.errorText}>
+                      {error}
+                    </Typography.Label>
+                  </View>
                 ) : null}
 
                 <View style={styles.actionsContainer}>
@@ -263,10 +270,21 @@ const styles = StyleSheet.create({
   rejectText: {
     color: theme.colors.status.error,
   },
+  errorBanner: {
+    backgroundColor: theme.colors.background.errorLight,
+    borderWidth: 1,
+    borderColor: theme.colors.status.error,
+    borderRadius: theme.radius.md,
+    padding: theme.spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.sm,
+  },
   errorText: {
-    color: theme.colors.status.error,
+    color: theme.colors.text.error,
     fontWeight: '600',
-    textAlign: 'center',
+    flex: 1,
   },
   emptyState: {
     alignItems: 'center',
