@@ -1,3 +1,3 @@
 export const ENV = {
-  API_BASE_URL: 'http://4.227.234.71:8001',
+  API_BASE_URL: 'https://app-api.algohealthplus.com',
 };
