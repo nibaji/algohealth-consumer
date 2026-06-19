@@ -128,7 +128,7 @@ AlertModal.displayName = 'AlertModal';
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(15, 10, 25, 0.4)', // Dark purple tint transparent overlay
+    backgroundColor: theme.colors.translucent.overlay,
     justifyContent: 'center',
     alignItems: 'center',
   },

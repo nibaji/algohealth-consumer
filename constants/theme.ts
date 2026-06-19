@@ -69,6 +69,7 @@ export const theme = {
       white25: 'rgba(255, 255, 255, 0.25)',
       white20: 'rgba(255, 255, 255, 0.2)',
       white15: 'rgba(255, 255, 255, 0.15)',
+      overlay: 'rgba(15, 10, 25, 0.4)',
     },
     common: {
       white: '#FFFFFF',
