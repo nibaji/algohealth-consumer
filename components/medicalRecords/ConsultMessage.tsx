@@ -49,7 +49,7 @@ export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({
   }, [item.id, item.text, onToggleSpeech]);
 
   return (
-    <View style={[styles.messageBubbleRow, isUser ? styles.rowUser : styles.rowBot]}>
+    <View style={[styles.messageBubbleRow, isUser ? styles.rowUser : styles.rowBot, { maxWidth: width * 0.82 }]}>
       {isUser ? null : (
         <View style={[styles.botAvatarCircle, { borderCurve: 'continuous' }]}>
           <Icon name={IconName.Sparkles} size={12} tintColor={theme.colors.primary.DEFAULT} />
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: theme.spacing.md,
     gap: theme.spacing.sm,
-    maxWidth: '85%',
+    // maxWidth set inline via useWindowDimensions for reliable web behaviour
   },
   rowUser: {
     alignSelf: 'flex-end',
@@ -177,6 +177,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.md,
     borderRadius: theme.radius.lg,
     gap: theme.spacing.xs,
+    flexShrink: 1,      // allow bubble to shrink inside the row
+    overflow: 'hidden', // prevent content from punching outside on web
   },
   bubbleUser: {
     backgroundColor: theme.colors.primary.DEFAULT,

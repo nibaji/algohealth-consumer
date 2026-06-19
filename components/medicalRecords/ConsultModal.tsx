@@ -213,6 +213,8 @@ const styles = StyleSheet.create({
   },
   chatArea: {
     flex: 1,
+    width: '100%',
+    overflow: 'hidden',
     backgroundColor: theme.colors.background.default,
   },
   listContent: {

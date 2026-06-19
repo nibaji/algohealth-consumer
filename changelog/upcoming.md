@@ -1,1 +1,2 @@
 ## Unreleased
+- 2026-06-19: Fixed chat messages overflowing the screen width on web in the Consult chat. Replaced percentage-based `maxWidth: '85%'` (unreliable on RN Web) with a pixel-based `width * 0.82` value from `useWindowDimensions`. Added `flexShrink: 1` and `overflow: 'hidden'` to the bubble container so long unbreakable strings wrap instead of expanding past the viewport. Also added `width: '100%'` and `overflow: 'hidden'` to the `chatArea` in `ConsultModal` to prevent horizontal scroll. Changed in `ConsultMessage.tsx`, `ConsultModal.tsx`.
