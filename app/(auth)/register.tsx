@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
 import { theme } from '@/constants/theme';
 import { useAuth } from '@/src/contexts/AuthContext';
-import { Link } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
 import { useAlert } from '@/src/contexts/AlertContext';
 
@@ -17,8 +17,14 @@ export default function RegisterScreen(): React.JSX.Element {
   const [showPassword, setShowPassword] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { register } = useAuth();
+  const router = useRouter();
   const keyboardAvoidingEnabled = useKeyboardAvoiding();
   const { showAlert } = useAlert();
+
+  // Pop back to login — register is always pushed on top of login
+  const goBack = useCallback((): void => {
+    router.back();
+  }, [router]);
 
   const toggleShowPassword = useCallback((): void => {
     setShowPassword((prev) => !prev);
@@ -117,13 +123,12 @@ export default function RegisterScreen(): React.JSX.Element {
           
           <View style={styles.footer}>
             <Typography.Label>Already have an account? </Typography.Label>
-            <Link href="/(auth)/login" asChild>
-              <Button.Secondary 
-                title="Sign In" 
-                style={styles.linkButton} 
-                textStyle={styles.linkText}
-              />
-            </Link>
+            <Button.Secondary
+              title="Sign In"
+              onPress={goBack}
+              style={styles.linkButton}
+              textStyle={styles.linkText}
+            />
           </View>
         </View>
       </ScrollView>

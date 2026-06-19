@@ -97,25 +97,25 @@ export default function LoginScreen(): React.JSX.Element {
           </View>
           
           <Link href="/(auth)/forgotPassword" asChild>
-            <Button.Secondary 
-              title="Forgot Password?" 
-              style={styles.forgotPassword} 
+            <Button.Secondary
+              title="Forgot Password?"
+              style={styles.forgotPassword}
               textStyle={styles.forgotPasswordText}
             />
           </Link>
-          
-          <Button.Primary 
-            title="Sign In" 
-            onPress={handleLogin} 
+
+          <Button.Primary
+            title="Sign In"
+            onPress={handleLogin}
             loading={isPending}
           />
-          
+
           <View style={styles.footer}>
             <Typography.Label>Don&apos;t have an account? </Typography.Label>
             <Link href="/(auth)/register" asChild>
-              <Button.Secondary 
-                title="Register" 
-                style={styles.linkButton} 
+              <Button.Secondary
+                title="Register"
+                style={styles.linkButton}
                 textStyle={styles.linkText}
               />
             </Link>
