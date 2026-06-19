@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View, Pressable } from 'react-native';
-import { Icon } from '@/components/ui/Icon';
+import { Icon, IconName } from '@/components/ui/Icon';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
@@ -9,16 +9,17 @@ import { MedicalRecordResponse } from '@/src/features/medicalRecords/medicalReco
 import { MedicalRecordCard } from './MedicalRecordCard';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { getDisplayRelation } from '@/src/utils/relation';
+import { Button } from '@/components/ui/Button';
 
 interface MemberAccordionProps {
   member: FamilyMemberOut;
   records: MedicalRecordResponse[];
   isExpanded: boolean;
-  onToggleExpand: () => void;
-  onNavigateCreateRecord: () => void;
+  onToggleExpand: (memberId: string) => void;
+  onNavigateCreateRecord: (memberId: string) => void;
   onNavigateRecordDetails: (recordId: string) => void;
-  onConsult: () => void;
-  onEditMember: () => void;
+  onConsult: (member: FamilyMemberOut) => void;
+  onEditMember: (member: FamilyMemberOut) => void;
 }
 
 export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
@@ -32,6 +33,23 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
   onEditMember,
 }) => {
   const { user } = useAuth();
+
+  const handleToggleExpand = React.useCallback((): void => {
+    onToggleExpand(member.id);
+  }, [onToggleExpand, member.id]);
+
+  const handleConsult = React.useCallback((): void => {
+    onConsult(member);
+  }, [onConsult, member]);
+
+  const handleNavigateCreateRecord = React.useCallback((): void => {
+    onNavigateCreateRecord(member.id);
+  }, [onNavigateCreateRecord, member.id]);
+
+  const handleEditMember = React.useCallback((): void => {
+    onEditMember(member);
+  }, [onEditMember, member]);
+
   return (
     <View 
       style={[
@@ -43,7 +61,7 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
       {/* Accordion Header */}
       <View style={styles.accordionHeader}>
         <Pressable 
-          onPress={member.invite_status === 'pending' ? undefined : onToggleExpand}
+          onPress={member.invite_status === 'pending' ? undefined : handleToggleExpand}
           style={styles.headerPressable}
           disabled={member.invite_status === 'pending'}
         >
@@ -80,31 +98,26 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
         </Pressable>
 
         {member.invite_status !== 'pending' ? (
-          <Pressable
-            onPress={onConsult}
-            style={({ pressed }) => [
-              styles.consultButton,
-              pressed ? styles.consultButtonPressed : null,
-              { borderCurve: 'continuous' }
-            ]}
-          >
-            <Icon name="sparkles" size={12} tintColor={theme.colors.primary.DEFAULT} />
-            <Typography.Label style={styles.consultText}>
-              Consult
-            </Typography.Label>
-          </Pressable>
+          <Button.Secondary
+            title="Consult"
+            onPress={handleConsult}
+            iconName={IconName.Sparkles}
+            iconColor={theme.colors.primary.DEFAULT}
+            style={styles.consultButton}
+            textStyle={styles.consultText}
+          />
         ) : null}
 
         {member.invite_status !== 'pending' ? (
           <Pressable 
-            onPress={onToggleExpand}
+            onPress={handleToggleExpand}
             style={({ pressed }) => [
               styles.chevronPressable,
               pressed ? styles.chevronPressablePressed : null
             ]}
           >
             <Icon 
-              name={isExpanded ? "chevron.up" : "chevron.down"} 
+              name={isExpanded ? IconName.ChevronUp : IconName.ChevronDown} 
               size={16}
               tintColor={theme.colors.text.tertiary}
             />
@@ -120,7 +133,7 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
           {member.health_summary ? (
             <View style={[styles.summaryCard, { borderCurve: 'continuous' }]}>
               <View style={styles.summaryTitleRow}>
-                <Icon name="sparkles" size={14} tintColor={theme.colors.primary.DEFAULT} />
+                <Icon name={IconName.Sparkles} size={14} tintColor={theme.colors.primary.DEFAULT} />
                 <Typography.Label style={styles.summaryTitle}>AI Health Summary</Typography.Label>
               </View>
               <Typography.Paragraph style={styles.summaryText}>
@@ -153,33 +166,23 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
 
           {/* Add record and edit member shortcuts */}
           <View style={styles.actionsFooterRow}>
-            <Pressable
-              onPress={onNavigateCreateRecord}
-              style={({ pressed }) => [
-                styles.addRecordShortcutButton,
-                pressed ? styles.addRecordShortcutButtonPressed : null,
-                { borderCurve: 'continuous' }
-              ]}
-            >
-              <Icon name="plus" size={12} tintColor={theme.colors.text.primary} />
-              <Typography.Label style={styles.addRecordShortcutText}>
-                Add Record
-              </Typography.Label>
-            </Pressable>
+            <Button.Secondary
+              title="Add Record"
+              onPress={handleNavigateCreateRecord}
+              iconName={IconName.Plus}
+              iconColor={theme.colors.text.primary}
+              style={styles.addRecordShortcutButton}
+              textStyle={styles.addRecordShortcutText}
+            />
 
-            <Pressable
-              onPress={onEditMember}
-              style={({ pressed }) => [
-                styles.editMemberShortcutButton,
-                pressed ? styles.editMemberShortcutButtonPressed : null,
-                { borderCurve: 'continuous' }
-              ]}
-            >
-              <Icon name="pencil" size={12} tintColor={theme.colors.primary.DEFAULT} />
-              <Typography.Label style={styles.editMemberShortcutText}>
-                Edit Member
-              </Typography.Label>
-            </Pressable>
+            <Button.Secondary
+              title="Edit Member"
+              onPress={handleEditMember}
+              iconName={IconName.Pencil}
+              iconColor={theme.colors.primary.DEFAULT}
+              style={styles.editMemberShortcutButton}
+              textStyle={styles.editMemberShortcutText}
+            />
           </View>
         </Animated.View>
       ) : null}
@@ -250,7 +253,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: theme.radius.full,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: theme.colors.background.infoLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -361,9 +364,9 @@ const styles = StyleSheet.create({
     color: theme.colors.primary.DEFAULT,
   },
   summaryCard: {
-    backgroundColor: '#FAF5FF',
+    backgroundColor: theme.colors.background.primaryLight,
     borderWidth: 1,
-    borderColor: '#E9D5FF',
+    borderColor: theme.colors.border.primaryLight,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.md,
     gap: theme.spacing.xs,
@@ -395,12 +398,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.xs,
     paddingVertical: 2,
     borderRadius: theme.radius.sm,
-    backgroundColor: '#FEF3C7',
+    backgroundColor: theme.colors.background.warningLight,
     borderWidth: 1,
-    borderColor: '#FDE68A',
+    borderColor: theme.colors.border.warningLight,
   },
   pendingTagText: {
-    color: '#D97706',
+    color: theme.colors.text.warningDark,
     fontSize: 9,
     fontWeight: '700',
     textTransform: 'uppercase',

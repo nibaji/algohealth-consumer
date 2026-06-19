@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useTransition } from 'react';
 import { StyleSheet, View, ScrollView, Pressable, ActivityIndicator, Alert, Platform, RefreshControl } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { theme } from '@/constants/theme';
+import { theme, shadows } from '@/constants/theme';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { validateDateString, apiDateToInputDate, inputDateToApiDate } from '@/components/ui/DateInput';
@@ -9,7 +9,7 @@ import { familyService } from '@/src/services/family/familyService';
 import { medicalRecordService } from '@/src/services/medicalRecords/medicalRecordService';
 import { MedicalRecordResponse } from '@/src/features/medicalRecords/medicalRecordTypes';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Icon } from '@/components/ui/Icon';
+import { Icon, IconName } from '@/components/ui/Icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RecordDetailSkeleton } from '@/components/ui/Skeleton';
 
@@ -405,7 +405,7 @@ export default function MedicalRecordDetail() {
           ]}
         >
           <Icon 
-            name="chevron.left" 
+            name={IconName.ChevronLeft} 
             size={20}
             tintColor={theme.colors.text.primary}
           />
@@ -437,7 +437,7 @@ export default function MedicalRecordDetail() {
           <Animated.View entering={FadeInDown.duration(500)} style={styles.successContainer}>
             <View style={[styles.successIconCircle, { backgroundColor: theme.colors.background.errorLight, borderCurve: 'continuous' }]}>
               <Icon 
-                name="trash.fill" 
+                name={IconName.TrashFill} 
                 size={40}
                 tintColor={theme.colors.status.error}
               />
@@ -577,7 +577,7 @@ export default function MedicalRecordDetail() {
                             { borderCurve: 'continuous' }
                           ]}
                         >
-                          <Icon name="doc.fill" size={16} tintColor={theme.colors.primary.DEFAULT} />
+                          <Icon name={IconName.DocFill} size={16} tintColor={theme.colors.primary.DEFAULT} />
                           <View style={styles.fileChipInfo}>
                             <Typography.Paragraph numberOfLines={1} style={styles.fileChipName}>
                               {file.filename}
@@ -600,7 +600,7 @@ export default function MedicalRecordDetail() {
               {record.ai_summary ? (
                 <View style={[styles.aiSummaryCard, { borderCurve: 'continuous' }]}>
                   <View style={styles.aiHeader}>
-                    <Icon name="sparkles" size={16} tintColor={theme.colors.primary.DEFAULT} />
+                    <Icon name={IconName.Sparkles} size={16} tintColor={theme.colors.primary.DEFAULT} />
                     <Typography.Label style={styles.aiTitle}>
                       AI Clinical Summary
                     </Typography.Label>
@@ -736,7 +736,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border.light,
     gap: theme.spacing.lg,
-    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+    ...shadows.sm,
   },
   detailItem: {
     gap: theme.spacing.xs,
@@ -765,7 +765,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.xl,
     padding: theme.spacing.lg,
     gap: theme.spacing.sm,
-    boxShadow: "0 4px 6px -1px rgba(138, 43, 226, 0.05)",
+    ...shadows.sm,
   },
   aiHeader: {
     flexDirection: 'row',
@@ -810,7 +810,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.xl,
     justifyContent: 'center',
     alignItems: 'center',
-    boxShadow: "0 10px 15px -3px rgba(239, 68, 68, 0.15)",
+    ...shadows.lg,
   },
   successIcon: {
     width: 40,

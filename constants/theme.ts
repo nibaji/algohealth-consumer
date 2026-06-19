@@ -33,6 +33,9 @@ export const theme = {
       infoLight: '#EEF2FF',
       warningLight: '#FEF3C7',
       errorLight: '#FEE2E2',
+      successLight: '#ECFDF5',
+      purpleLight: '#F3E8FF',
+      splash: '#2D0E5A',
     },
     text: {
       primary: neutral.gray900,
@@ -108,6 +111,12 @@ export const theme = {
 export const shadows: Record<string, ViewStyle> = {
   sm: {
     boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)"
+  },
+  primary: {
+    boxShadow: "0 10px 15px -3px rgba(138, 43, 226, 0.2)"
+  },
+  success: {
+    boxShadow: "0 10px 15px -3px rgba(16, 185, 129, 0.15)"
   },
   md: {
     boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)"

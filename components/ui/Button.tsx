@@ -2,12 +2,17 @@ import React from 'react';
 import { Pressable, StyleSheet, ActivityIndicator, PressableProps, StyleProp, ViewStyle, TextStyle } from 'react-native';
 import { theme } from '@/constants/theme';
 import { Typography } from './Typography';
+import { Icon, IconName } from './Icon';
 
 export interface BaseButtonProps extends PressableProps {
   title: string;
   loading?: boolean;
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
+  iconName?: IconName;
+  iconSize?: number;
+  iconColor?: string;
+  iconPosition?: 'left' | 'right';
 }
 
 const BaseButton = ({ 
@@ -16,12 +21,29 @@ const BaseButton = ({
   style, 
   textStyle, 
   disabled, 
+  iconName,
+  iconSize = 16,
+  iconColor,
+  iconPosition = 'left',
   ...props 
 }: BaseButtonProps & { 
   defaultStyle: ViewStyle; 
   pressedStyle: ViewStyle; 
   defaultTextStyle: TextStyle; 
 }) => {
+  const renderIcon = () => {
+    if (!iconName) return null;
+    const resolvedColor = iconColor || (props.defaultTextStyle.color as string);
+    return (
+      <Icon
+        name={iconName}
+        size={iconSize}
+        tintColor={resolvedColor}
+        style={iconPosition === 'left' ? styles.iconLeft : styles.iconRight}
+      />
+    );
+  };
+
   return (
     <Pressable
       style={({ pressed }) => [
@@ -37,9 +59,13 @@ const BaseButton = ({
       {loading ? (
         <ActivityIndicator color={props.defaultTextStyle.color as string} />
       ) : (
-        <Typography.Label style={[props.defaultTextStyle, textStyle]}>
-          {title}
-        </Typography.Label>
+        <>
+          {iconPosition === 'left' ? renderIcon() : null}
+          <Typography.Label style={[props.defaultTextStyle, textStyle]}>
+            {title}
+          </Typography.Label>
+          {iconPosition === 'right' ? renderIcon() : null}
+        </>
       )}
     </Pressable>
   );
@@ -130,5 +156,11 @@ const styles = StyleSheet.create({
     color: theme.colors.text.inverse,
     fontWeight: '600',
     fontSize: theme.fontSize.md,
+  },
+  iconLeft: {
+    marginRight: theme.spacing.xs,
+  },
+  iconRight: {
+    marginLeft: theme.spacing.xs,
   },
 });

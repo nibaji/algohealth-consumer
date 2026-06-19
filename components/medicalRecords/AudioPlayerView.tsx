@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { StyleSheet, View, Pressable } from 'react-native';
-import { Icon } from '@/components/ui/Icon';
+import { StyleSheet, View, Pressable, LayoutChangeEvent, GestureResponderEvent } from 'react-native';
+import { Icon, IconName } from '@/components/ui/Icon';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
 import { formatTime } from '@/src/utils/time';
@@ -26,11 +26,11 @@ export const AudioPlayerView: React.FC<AudioPlayerViewProps> = React.memo(({
 }) => {
   const [progressBarWidth, setProgressBarWidth] = useState(0);
 
-  const handleProgressBarLayout = useCallback((e: any) => {
+  const handleProgressBarLayout = useCallback((e: LayoutChangeEvent) => {
     setProgressBarWidth(e.nativeEvent.layout.width);
   }, []);
 
-  const handleProgressBarPress = useCallback((event: any) => {
+  const handleProgressBarPress = useCallback((event: GestureResponderEvent) => {
     const { locationX } = event.nativeEvent;
     if (progressBarWidth > 0) {
       const percentage = Math.max(0, Math.min(1, locationX / progressBarWidth));
@@ -48,7 +48,7 @@ export const AudioPlayerView: React.FC<AudioPlayerViewProps> = React.memo(({
         style={[styles.playPauseBtn, isUser ? styles.playPauseBtnUser : styles.playPauseBtnDefault]}
       >
         <Icon 
-          name={isPlaying ? 'pause.fill' : 'play.fill'} 
+          name={isPlaying ? IconName.PauseFill : IconName.PlayFill} 
           size={16} 
           tintColor={isUser ? '#FFFFFF' : theme.colors.primary.DEFAULT} 
         />
@@ -95,7 +95,7 @@ export const AudioPlayerView: React.FC<AudioPlayerViewProps> = React.memo(({
           ]}
         >
           <Icon 
-            name="trash.fill" 
+            name={IconName.TrashFill} 
             size={14} 
             tintColor={isUser ? '#FFFFFF' : theme.colors.status.error} 
           />
@@ -127,9 +127,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
   playPauseBtnDefault: {
-    backgroundColor: '#FAF5FF',
+    backgroundColor: theme.colors.background.primaryLight,
     borderWidth: 1,
-    borderColor: '#E9D5FF',
+    borderColor: theme.colors.border.primaryLight,
   },
   playerSeeker: {
     flex: 1,

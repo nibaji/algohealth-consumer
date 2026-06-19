@@ -9,7 +9,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
 
-import { Icon } from '@/components/ui/Icon';
+import { Icon, IconName } from '@/components/ui/Icon';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
 import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
@@ -53,15 +53,11 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
         isPlaying={isCurrentPlaying ? activePlayerStatus.playing : false}
         currentTime={isCurrentPlaying ? activePlayerStatus.currentTime : 0}
         duration={isCurrentPlaying ? activePlayerStatus.duration : (item.audio_duration || 0)}
-        onPlayPause={() => {
-          if (item.audio_uri) {
-            handlePlayPauseMessage(item.id, item.audio_uri);
-          }
-        }}
-        onSeek={(percentage) => handleSeekMessage(item.id, percentage)}
+        onPlayPause={handlePlayPauseMessage}
+        onSeek={handleSeekMessage}
         isSpeaking={isSpeaking}
         isSpeechPaused={isPaused}
-        onToggleSpeech={() => handleToggleSpeech(item.id, item.text || '')}
+        onToggleSpeech={handleToggleSpeech}
       />
     );
   }, [
@@ -124,7 +120,7 @@ export const ConsultModal: React.FC<ConsultModalProps> = React.memo(({ visible, 
               { borderCurve: 'continuous' }
             ]}
           >
-            <Icon name="xmark" size={16} tintColor={theme.colors.text.primary} />
+            <Icon name={IconName.Xmark} size={16} tintColor={theme.colors.text.primary} />
           </Pressable>
         </View>
 

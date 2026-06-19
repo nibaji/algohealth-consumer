@@ -7,7 +7,7 @@ import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
 import { DateInput } from '@/components/ui/DateInput';
-import { Icon } from '@/components/ui/Icon';
+import { Icon, IconName } from '@/components/ui/Icon';
 import { AudioNoteRecorder } from '@/components/medicalRecords/AudioNoteRecorder';
 import { formatFileSize } from '@/src/utils/file';
 import { styles } from './editRecordFormStyles';
@@ -31,6 +31,50 @@ interface EditRecordFormProps {
   handleSave: () => void;
   isPending: boolean;
 }
+
+const NewDocumentItem = React.memo(({ 
+  doc, 
+  index, 
+  onRemove 
+}: { 
+  doc: DocumentPicker.DocumentPickerAsset; 
+  index: number; 
+  onRemove: (idx: number) => void; 
+}) => {
+  const handleRemove = React.useCallback((): void => {
+    onRemove(index);
+  }, [onRemove, index]);
+
+  return (
+    <Animated.View
+      entering={FadeInDown.duration(200)}
+      style={styles.editFileItem}
+    >
+      <View style={styles.editFileInfo}>
+        <Icon name={IconName.Paperclip} size={14} tintColor={theme.colors.text.secondary} />
+        <View style={styles.editFileNameContainer}>
+          <Typography.Paragraph numberOfLines={1} style={styles.editFileName}>
+            {doc.name}
+          </Typography.Paragraph>
+          <Typography.Label style={styles.editFileSize}>
+            {formatFileSize(doc.size)}
+          </Typography.Label>
+        </View>
+      </View>
+      <Pressable
+        onPress={handleRemove}
+        style={({ pressed }) => [
+          styles.editDeleteFileButton,
+          pressed ? styles.editDeleteFileButtonPressed : null,
+        ]}
+      >
+        <Icon name={IconName.Xmark} size={12} tintColor={theme.colors.text.secondary} />
+      </Pressable>
+    </Animated.View>
+  );
+});
+
+NewDocumentItem.displayName = 'NewDocumentItem';
 
 export const EditRecordForm: React.FC<EditRecordFormProps> = ({
   visitDate,
@@ -97,46 +141,24 @@ export const EditRecordForm: React.FC<EditRecordFormProps> = ({
           <Typography.Label style={styles.editAttachmentsLabel}>Add New Attachments</Typography.Label>
 
           {/* Document Picker */}
-          <Pressable
+          <Button.Secondary
+            title="Add Documents"
             onPress={handlePickNewDocuments}
-            style={({ pressed }) => [
-              styles.editAttachButton,
-              pressed ? styles.editAttachButtonPressed : null,
-            ]}
-          >
-            <Icon name="doc.fill" size={16} tintColor={theme.colors.primary.DEFAULT} />
-            <Typography.Label style={styles.editAttachButtonText}>Add Documents</Typography.Label>
-          </Pressable>
+            iconName={IconName.DocFill}
+            iconColor={theme.colors.primary.DEFAULT}
+            style={styles.editAttachButton}
+            textStyle={styles.editAttachButtonText}
+          />
 
           {newDocuments.length > 0 ? (
             <View style={styles.editFileList}>
               {newDocuments.map((doc, idx) => (
-                <Animated.View
+                <NewDocumentItem
                   key={`new-doc-${idx}-${doc.uri}`}
-                  entering={FadeInDown.duration(200)}
-                  style={styles.editFileItem}
-                >
-                  <View style={styles.editFileInfo}>
-                    <Icon name="paperclip" size={14} tintColor={theme.colors.text.secondary} />
-                    <View style={styles.editFileNameContainer}>
-                      <Typography.Paragraph numberOfLines={1} style={styles.editFileName}>
-                        {doc.name}
-                      </Typography.Paragraph>
-                      <Typography.Label style={styles.editFileSize}>
-                        {formatFileSize(doc.size)}
-                      </Typography.Label>
-                    </View>
-                  </View>
-                  <Pressable
-                    onPress={() => removeNewDocument(idx)}
-                    style={({ pressed }) => [
-                      styles.editDeleteFileButton,
-                      pressed ? styles.editDeleteFileButtonPressed : null,
-                    ]}
-                  >
-                    <Icon name="xmark" size={12} tintColor={theme.colors.text.secondary} />
-                  </Pressable>
-                </Animated.View>
+                  doc={doc}
+                  index={idx}
+                  onRemove={removeNewDocument}
+                />
               ))}
             </View>
           ) : null}

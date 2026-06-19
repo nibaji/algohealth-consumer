@@ -1,8 +1,8 @@
-import { Icon } from '@/components/ui/Icon';
+import { Icon, IconName } from '@/components/ui/Icon';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
 import { ChatMessage } from '@/src/utils/consultCache';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { AudioPlayerView } from './AudioPlayerView';
 
@@ -11,12 +11,12 @@ interface ConsultMessageProps {
   isPlaying: boolean;
   currentTime: number; // in seconds
   duration: number; // in seconds
-  onPlayPause: () => void;
-  onSeek: (percentage: number) => void;
+  onPlayPause: (id: string, audioUri: string) => void;
+  onSeek: (id: string, percentage: number) => void;
   // TTS props — only relevant for bot messages
   isSpeaking: boolean;
   isSpeechPaused: boolean;
-  onToggleSpeech: () => void;
+  onToggleSpeech: (id: string, text: string) => void;
 }
 
 export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({
@@ -34,11 +34,25 @@ export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({
   const isUser = item.sender === 'user';
   const hasText = Boolean(item.text && item.text.trim() !== '');
 
+  const handlePlayPause = useCallback((): void => {
+    if (item.audio_uri) {
+      onPlayPause(item.id, item.audio_uri);
+    }
+  }, [item.id, item.audio_uri, onPlayPause]);
+
+  const handleSeek = useCallback((percentage: number): void => {
+    onSeek(item.id, percentage);
+  }, [item.id, onSeek]);
+
+  const handleToggleSpeech = useCallback((): void => {
+    onToggleSpeech(item.id, item.text || '');
+  }, [item.id, item.text, onToggleSpeech]);
+
   return (
     <View style={[styles.messageBubbleRow, isUser ? styles.rowUser : styles.rowBot]}>
       {isUser ? null : (
         <View style={[styles.botAvatarCircle, { borderCurve: 'continuous' }]}>
-          <Icon name="sparkles" size={12} tintColor={theme.colors.primary.DEFAULT} />
+          <Icon name={IconName.Sparkles} size={12} tintColor={theme.colors.primary.DEFAULT} />
         </View>
       )}
 
@@ -55,8 +69,8 @@ export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({
               isPlaying={isPlaying}
               currentTime={currentTime}
               duration={duration}
-              onPlayPause={onPlayPause}
-              onSeek={onSeek}
+              onPlayPause={handlePlayPause}
+              onSeek={handleSeek}
               variant="user"
             />
           </View>
@@ -73,7 +87,7 @@ export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({
             {item.documents.map((doc, idx) => (
               <View key={idx} style={[styles.docChip, isUser ? styles.docChipUser : styles.docChipBot, { borderCurve: 'continuous' }]}>
                 <Icon
-                  name="doc.fill"
+                  name={IconName.DocFill}
                   size={12}
                   tintColor={isUser ? '#FFFFFF' : theme.colors.primary.DEFAULT}
                 />
@@ -94,7 +108,7 @@ export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({
           {/* Speak button — only for bot messages that have text */}
           {!isUser && hasText ? (
             <Pressable
-              onPress={onToggleSpeech}
+              onPress={handleToggleSpeech}
               style={({ pressed }) => [
                 styles.speakButton,
                 (isSpeaking || isSpeechPaused) ? styles.speakButtonActive : null,
@@ -112,8 +126,8 @@ export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({
               <Icon
                 name={
                   isSpeaking
-                    ? 'pause.fill'
-                    : 'play.fill'
+                    ? IconName.PauseFill
+                    : IconName.PlayFill
                 }
                 size={12}
                 tintColor={

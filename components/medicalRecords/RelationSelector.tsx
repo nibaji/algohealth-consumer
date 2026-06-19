@@ -4,7 +4,7 @@ import { Typography } from '@/components/ui/Typography';
 import { TextInput } from '@/components/ui/TextInput';
 import { styles } from './editMemberModalStyles';
 
-export type RelationType = 'Spouse' | 'Child' | 'Parent' | 'Sibling' | 'Grandparent' | 'Other';
+import { RelationType } from '@/src/features/family/familyTypes';
 
 interface RelationSelectorProps {
   isFamilyHead: boolean;

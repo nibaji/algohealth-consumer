@@ -1,8 +1,8 @@
 import React from 'react';
 import { StyleSheet, View, Pressable } from 'react-native';
-import { Icon } from '@/components/ui/Icon';
+import { Icon, IconName } from '@/components/ui/Icon';
 import { Typography } from '@/components/ui/Typography';
-import { theme } from '@/constants/theme';
+import { theme, shadows } from '@/constants/theme';
 import { MedicalRecordResponse } from '@/src/features/medicalRecords/medicalRecordTypes';
 import { apiDateToInputDate } from '@/components/ui/DateInput';
 
@@ -34,7 +34,7 @@ export const MedicalRecordCard: React.FC<MedicalRecordCardProps> = React.memo(({
           <Typography.Label style={styles.recordDate}>
             {apiDateToInputDate(record.visit_date)}
           </Typography.Label>
-          <Icon name="chevron.right" size={14} tintColor={theme.colors.text.tertiary} />
+          <Icon name={IconName.ChevronRight} size={14} tintColor={theme.colors.text.tertiary} />
         </View>
       </View>
     </Pressable>
@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border.light,
     gap: theme.spacing.xs,
-    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.02)",
+    ...shadows.sm,
   },
   recordItemCardPressed: {
     backgroundColor: theme.colors.background.default,
@@ -92,9 +92,9 @@ const styles = StyleSheet.create({
   aiBadgeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FAF5FF',
+    backgroundColor: theme.colors.background.primaryLight,
     borderWidth: 1,
-    borderColor: '#E9D5FF',
+    borderColor: theme.colors.border.primaryLight,
     borderRadius: theme.radius.sm,
     paddingVertical: 2,
     paddingHorizontal: theme.spacing.xs,

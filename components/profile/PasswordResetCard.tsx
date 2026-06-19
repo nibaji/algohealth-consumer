@@ -1,11 +1,11 @@
 import React, { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { Icon } from '@/components/ui/Icon';
+import { Icon, IconName } from '@/components/ui/Icon';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
-import { usePasswordReset } from '@/src/features/auth/use-password-reset';
+import { usePasswordReset } from '@/src/features/auth/usePasswordReset';
 
 interface PasswordResetCardProps {
   email?: string | null;
@@ -94,7 +94,7 @@ export const PasswordResetCard = ({ email }: PasswordResetCardProps): React.JSX.
           accessibilityRole="button"
         >
           <Icon
-            name={showNewPassword ? 'eye.slash' : 'eye'}
+            name={showNewPassword ? IconName.EyeSlash : IconName.Eye}
             size={20}
             tintColor={theme.colors.text.tertiary}
           />
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   passwordInput: {
-    paddingRight: 48,
+    paddingRight: theme.spacing['3xl'],
   },
   eyeButton: {
     position: 'absolute',

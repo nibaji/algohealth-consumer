@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useTransition } from 'react';
-import { StyleSheet, View, Modal, Pressable, Platform } from 'react-native';
+import React, { useState, useEffect, useTransition, useCallback } from 'react';
+import { StyleSheet, View, Modal, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { InvitesSkeleton } from '@/components/ui/Skeleton';
-import { Icon } from '@/components/ui/Icon';
+import { Icon, IconName } from '@/components/ui/Icon';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
-import { theme } from '@/constants/theme';
+import { theme, shadows } from '@/constants/theme';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { familyService } from '@/src/services/family/familyService';
 import { FamilyOut } from '@/src/features/family/familyTypes';
@@ -47,7 +47,7 @@ export const InvitesModal: React.FC<InvitesModalProps> = React.memo(({ visible, 
     }
   }, [visible, isFamilyPending]);
 
-  const handleAccept = React.useCallback(() => {
+  const handleAccept = useCallback(() => {
     if (!pendingFamily) return;
     setError(null);
     startActionTransition(async () => {
@@ -68,7 +68,7 @@ export const InvitesModal: React.FC<InvitesModalProps> = React.memo(({ visible, 
     });
   }, [pendingFamily, refreshProfile, onActionSuccess, onClose]);
 
-  const handleReject = React.useCallback(() => {
+  const handleReject = useCallback(() => {
     if (!pendingFamily) return;
     setError(null);
     startActionTransition(async () => {
@@ -88,6 +88,10 @@ export const InvitesModal: React.FC<InvitesModalProps> = React.memo(({ visible, 
     });
   }, [pendingFamily, refreshProfile, onActionSuccess, onClose]);
 
+  const handleReload = useCallback(() => {
+    refreshProfile();
+  }, [refreshProfile]);
+
   return (
     <Modal
       visible={visible}
@@ -97,7 +101,7 @@ export const InvitesModal: React.FC<InvitesModalProps> = React.memo(({ visible, 
     >
       <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, theme.spacing.md) }]}>
         {/* Header bar */}
-        <View style={[styles.headerBar, Platform.OS !== 'ios' ? { paddingTop: insets.top, height: 56 + insets.top } : null]}>
+        <View style={[styles.headerBar, process.env.EXPO_OS !== 'ios' ? { paddingTop: insets.top, height: 56 + insets.top } : null]}>
           <Pressable 
             onPress={onClose}
             style={({ pressed }) => [
@@ -105,7 +109,7 @@ export const InvitesModal: React.FC<InvitesModalProps> = React.memo(({ visible, 
               pressed ? styles.closeButtonPressed : null,
             ]}
           >
-            <Icon name="xmark" size={20} tintColor={theme.colors.text.primary} />
+            <Icon name={IconName.Xmark} size={20} tintColor={theme.colors.text.primary} />
           </Pressable>
           <Typography.Subheading style={styles.headerTitle}>
             Pending Invitations
@@ -121,7 +125,7 @@ export const InvitesModal: React.FC<InvitesModalProps> = React.memo(({ visible, 
               <View style={[styles.card, { borderCurve: 'continuous' }]}>
                 <View style={styles.cardHeader}>
                   <View style={styles.iconContainer}>
-                    <Icon name="envelope.fill" size={24} tintColor={theme.colors.primary.DEFAULT} />
+                    <Icon name={IconName.EnvelopeFill} size={24} tintColor={theme.colors.primary.DEFAULT} />
                   </View>
                   <View style={styles.cardTextContainer}>
                     <Typography.Heading style={styles.cardTitle}>
@@ -150,8 +154,8 @@ export const InvitesModal: React.FC<InvitesModalProps> = React.memo(({ visible, 
                     title="Reject" 
                     onPress={handleReject}
                     loading={isPending}
-                    textStyle={{ color: theme.colors.status.error }}
-                    style={[styles.actionButton, { borderColor: theme.colors.status.error }]}
+                    textStyle={styles.rejectText}
+                    style={styles.rejectButton}
                   />
                 </View>
               </View>
@@ -161,6 +165,7 @@ export const InvitesModal: React.FC<InvitesModalProps> = React.memo(({ visible, 
               <Typography.Paragraph style={styles.emptyText}>
                 {error || 'No pending invitations found.'}
               </Typography.Paragraph>
+              <Button.Secondary title="Reload" onPress={handleReload} />
             </View>
           )}
         </View>
@@ -207,13 +212,6 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     justifyContent: 'center',
   },
-  loadingBox: {
-    alignItems: 'center',
-    gap: theme.spacing.md,
-  },
-  loadingText: {
-    color: theme.colors.text.secondary,
-  },
   inviteDetails: {
     width: '100%',
   },
@@ -224,7 +222,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border.light,
     gap: theme.spacing.lg,
-    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+    ...shadows.sm,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -237,7 +235,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.lg,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F3E8FF',
+    backgroundColor: theme.colors.background.purpleLight,
   },
   cardTextContainer: {
     flex: 1,
@@ -258,6 +256,13 @@ const styles = StyleSheet.create({
   actionButton: {
     width: '100%',
   },
+  rejectButton: {
+    width: '100%',
+    borderColor: theme.colors.status.error,
+  },
+  rejectText: {
+    color: theme.colors.status.error,
+  },
   errorText: {
     color: theme.colors.status.error,
     fontWeight: '600',
@@ -265,6 +270,7 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     alignItems: 'center',
+    gap: theme.spacing.md,
   },
   emptyText: {
     color: theme.colors.text.secondary,

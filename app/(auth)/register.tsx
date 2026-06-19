@@ -1,6 +1,6 @@
 import React, { useCallback, useState, useTransition } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, ScrollView, Alert, Pressable } from 'react-native';
-import { Icon } from '@/components/ui/Icon';
+import { Icon, IconName } from '@/components/ui/Icon';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
@@ -22,7 +22,7 @@ export default function RegisterScreen(): React.JSX.Element {
     setShowPassword((prev) => !prev);
   }, []);
 
-  const handleRegister = (): void => {
+  const handleRegister = useCallback((): void => {
     if (!email.trim() || !password || !fullName.trim()) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
@@ -48,7 +48,7 @@ export default function RegisterScreen(): React.JSX.Element {
         Alert.alert('Registration Failed', message);
       }
     });
-  };
+  }, [email, password, fullName, register]);
 
   return (
     <KeyboardAvoidingView 
@@ -100,7 +100,7 @@ export default function RegisterScreen(): React.JSX.Element {
               accessibilityRole="button"
             >
               <Icon
-                name={showPassword ? 'eye.slash' : 'eye'}
+                name={showPassword ? IconName.EyeSlash : IconName.Eye}
                 size={20}
                 tintColor={theme.colors.text.tertiary}
               />

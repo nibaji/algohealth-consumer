@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { StyleSheet, View, ScrollView, Pressable, KeyboardAvoidingView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { theme } from '@/constants/theme';
+import { theme, shadows } from '@/constants/theme';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
@@ -9,17 +9,16 @@ import { DateInput, validateDateString, inputDateToApiDate } from '@/components/
 import { useAuth } from '@/src/contexts/AuthContext';
 import { familyService } from '@/src/services/family/familyService';
 import { refreshTracker } from '@/src/utils/refreshTracker';
-import { FamilyOut, FamilyMemberCreate } from '@/src/features/family/familyTypes';
+import { FamilyOut, FamilyMemberCreate, GenderType, RelationType } from '@/src/features/family/familyTypes';
 import Animated, { FadeInDown, FadeInUp, LayoutAnimationConfig } from 'react-native-reanimated';
 import * as Clipboard from 'expo-clipboard';
-import { Icon } from '@/components/ui/Icon';
+import { Icon, IconName } from '@/components/ui/Icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
+import { GenderSelector } from '@/components/medicalRecords/GenderSelector';
+import { RelationSelector } from '@/components/medicalRecords/RelationSelector';
 
-type GenderType = 'Male' | 'Female' | 'Other' | 'Unknown';
-type RelationType = 'Spouse' | 'Child' | 'Parent' | 'Sibling' | 'Grandparent' | 'Other';
-
-export default function CreateFamily() {
+export default function CreateFamily(): React.JSX.Element {
   const router = useRouter();
   const { refreshProfile } = useAuth();
   const insets = useSafeAreaInsets();
@@ -35,11 +34,12 @@ export default function CreateFamily() {
 
   // Step 2: Add Member form states
   const [memberName, setMemberName] = useState('');
-  const [memberRelation, setMemberRelation] = useState<RelationType>('Spouse');
-  const [memberGender, setMemberGender] = useState<GenderType>('Female');
-  const [memberDob, setMemberDob] = useState(''); // YYYY-MM-DD
+  const [memberRelation, setMemberRelation] = useState<RelationType>(RelationType.Spouse);
+  const [memberGender, setMemberGender] = useState<GenderType>(GenderType.Female);
+  const [memberDob, setMemberDob] = useState(''); // DD-MM-YYYY
   const [memberEmail, setMemberEmail] = useState('');
   const [memberMobile, setMemberMobile] = useState('');
+  const [customRelation, setCustomRelation] = useState('');
 
   const [memberLoading, setMemberLoading] = useState(false);
   const [memberError, setMemberError] = useState<string | null>(null);
@@ -116,7 +116,7 @@ export default function CreateFamily() {
     try {
       const payload: FamilyMemberCreate = {
         name: memberName,
-        relation: memberRelation,
+        relation: memberRelation === RelationType.Other ? customRelation : memberRelation,
         gender: memberGender,
         date_of_birth: inputDateToApiDate(memberDob),
         email_id: memberEmail.trim() ? memberEmail : null,
@@ -126,13 +126,14 @@ export default function CreateFamily() {
       await familyService.addFamilyMember(payload);
       
       // Update local list
-      setAddedMembers(prev => [...prev, { name: memberName, relation: memberRelation }]);
+      setAddedMembers(prev => [...prev, { name: memberName, relation: payload.relation }]);
       
       // Clear member input fields
       setMemberName('');
       setMemberDob('');
       setMemberEmail('');
       setMemberMobile('');
+      setCustomRelation('');
       setMemberSuccess(true);
       
       // Auto-hide success banner after 3 seconds
@@ -143,7 +144,7 @@ export default function CreateFamily() {
     } finally {
       setMemberLoading(false);
     }
-  }, [memberName, memberRelation, memberGender, memberDob, memberEmail, memberMobile]);
+  }, [memberName, memberRelation, memberGender, memberDob, memberEmail, memberMobile, customRelation]);
 
   // Complete onboarding / Navigate to Home
   const handleFinish = useCallback(async () => {
@@ -163,6 +164,38 @@ export default function CreateFamily() {
     }
   }, [router]);
 
+  const handleFamilyNameChange = useCallback((text: string) => {
+    setFamilyName(text);
+  }, []);
+
+  const handleMemberNameChange = useCallback((text: string) => {
+    setMemberName(text);
+  }, []);
+
+  const handleMemberDobChange = useCallback((text: string) => {
+    setMemberDob(text);
+  }, []);
+
+  const handleMemberEmailChange = useCallback((text: string) => {
+    setMemberEmail(text);
+  }, []);
+
+  const handleMemberMobileChange = useCallback((text: string) => {
+    setMemberMobile(text);
+  }, []);
+
+  const handleGenderChange = useCallback((gender: GenderType) => {
+    setMemberGender(gender);
+  }, []);
+
+  const handleRelationChange = useCallback((relation: RelationType) => {
+    setMemberRelation(relation);
+  }, []);
+
+  const handleCustomRelationChange = useCallback((text: string) => {
+    setCustomRelation(text);
+  }, []);
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -179,7 +212,7 @@ export default function CreateFamily() {
           ]}
         >
           <Icon 
-            name="chevron.left" 
+            name={IconName.ChevronLeft} 
             size={20}
             tintColor={theme.colors.text.primary}
           />
@@ -216,7 +249,7 @@ export default function CreateFamily() {
                 label="Family Name"
                 placeholder="e.g. The Smiths, Miller Household"
                 value={familyName}
-                onChangeText={setFamilyName}
+                onChangeText={handleFamilyNameChange}
                 error={familyError ? familyError : undefined}
                 autoFocus
               />
@@ -253,7 +286,7 @@ export default function CreateFamily() {
                   ]}
                 >
                   <Icon 
-                    name={copied ? "checkmark" : "doc.on.doc.fill"} 
+                    name={copied ? IconName.Checkmark : IconName.DocOnDocFill} 
                     size={16}
                     tintColor={copied ? theme.colors.status.success : theme.colors.primary.content}
                   />
@@ -291,85 +324,35 @@ export default function CreateFamily() {
                 label="Full Name"
                 placeholder="e.g. Jane Smith"
                 value={memberName}
-                onChangeText={setMemberName}
+                onChangeText={handleMemberNameChange}
               />
 
               <DateInput
                 label="Date of Birth"
                 value={memberDob}
-                onChangeText={setMemberDob}
+                onChangeText={handleMemberDobChange}
               />
               
               {/* GENDER SELECTION CHIPS */}
-              <View style={styles.formGroup}>
-                <Typography.Label style={styles.selectLabel}>Gender</Typography.Label>
-                <View style={styles.chipsRow}>
-                  {(['Male', 'Female', 'Other'] as GenderType[]).map((genderOption) => {
-                    const isSelected = memberGender === genderOption;
-                    return (
-                      <Pressable
-                        key={genderOption}
-                        onPress={() => setMemberGender(genderOption)}
-                        style={[
-                          styles.chip,
-                          isSelected ? styles.chipSelected : null,
-                          { borderCurve: 'continuous' }
-                        ]}
-                      >
-                        <Typography.Label 
-                          style={[
-                            styles.chipText,
-                            isSelected ? styles.chipTextSelected : null
-                          ]}
-                          truncate
-                        >
-                          {genderOption}
-                        </Typography.Label>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              </View>
+              <GenderSelector
+                gender={memberGender}
+                onChangeGender={handleGenderChange}
+              />
 
               {/* RELATION SHIPS SELECTION */}
-              <View style={styles.formGroup}>
-                <Typography.Label style={styles.selectLabel}>Relationship to Family Head</Typography.Label>
-                <ScrollView 
-                  horizontal 
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.relationsRow}
-                >
-                  {(['Spouse', 'Child', 'Parent', 'Sibling', 'Grandparent', 'Other'] as RelationType[]).map((relationOption) => {
-                    const isSelected = memberRelation === relationOption;
-                    return (
-                      <Pressable
-                        key={relationOption}
-                        onPress={() => setMemberRelation(relationOption)}
-                        style={[
-                          styles.relationChip,
-                          isSelected ? styles.relationChipSelected : null,
-                          { borderCurve: 'continuous' }
-                        ]}
-                      >
-                        <Typography.Label 
-                          style={[
-                            styles.relationChipText,
-                            isSelected ? styles.relationChipTextSelected : null
-                          ]}
-                        >
-                          {relationOption}
-                        </Typography.Label>
-                      </Pressable>
-                    );
-                  })}
-                </ScrollView>
-              </View>
+              <RelationSelector
+                isFamilyHead={false}
+                relation={memberRelation}
+                onChangeRelation={handleRelationChange}
+                customRelation={customRelation}
+                onChangeCustomRelation={handleCustomRelationChange}
+              />
 
               <TextInput
                 label="Email ID (Optional)"
                 placeholder="jane.smith@example.com"
                 value={memberEmail}
-                onChangeText={setMemberEmail}
+                onChangeText={handleMemberEmailChange}
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
@@ -378,7 +361,7 @@ export default function CreateFamily() {
                 label="Mobile Number (Optional)"
                 placeholder="e.g. 9876543210"
                 value={memberMobile}
-                onChangeText={setMemberMobile}
+                onChangeText={handleMemberMobileChange}
                 keyboardType="phone-pad"
               />
 
@@ -464,10 +447,6 @@ const styles = StyleSheet.create({
   backButtonPressed: {
     opacity: 0.6,
   },
-  backIcon: {
-    width: 20,
-    height: 20,
-  },
   headerTitle: {
     fontWeight: '700',
     color: theme.colors.text.primary,
@@ -506,19 +485,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border.light,
     gap: theme.spacing.lg,
-    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+    ...shadows.sm,
   },
   submitButton: {
     marginTop: theme.spacing.md,
   },
-  
-  // Step 2 styles
   inviteCodeCard: {
     backgroundColor: theme.colors.primary.DEFAULT,
     padding: theme.spacing.lg,
     borderRadius: theme.radius.xl,
     gap: theme.spacing.sm,
-    boxShadow: "0 10px 15px -3px rgba(138, 43, 226, 0.25)",
+    ...shadows.primary,
   },
   inviteLabel: {
     color: '#E0C3FC',
@@ -549,10 +526,6 @@ const styles = StyleSheet.create({
   copyButtonPressed: {
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
   },
-  copyIcon: {
-    width: 16,
-    height: 16,
-  },
   copyButtonText: {
     color: theme.colors.primary.content,
     fontWeight: '600',
@@ -572,7 +545,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border.light,
     gap: theme.spacing.md,
-    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+    ...shadows.sm,
   },
   formSectionTitle: {
     fontSize: theme.fontSize.lg,
@@ -580,78 +553,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: theme.spacing.xs,
   },
-  formRow: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-    width: '100%',
-  },
-  flexHalf: {
-    flex: 1,
-  },
-  selectLabel: {
-    color: theme.colors.text.secondary,
-    marginBottom: theme.spacing.xs,
-  },
-  chipsRow: {
-    flexDirection: 'row',
-    gap: theme.spacing.xs,
-    alignItems: 'center',
-    height: 48,
-  },
-  chip: {
-    flex: 1,
-    height: '100%',
-    backgroundColor: theme.colors.background.default,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: theme.radius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-  },
-  chipSelected: {
-    backgroundColor: theme.colors.primary.DEFAULT,
-    borderColor: theme.colors.primary.DEFAULT,
-  },
-  chipText: {
-    color: theme.colors.text.primary,
-    fontWeight: '600',
-    fontSize: 12,
-  },
-  chipTextSelected: {
-    color: theme.colors.primary.content,
-  },
-  formGroup: {
-    width: '100%',
-    marginVertical: theme.spacing.xs,
-  },
-  relationsRow: {
-    gap: theme.spacing.xs,
-    paddingRight: theme.spacing.xl,
-  },
-  relationChip: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    backgroundColor: theme.colors.background.default,
-    borderRadius: theme.radius.full,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-  },
-  relationChipSelected: {
-    backgroundColor: theme.colors.primary.DEFAULT,
-    borderColor: theme.colors.primary.DEFAULT,
-  },
-  relationChipText: {
-    color: theme.colors.text.secondary,
-    fontWeight: '600',
-  },
-  relationChipTextSelected: {
-    color: theme.colors.primary.content,
-  },
   addButton: {
     marginTop: theme.spacing.md,
   },
   successBanner: {
-    backgroundColor: '#ECFDF5',
+    backgroundColor: theme.colors.background.successLight,
     borderWidth: 1,
     borderColor: theme.colors.status.success,
     borderRadius: theme.radius.md,
@@ -694,7 +600,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: theme.radius.full,
-    backgroundColor: '#EEF2FF',
+    backgroundColor: theme.colors.background.infoLight,
     justifyContent: 'center',
     alignItems: 'center',
   },

@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { theme } from '@/constants/theme';
+import { theme, shadows } from '@/constants/theme';
 
 export const styles = StyleSheet.create({
   container: {
@@ -67,7 +67,7 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border.light,
     gap: theme.spacing.md,
-    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+    ...shadows.sm,
   },
   formRow: {
     flexDirection: 'row',
@@ -159,6 +159,9 @@ export const styles = StyleSheet.create({
   deleteButton: {
     width: '100%',
     borderColor: theme.colors.status.error,
+  },
+  deleteButtonText: {
+    color: theme.colors.status.error,
   },
   errorBannerText: {
     color: theme.colors.text.error,

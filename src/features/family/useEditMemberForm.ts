@@ -1,12 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Alert, Platform } from 'react-native';
-import { FamilyMemberOut, FamilyMemberUpdate } from '@/src/features/family/familyTypes';
+import { Alert } from 'react-native';
+import { FamilyMemberOut, FamilyMemberUpdate, GenderType, RelationType } from '@/src/features/family/familyTypes';
 import { familyService } from '@/src/services/family/familyService';
 import { apiDateToInputDate, inputDateToApiDate, validateDateString } from '@/src/utils/date';
 import { useAuth } from '@/src/contexts/AuthContext';
-
-type GenderType = 'Male' | 'Female' | 'Other' | 'Unknown';
-type RelationType = 'Spouse' | 'Child' | 'Parent' | 'Sibling' | 'Grandparent' | 'Other';
 
 interface UseEditMemberFormParams {
   visible: boolean;
@@ -35,8 +32,8 @@ export const useEditMemberForm = ({
   const [error, setError] = useState<string | null>(null);
 
   const [memberName, setMemberName] = useState('');
-  const [memberRelation, setMemberRelation] = useState<RelationType>('Spouse');
-  const [memberGender, setMemberGender] = useState<GenderType>('Female');
+  const [memberRelation, setMemberRelation] = useState<RelationType>(RelationType.Spouse);
+  const [memberGender, setMemberGender] = useState<GenderType>(GenderType.Female);
   const [memberDob, setMemberDob] = useState('');
   const [memberEmail, setMemberEmail] = useState('');
   const [memberMobile, setMemberMobile] = useState('');
@@ -70,7 +67,7 @@ export const useEditMemberForm = ({
           setMemberRelation(relationVal as RelationType);
           setCustomRelation('');
         } else {
-          setMemberRelation('Other');
+          setMemberRelation(RelationType.Other);
           setCustomRelation(relationVal);
         }
 
@@ -128,7 +125,7 @@ export const useEditMemberForm = ({
     try {
       const payload: FamilyMemberUpdate = {
         name: memberName,
-        relation: isFamilyHead ? (member?.relation || 'Self') : (memberRelation === 'Other' && customRelation.trim() ? customRelation.trim() : memberRelation),
+        relation: isFamilyHead ? (member?.relation || 'Self') : (memberRelation === RelationType.Other && customRelation.trim() ? customRelation.trim() : memberRelation),
         gender: memberGender,
         date_of_birth: inputDateToApiDate(memberDob),
         email_id: memberEmail.trim() ? memberEmail : null,
@@ -162,7 +159,7 @@ export const useEditMemberForm = ({
       }
     };
 
-    if (Platform.OS === 'web') {
+    if (process.env.EXPO_OS === 'web') {
       if (window.confirm(`Are you sure you want to delete ${member.name}? All of their medical records will be deleted permanently. This action cannot be undone.`)) {
         performDelete();
       }

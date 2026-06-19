@@ -1,10 +1,35 @@
 import React, { useState, useCallback } from 'react';
 import { StyleSheet, View, TextInput, Pressable, ScrollView } from 'react-native';
-import { Icon } from '@/components/ui/Icon';
+import { Icon, IconName } from '@/components/ui/Icon';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
 import * as DocumentPicker from 'expo-document-picker';
 import { AudioNoteRecorder } from './AudioNoteRecorder';
+
+interface AttachmentChipProps {
+  doc: DocumentPicker.DocumentPickerAsset;
+  index: number;
+  onRemove: (idx: number) => void;
+}
+
+const AttachmentChip = React.memo(({ doc, index, onRemove }: AttachmentChipProps) => {
+  const handleRemove = useCallback(() => {
+    onRemove(index);
+  }, [index, onRemove]);
+
+  return (
+    <View style={[styles.attachmentChip, { borderCurve: 'continuous' }]}>
+      <Icon name={IconName.DocFill} size={10} tintColor={theme.colors.text.secondary} />
+      <Typography.Label style={styles.attachmentLabel} numberOfLines={1}>
+        {doc.name}
+      </Typography.Label>
+      <Pressable onPress={handleRemove} style={styles.chipRemoveBtn}>
+        <Icon name={IconName.Xmark} size={10} tintColor={theme.colors.text.tertiary} />
+      </Pressable>
+    </View>
+  );
+});
+AttachmentChip.displayName = 'AttachmentChip';
 
 interface ConsultInputProps {
   onSend: (text: string, audioFile: DocumentPicker.DocumentPickerAsset | null, documents: DocumentPicker.DocumentPickerAsset[]) => void;
@@ -63,6 +88,19 @@ export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({
     setIsRecordingMode(false);
   }, [inputText, audioFile, documents, onSend]);
 
+  const handleAudioChange = useCallback((file: DocumentPicker.DocumentPickerAsset | null) => {
+    setAudioFile(file);
+    setIsRecordingMode(false);
+  }, []);
+
+  const handleStartRecording = useCallback(() => {
+    setIsRecordingMode(true);
+  }, []);
+
+  const handleInputTextChange = useCallback((text: string) => {
+    setInputText(text);
+  }, []);
+
   return (
     <View style={styles.inputContainer}>
       {/* Picked attachments list */}
@@ -74,15 +112,12 @@ export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({
             contentContainerStyle={styles.attachmentsList}
           >
             {documents.map((doc, index) => (
-              <View key={index} style={[styles.attachmentChip, { borderCurve: 'continuous' }]}>
-                <Icon name="doc.fill" size={10} tintColor={theme.colors.text.secondary} />
-                <Typography.Label style={styles.attachmentLabel} numberOfLines={1}>
-                  {doc.name}
-                </Typography.Label>
-                <Pressable onPress={() => removeDocument(index)} style={styles.chipRemoveBtn}>
-                  <Icon name="xmark" size={10} tintColor={theme.colors.text.tertiary} />
-                </Pressable>
-              </View>
+              <AttachmentChip
+                key={index}
+                doc={doc}
+                index={index}
+                onRemove={removeDocument}
+              />
             ))}
           </ScrollView>
         </View>
@@ -95,10 +130,7 @@ export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({
           <View style={styles.recorderContainer}>
             <AudioNoteRecorder
               audioFile={audioFile}
-              onAudioChange={(file: DocumentPicker.DocumentPickerAsset | null) => {
-                setAudioFile(file);
-                setIsRecordingMode(false);
-              }}
+              onAudioChange={handleAudioChange}
               variant="chat"
               startRecordingOnInit={true}
             />
@@ -115,16 +147,13 @@ export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({
                 { borderCurve: 'continuous' }
               ]}
             >
-              <Icon name="paperclip" size={18} tintColor={theme.colors.text.secondary} />
+              <Icon name={IconName.Paperclip} size={18} tintColor={theme.colors.text.secondary} />
             </Pressable>
 
             <View style={styles.recorderContainer}>
               <AudioNoteRecorder
                 audioFile={audioFile}
-                onAudioChange={(file: DocumentPicker.DocumentPickerAsset | null) => {
-                  setAudioFile(file);
-                  setIsRecordingMode(false);
-                }}
+                onAudioChange={handleAudioChange}
                 variant="chat"
               />
             </View>
@@ -138,7 +167,7 @@ export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({
                 { borderCurve: 'continuous' }
               ]}
             >
-              <Icon name="paperplane.fill" size={16} tintColor="#FFFFFF" />
+              <Icon name={IconName.PaperplaneFill} size={16} tintColor="#FFFFFF" />
             </Pressable>
           </>
         ) : (
@@ -153,13 +182,13 @@ export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({
                 { borderCurve: 'continuous' }
               ]}
             >
-              <Icon name="paperclip" size={18} tintColor={theme.colors.text.secondary} />
+              <Icon name={IconName.Paperclip} size={18} tintColor={theme.colors.text.secondary} />
             </Pressable>
 
             <TextInput
               placeholder="Type or record a question..."
               value={inputText}
-              onChangeText={setInputText}
+              onChangeText={handleInputTextChange}
               style={[styles.textInput, { borderCurve: 'continuous' }]}
               placeholderTextColor={theme.colors.text.tertiary}
               editable={!disabled}
@@ -177,11 +206,11 @@ export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({
                   { borderCurve: 'continuous' }
                 ]}
               >
-                <Icon name="paperplane.fill" size={16} tintColor="#FFFFFF" />
+                <Icon name={IconName.PaperplaneFill} size={16} tintColor="#FFFFFF" />
               </Pressable>
             ) : (
               <Pressable
-                onPress={() => setIsRecordingMode(true)}
+                onPress={handleStartRecording}
                 disabled={disabled}
                 style={({ pressed }) => [
                   styles.actionBtn,
@@ -189,7 +218,7 @@ export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({
                   { borderCurve: 'continuous' }
                 ]}
               >
-                <Icon name="mic.fill" size={18} tintColor={theme.colors.primary.DEFAULT} />
+                <Icon name={IconName.MicFill} size={18} tintColor={theme.colors.primary.DEFAULT} />
               </Pressable>
             )}
           </>

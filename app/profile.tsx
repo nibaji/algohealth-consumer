@@ -1,15 +1,15 @@
 import React, { useCallback } from 'react';
 import { StyleSheet, View, ScrollView, Pressable, KeyboardAvoidingView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { theme } from '@/constants/theme';
+import { theme, shadows } from '@/constants/theme';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
-import { PasswordResetCard } from '@/components/profile/password-reset-card';
-import { ProfileDetailsCard } from '@/components/profile/profile-details-card';
+import { PasswordResetCard } from '@/components/profile/PasswordResetCard';
+import { ProfileDetailsCard } from '@/components/profile/ProfileDetailsCard';
 import { useAuth } from '@/src/contexts/AuthContext';
-import { useProfileDetails } from '@/src/features/auth/use-profile-details';
+import { useProfileDetails } from '@/src/features/auth/useProfileDetails';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Icon } from '@/components/ui/Icon';
+import { Icon, IconName } from '@/components/ui/Icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
 
@@ -51,7 +51,7 @@ export default function Profile(): React.JSX.Element {
           ]}
         >
           <Icon 
-            name="chevron.left" 
+            name={IconName.ChevronLeft} 
             size={20}
             tintColor={theme.colors.text.primary}
           />
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary.DEFAULT,
     justifyContent: 'center',
     alignItems: 'center',
-    boxShadow: "0 10px 15px -3px rgba(138, 43, 226, 0.2)",
+    ...shadows.primary,
   },
   avatarText: {
     color: theme.colors.primary.content,

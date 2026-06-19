@@ -9,10 +9,10 @@ import {
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
-import { theme } from '@/constants/theme';
-import { usePasswordReset } from '@/src/features/auth/use-password-reset';
+import { theme, shadows } from '@/constants/theme';
+import { usePasswordReset } from '@/src/features/auth/usePasswordReset';
 import { useRouter } from 'expo-router';
-import { Icon } from '@/components/ui/Icon';
+import { Icon, IconName } from '@/components/ui/Icon';
 import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
@@ -50,6 +50,10 @@ export default function ForgotPasswordScreen(): React.JSX.Element {
     router.replace('/(auth)/login');
   }, [router]);
 
+  const handleBack = useCallback((): void => {
+    router.back();
+  }, [router]);
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -63,13 +67,13 @@ export default function ForgotPasswordScreen(): React.JSX.Element {
         {/* Header with back button */}
         <View style={styles.topNav}>
           <Pressable
-            onPress={() => router.back()}
+            onPress={handleBack}
             style={({ pressed }) => [
               styles.backButton,
               pressed ? styles.backButtonPressed : null,
             ]}
           >
-            <Icon name="chevron.left" size={20} tintColor={theme.colors.text.primary} />
+            <Icon name={IconName.ChevronLeft} size={20} tintColor={theme.colors.text.primary} />
           </Pressable>
         </View>
 
@@ -165,7 +169,7 @@ export default function ForgotPasswordScreen(): React.JSX.Element {
                 accessibilityRole="button"
               >
                 <Icon
-                  name={showPassword ? 'eye.slash' : 'eye'}
+                  name={showPassword ? IconName.EyeSlash : IconName.Eye}
                   size={20}
                   tintColor={theme.colors.text.tertiary}
                 />
@@ -238,7 +242,7 @@ const styles = StyleSheet.create({
     lineHeight: theme.lineHeight.md,
   },
   successBanner: {
-    backgroundColor: '#ECFDF5',
+    backgroundColor: theme.colors.background.successLight,
     borderWidth: 1,
     borderColor: theme.colors.status.success,
     borderRadius: theme.radius.md,
@@ -251,7 +255,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   errorBanner: {
-    backgroundColor: '#FEF2F2',
+    backgroundColor: theme.colors.background.errorLight,
     borderWidth: 1,
     borderColor: theme.colors.status.error,
     borderRadius: theme.radius.md,
@@ -271,7 +275,7 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border.light,
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+    ...shadows.md,
   },
   stepHeader: {
     flexDirection: 'row',
@@ -299,7 +303,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   passwordInput: {
-    paddingRight: 48,
+    paddingRight: theme.spacing['3xl'],
   },
   eyeButton: {
     position: 'absolute',

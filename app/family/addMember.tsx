@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useTransition } from 'react';
 import { StyleSheet, View, ScrollView, Pressable, KeyboardAvoidingView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { theme } from '@/constants/theme';
+import { theme, shadows } from '@/constants/theme';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
@@ -9,14 +9,13 @@ import { DateInput, validateDateString, inputDateToApiDate } from '@/components/
 import { useAuth } from '@/src/contexts/AuthContext';
 import { familyService } from '@/src/services/family/familyService';
 import { refreshTracker } from '@/src/utils/refreshTracker';
-import { FamilyMemberCreate } from '@/src/features/family/familyTypes';
+import { FamilyMemberCreate, GenderType, RelationType } from '@/src/features/family/familyTypes';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Icon } from '@/components/ui/Icon';
+import { Icon, IconName } from '@/components/ui/Icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
-
-type GenderType = 'Male' | 'Female' | 'Other' | 'Unknown';
-type RelationType = 'Spouse' | 'Child' | 'Parent' | 'Sibling' | 'Grandparent' | 'Other';
+import { GenderSelector } from '@/components/medicalRecords/GenderSelector';
+import { RelationSelector } from '@/components/medicalRecords/RelationSelector';
 
 export default function AddMember() {
   const router = useRouter();
@@ -26,8 +25,8 @@ export default function AddMember() {
 
   // Form states
   const [memberName, setMemberName] = useState('');
-  const [memberRelation, setMemberRelation] = useState<RelationType>('Spouse');
-  const [memberGender, setMemberGender] = useState<GenderType>('Female');
+  const [memberRelation, setMemberRelation] = useState<RelationType>(RelationType.Spouse);
+  const [memberGender, setMemberGender] = useState<GenderType>(GenderType.Female);
   const [memberDob, setMemberDob] = useState(''); // DD-MM-YYYY
   const [memberEmail, setMemberEmail] = useState('');
   const [memberMobile, setMemberMobile] = useState('');
@@ -84,6 +83,42 @@ export default function AddMember() {
     setMemberRelation(relation);
   }, []);
 
+  const handleNameChange = useCallback((text: string) => {
+    setMemberName(text);
+    if (errors.name) validateField('name', text);
+  }, [errors.name, validateField]);
+
+  const handleDobChange = useCallback((text: string) => {
+    setMemberDob(text);
+    if (errors.dob) validateField('dob', text);
+  }, [errors.dob, validateField]);
+
+  const handleEmailChange = useCallback((text: string) => {
+    setMemberEmail(text);
+    if (errors.email) validateField('email', text);
+  }, [errors.email, validateField]);
+
+  const handleMobileChange = useCallback((text: string) => {
+    setMemberMobile(text);
+    if (errors.mobile) validateField('mobile', text);
+  }, [errors.mobile, validateField]);
+
+  const handleNameBlur = useCallback(() => {
+    validateField('name', memberName);
+  }, [memberName, validateField]);
+
+  const handleDobBlur = useCallback(() => {
+    validateField('dob', memberDob);
+  }, [memberDob, validateField]);
+
+  const handleEmailBlur = useCallback(() => {
+    validateField('email', memberEmail);
+  }, [memberEmail, validateField]);
+
+  const handleMobileBlur = useCallback(() => {
+    validateField('mobile', memberMobile);
+  }, [memberMobile, validateField]);
+
   // Form submission handler
   const handleAddMember = useCallback(() => {
     const isNameValid = validateField('name', memberName);
@@ -103,20 +138,12 @@ export default function AddMember() {
       try {
         const payload: FamilyMemberCreate = {
           name: memberName,
-          relation: memberRelation === 'Other' && customRelation.trim() ? customRelation.trim() : memberRelation,
+          relation: memberRelation === RelationType.Other && customRelation.trim() ? customRelation.trim() : memberRelation,
           gender: memberGender,
           date_of_birth: inputDateToApiDate(memberDob),
           email_id: memberEmail.trim() ? memberEmail : null,
           mobile_no: memberMobile.trim() ? memberMobile : null,
         };
-
-        //### 📋 Add Family Member Form Improvements (Follow-up)
-        // - **DOB Formatter & DD-MM-YYYY Validation (`app/family/add-member.tsx`)**: Updated the Date of Birth input field to use the `DD-MM-YYYY` format.
-        //   - *On Change segment validation*: DAY digits are verified immediately (must start with 0-3 and resolve to 01-31), MONTH digits are verified immediately (must start with 0-1 and resolve to 01-12), and YEAR is verified to be in the range `[1900, currentYear]` as soon as 4 digits are completed. Also checks the completed date string to verify it is not in the future.
-        //   - *On Blur complete verification*: The entire DOB is validated for correct formatting, exact calendar validation (e.g. Feb 30th checks), and checking that the date is not in the future (using timezone-safe date-only comparison).
-        //   - *Auto-Hyphenation Formatting*: Hyphens (`-`) are appended immediately upon completing the day (`DD`) and month (`MM`) segments (e.g., typing `12` turns into `12-` immediately) while preserving natural backspace behavior so the user does not get stuck.
-        // - **Custom Relationship Option (`app/family/add-member.tsx`)**: Replaced the label "Relation to Owner" with "Relationship". Introduced a conditional "Custom Relationship" text input that appears when the user selects "Other" as the relation, allowing custom labels.
-        // - **Form-wide Input Validation on Blur & Change (`app/family/add-member.tsx`)**: Implemented robust inline error displays for Full Name, Email, and Mobile fields. Inputs validate on blur and clear/correct errors immediately on change. Form submission runs a full validate pass over all fields.
         
         await familyService.addFamilyMember(payload);
         
@@ -165,7 +192,7 @@ export default function AddMember() {
           ]}
         >
           <Icon 
-            name="chevron.left" 
+            name={IconName.ChevronLeft} 
             size={20}
             tintColor={theme.colors.text.primary}
           />
@@ -190,7 +217,7 @@ export default function AddMember() {
           >
             <View style={styles.successIconCircle}>
               <Icon 
-                name="checkmark.seal.fill" 
+                name={IconName.CheckmarkSealFill} 
                 size={40}
                 tintColor={theme.colors.status.success}
               />
@@ -218,11 +245,8 @@ export default function AddMember() {
                 label="Full Name"
                 placeholder="e.g. Jane Smith"
                 value={memberName}
-                onChangeText={(text) => {
-                  setMemberName(text);
-                  if (errors.name) validateField('name', text);
-                }}
-                onBlur={() => validateField('name', memberName)}
+                onChangeText={handleNameChange}
+                onBlur={handleNameBlur}
                 error={errors.name}
                 autoFocus
               />
@@ -230,96 +254,32 @@ export default function AddMember() {
               <DateInput
                 label="Date of Birth"
                 value={memberDob}
-                onChangeText={(text) => {
-                  setMemberDob(text);
-                  if (errors.dob) validateField('dob', text);
-                }}
-                onBlur={() => validateField('dob', memberDob)}
+                onChangeText={handleDobChange}
+                onBlur={handleDobBlur}
                 error={errors.dob}
               />
               
               {/* GENDER SELECTION CHIPS */}
-              <View style={styles.formGroup}>
-                <Typography.Label style={styles.selectLabel}>Gender</Typography.Label>
-                <View style={styles.chipsRow}>
-                  {(['Male', 'Female', 'Other'] as GenderType[]).map((genderOption) => {
-                    const isSelected = memberGender === genderOption;
-                    return (
-                      <Pressable
-                        key={genderOption}
-                        onPress={() => setMemberGender(genderOption)}
-                        style={[
-                          styles.chip,
-                          isSelected ? styles.chipSelected : null,
-                        ]}
-                      >
-                        <Typography.Label 
-                          style={[
-                            styles.chipText,
-                            isSelected ? styles.chipTextSelected : null
-                          ]}
-                          truncate
-                        >
-                          {genderOption}
-                        </Typography.Label>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              </View>
+              <GenderSelector
+                gender={memberGender}
+                onChangeGender={setMemberGender}
+              />
 
               {/* RELATION SHIPS SELECTION */}
-              <View style={styles.formGroup}>
-                <Typography.Label style={styles.selectLabel}>Relationship to Family Head</Typography.Label>
-                <ScrollView 
-                  horizontal 
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.relationsRow}
-                >
-                  {(['Spouse', 'Child', 'Parent', 'Sibling', 'Grandparent', 'Other'] as RelationType[]).map((relationOption) => {
-                    const isSelected = memberRelation === relationOption;
-                    return (
-                      <Pressable
-                        key={relationOption}
-                        onPress={() => handleRelationChange(relationOption)}
-                        style={[
-                          styles.relationChip,
-                          isSelected ? styles.relationChipSelected : null,
-                        ]}
-                      >
-                        <Typography.Label 
-                          style={[
-                            styles.relationChipText,
-                            isSelected ? styles.relationChipTextSelected : null
-                          ]}
-                        >
-                          {relationOption}
-                        </Typography.Label>
-                      </Pressable>
-                    );
-                  })}
-                </ScrollView>
-              </View>
-
-              {/* Optional Custom Relation TextInput */}
-              {memberRelation === 'Other' ? (
-                <TextInput
-                  label="Custom Relationship (Optional)"
-                  placeholder="e.g. Cousin, Friend, Caregiver"
-                  value={customRelation}
-                  onChangeText={setCustomRelation}
-                />
-              ) : null}
+              <RelationSelector
+                isFamilyHead={false}
+                relation={memberRelation}
+                onChangeRelation={handleRelationChange}
+                customRelation={customRelation}
+                onChangeCustomRelation={setCustomRelation}
+              />
 
               <TextInput
                 label="Email ID (Optional)"
                 placeholder="jane.smith@example.com"
                 value={memberEmail}
-                onChangeText={(text) => {
-                  setMemberEmail(text);
-                  if (errors.email) validateField('email', text);
-                }}
-                onBlur={() => validateField('email', memberEmail)}
+                onChangeText={handleEmailChange}
+                onBlur={handleEmailBlur}
                 error={errors.email}
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -329,11 +289,8 @@ export default function AddMember() {
                 label="Mobile Number (Optional)"
                 placeholder="e.g. 9876543210"
                 value={memberMobile}
-                onChangeText={(text) => {
-                  setMemberMobile(text);
-                  if (errors.mobile) validateField('mobile', text);
-                }}
-                onBlur={() => validateField('mobile', memberMobile)}
+                onChangeText={handleMobileChange}
+                onBlur={handleMobileBlur}
                 error={errors.mobile}
                 keyboardType="phone-pad"
               />
@@ -405,7 +362,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border.light,
     gap: theme.spacing.md,
-    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+    ...shadows.md,
   },
   formRow: {
     flexDirection: 'row',
@@ -414,67 +371,6 @@ const styles = StyleSheet.create({
   },
   flexHalf: {
     flex: 1,
-  },
-  selectLabel: {
-    color: theme.colors.text.secondary,
-    marginBottom: theme.spacing.xs,
-  },
-  chipsRow: {
-    flexDirection: 'row',
-    gap: theme.spacing.xs,
-    alignItems: 'center',
-    height: 48,
-  },
-  chip: {
-    flex: 1,
-    height: '100%',
-    backgroundColor: theme.colors.background.default,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: theme.radius.md,
-    borderCurve: 'continuous',
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-  },
-  chipSelected: {
-    backgroundColor: theme.colors.primary.DEFAULT,
-    borderColor: theme.colors.primary.DEFAULT,
-  },
-  chipText: {
-    color: theme.colors.text.primary,
-    fontWeight: '600',
-    fontSize: 12,
-  },
-  chipTextSelected: {
-    color: theme.colors.primary.content,
-  },
-  formGroup: {
-    width: '100%',
-    marginVertical: theme.spacing.xs,
-  },
-  relationsRow: {
-    gap: theme.spacing.xs,
-    paddingRight: theme.spacing.xl,
-  },
-  relationChip: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    backgroundColor: theme.colors.background.default,
-    borderRadius: theme.radius.full,
-    borderCurve: 'continuous',
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-  },
-  relationChipSelected: {
-    backgroundColor: theme.colors.primary.DEFAULT,
-    borderColor: theme.colors.primary.DEFAULT,
-  },
-  relationChipText: {
-    color: theme.colors.text.secondary,
-    fontWeight: '600',
-  },
-  relationChipTextSelected: {
-    color: theme.colors.primary.content,
   },
   addButton: {
     marginTop: theme.spacing.md,
@@ -497,10 +393,10 @@ const styles = StyleSheet.create({
     height: 72,
     borderRadius: theme.radius.xl,
     borderCurve: 'continuous',
-    backgroundColor: '#ECFDF5',
+    backgroundColor: theme.colors.background.successLight,
     justifyContent: 'center',
     alignItems: 'center',
-    boxShadow: "0 10px 15px -3px rgba(16, 185, 129, 0.15)",
+    ...shadows.success,
   },
   successIcon: {
     width: 40,

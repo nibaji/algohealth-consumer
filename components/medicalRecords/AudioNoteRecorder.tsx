@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Pressable } from 'react-native';
 import { styles } from './audioNoteRecorderStyles';
 import { theme } from '@/constants/theme';
-import { Icon } from '@/components/ui/Icon';
+import { Icon, IconName } from '@/components/ui/Icon';
 import { Typography } from '@/components/ui/Typography';
 import Animated from 'react-native-reanimated';
 import * as DocumentPicker from 'expo-document-picker';
@@ -52,7 +52,7 @@ export const AudioNoteRecorder: React.FC<AudioNoteRecorderProps> = React.memo(({
             <View style={styles.recordingStateRow}>
               {/* Pulsing indicator */}
               <Animated.View style={[styles.pulseCircle, pulsingStyle]}>
-                <Icon name="mic.fill" size={20} tintColor="#EF4444" />
+                <Icon name={IconName.MicFill} size={20} tintColor="#EF4444" />
               </Animated.View>
               
               <View style={styles.recordingTimerContainer}>
@@ -85,7 +85,7 @@ export const AudioNoteRecorder: React.FC<AudioNoteRecorderProps> = React.memo(({
                     pressed ? styles.recordMicButtonPressed : null,
                   ]}
                 >
-                  <Icon name="mic.fill" size={24} tintColor="#FFF" />
+                  <Icon name={IconName.MicFill} size={24} tintColor="#FFF" />
                 </Pressable>
                 <View style={styles.idleTextContainer}>
                   <Typography.Paragraph style={styles.audioNoteTitle}>
@@ -111,7 +111,7 @@ export const AudioNoteRecorder: React.FC<AudioNoteRecorderProps> = React.memo(({
               ]}
             >
               <Icon 
-                name={playerStatus.playing ? 'pause.fill' : 'play.fill'} 
+                name={playerStatus.playing ? IconName.PauseFill : IconName.PlayFill} 
                 size={18} 
                 tintColor={theme.colors.primary.DEFAULT} 
               />
@@ -163,7 +163,7 @@ export const AudioNoteRecorder: React.FC<AudioNoteRecorderProps> = React.memo(({
                 pressed ? styles.deleteAudioButtonPressed : null,
               ]}
             >
-              <Icon name="trash.fill" size={16} tintColor={theme.colors.text.secondary} />
+              <Icon name={IconName.TrashFill} size={16} tintColor={theme.colors.text.secondary} />
             </Pressable>
           </View>
         </View>

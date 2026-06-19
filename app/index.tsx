@@ -2,9 +2,10 @@ import { ConsultModal } from '@/components/medicalRecords/ConsultModal';
 import { EditMemberModal } from '@/components/medicalRecords/EditMemberModal';
 import { InvitesModal } from '@/components/medicalRecords/InvitesModal';
 import { MemberAccordion } from '@/components/medicalRecords/MemberAccordion';
-import { Icon } from '@/components/ui/Icon';
+import { Icon, IconName } from '@/components/ui/Icon';
 import { Typography } from '@/components/ui/Typography';
-import { theme } from '@/constants/theme';
+import { theme, shadows } from '@/constants/theme';
+import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { FamilyMemberOut, FamilyOut } from '@/src/features/family/familyTypes';
 import { MedicalRecordResponse } from '@/src/features/medicalRecords/medicalRecordTypes';
@@ -205,6 +206,14 @@ export default function Index() {
     setActiveEditMember(null);
   }, []);
 
+  const handleOpenInvites = useCallback((): void => {
+    setIsInvitesVisible(true);
+  }, []);
+
+  const handleCloseInvites = useCallback((): void => {
+    setIsInvitesVisible(false);
+  }, []);
+
   // Copy Invite Code handler
   const handleCopyCode = useCallback(async () => {
     if (!family?.invite_code) return;
@@ -238,7 +247,7 @@ export default function Index() {
   }, [router]);
 
   const handleNavigateAddMember = useCallback(() => {
-    router.push('/family/add-member');
+    router.push('/family/addMember');
   }, [router]);
 
   return (
@@ -248,11 +257,11 @@ export default function Index() {
         <Typography.Subheading style={styles.headerTitle}>
           AlgoHealth Plus
         </Typography.Subheading>
-
+ 
         <View style={styles.headerActions}>
           {isFamilyPending ? (
             <Pressable
-              onPress={() => setIsInvitesVisible(true)}
+              onPress={handleOpenInvites}
               style={({ pressed }) => [
                 styles.invitesButton,
                 pressed ? styles.invitesButtonPressed : null,
@@ -260,14 +269,14 @@ export default function Index() {
               ]}
             >
               <Icon
-                name="envelope.fill"
+                name={IconName.EnvelopeFill}
                 size={20}
                 tintColor={theme.colors.primary.DEFAULT}
               />
               <View style={styles.badgeDot} />
             </Pressable>
           ) : null}
-
+ 
           {/* Profile icon top right */}
           <Pressable
             onPress={handleNavigateProfile}
@@ -278,7 +287,7 @@ export default function Index() {
             ]}
           >
             <Icon
-              name="person.crop.circle.fill"
+              name={IconName.PersonCropCircleFill}
               size={20}
               tintColor={theme.colors.primary.DEFAULT}
             />
@@ -342,7 +351,7 @@ export default function Index() {
                           ]}
                         >
                           <Icon
-                            name={copied ? "checkmark" : "doc.on.doc.fill"}
+                            name={copied ? IconName.Checkmark : IconName.DocOnDocFill}
                             size={14}
                             tintColor={copied ? theme.colors.status.success : theme.colors.primary.DEFAULT}
                           />
@@ -351,59 +360,50 @@ export default function Index() {
                           </Typography.Label>
                         </Pressable>
                       </View>
-
+ 
                       <Typography.Paragraph style={styles.inviteInstructions}>
                         Share this invite code with family members so they can enter it in their &quot;Join Family&quot; screen to join this family.
                       </Typography.Paragraph>
                     </View>
-
+ 
                     <View style={styles.divider} />
-
+ 
                     {/* Add Family Member CTA */}
-                    <Pressable
+                    <Button.Secondary
+                      title="Add Family Member"
                       onPress={handleNavigateAddMember}
-                      style={({ pressed }) => [
-                        styles.addMemberButton,
-                        pressed ? styles.addMemberButtonPressed : null,
-                        { borderCurve: 'continuous' }
-                      ]}
-                    >
-                      <Icon
-                        name="person.badge.plus"
-                        size={18}
-                        tintColor={theme.colors.primary.DEFAULT}
-                      />
-                      <Typography.Label style={styles.addMemberText}>
-                        Add Family Member
-                      </Typography.Label>
-                    </Pressable>
-
+                      iconName={IconName.PersonBadgePlus}
+                      iconColor={theme.colors.primary.DEFAULT}
+                      style={styles.addMemberButton}
+                      textStyle={styles.addMemberText}
+                    />
+ 
                     {/* ACCORDION SECTION GROUPED BY FAMILY MEMBER */}
                     {family.members.length > 0 ? (
-                      <View style={styles.accordionsList}>
-                        {family.members.map((member) => {
-                          const isExpanded = expandedMembers[member.id] || false;
-
-                          // Filter records for this member
-                          const memberRecords = records.filter(
-                            (r) => r.family_member_id === member.id
-                          );
-
-                          return (
-                            <MemberAccordion
-                              key={member.id}
-                              member={member}
-                              records={memberRecords}
-                              isExpanded={isExpanded}
-                              onToggleExpand={() => toggleExpand(member.id)}
-                              onNavigateCreateRecord={() => handleNavigateCreateRecord(member.id)}
-                              onNavigateRecordDetails={handleNavigateRecordDetails}
-                              onConsult={() => handleOpenConsult(member)}
-                              onEditMember={() => handleOpenEditMember(member)}
-                            />
-                          );
-                        })}
-                      </View>
+                       <View style={styles.accordionsList}>
+                         {family.members.map((member) => {
+                           const isExpanded = expandedMembers[member.id] || false;
+ 
+                           // Filter records for this member
+                           const memberRecords = records.filter(
+                             (r) => r.family_member_id === member.id
+                           );
+ 
+                           return (
+                             <MemberAccordion
+                               key={member.id}
+                               member={member}
+                               records={memberRecords}
+                               isExpanded={isExpanded}
+                               onToggleExpand={toggleExpand}
+                               onNavigateCreateRecord={handleNavigateCreateRecord}
+                               onNavigateRecordDetails={handleNavigateRecordDetails}
+                               onConsult={handleOpenConsult}
+                               onEditMember={handleOpenEditMember}
+                             />
+                           );
+                         })}
+                       </View>
                     ) : (
                       <View style={styles.emptyState}>
                         <Typography.Paragraph style={styles.emptyStateText}>
@@ -435,49 +435,39 @@ export default function Index() {
                       Need to switch? Start a new family or join another family using a different invite code.
                     </Typography.Paragraph>
                     <View style={styles.actionsRow}>
-                      <Pressable
+                      <Button.Secondary
+                        title="New Family"
                         onPress={handleNavigateCreateFamily}
-                        style={({ pressed }) => [
-                          styles.actionButton,
-                          pressed ? styles.actionButtonPressed : null,
-                          { borderCurve: 'continuous' }
-                        ]}
-                      >
-                        <Icon name="plus.circle.fill" size={20} tintColor={theme.colors.primary.DEFAULT} />
-                        <Typography.Label style={styles.actionButtonText}>
-                          New Family
-                        </Typography.Label>
-                      </Pressable>
-
-                      <Pressable
+                        iconName={IconName.PlusCircleFill}
+                        iconColor={theme.colors.primary.DEFAULT}
+                        style={styles.actionButton}
+                        textStyle={styles.actionButtonText}
+                      />
+ 
+                      <Button.Secondary
+                        title="Join Family"
                         onPress={handleNavigateJoinFamily}
-                        style={({ pressed }) => [
-                          styles.actionButton,
-                          pressed ? styles.actionButtonPressed : null,
-                          { borderCurve: 'continuous' }
-                        ]}
-                      >
-                        <Icon name="arrow.right.to.line.cycle" size={20} tintColor={theme.colors.status.success} />
-                        <Typography.Label style={styles.actionButtonText}>
-                          Join Family
-                        </Typography.Label>
-                      </Pressable>
+                        iconName={IconName.ArrowRightToLineCycle}
+                        iconColor={theme.colors.status.success}
+                        style={styles.actionButton}
+                        textStyle={styles.actionButtonText}
+                      />
                     </View>
                   </View>
                 )}
               </View>
-
+ 
             </Animated.View>
           </LayoutAnimationConfig>
         )}
       </ScrollView>
-
+ 
       <ConsultModal
         visible={isConsultVisible}
         member={activeConsultMember}
         onClose={handleCloseConsult}
       />
-
+ 
       <EditMemberModal
         visible={isEditMemberVisible}
         member={activeEditMember}
@@ -485,10 +475,10 @@ export default function Index() {
         onUpdateSuccess={loadDashboardData}
         ownerId={family?.owner_id || null}
       />
-
+ 
       <InvitesModal
         visible={isInvitesVisible}
-        onClose={() => setIsInvitesVisible(false)}
+        onClose={handleCloseInvites}
         onActionSuccess={loadDashboardData}
       />
     </View>
@@ -599,7 +589,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.xl,
     borderWidth: 1,
     borderColor: theme.colors.border.light,
-    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+    ...shadows.md,
   },
   sectionsContainer: {
     backgroundColor: theme.colors.background.surface,
@@ -669,7 +659,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: theme.spacing.xs,
     paddingHorizontal: theme.spacing.sm,
-    backgroundColor: '#F3E8FF',
+    backgroundColor: theme.colors.background.purpleLight,
     borderRadius: theme.radius.md,
     gap: theme.spacing.xs,
   },

@@ -42,10 +42,41 @@ const MATERIAL_MAP: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   'pause.fill': 'pause',
 };
 
-type SFSymbolName = keyof typeof MATERIAL_MAP;
+export enum IconName {
+  EnvelopeFill = 'envelope.fill',
+  Envelope = 'envelope',
+  ChevronLeft = 'chevron.left',
+  ChevronRight = 'chevron.right',
+  ChevronUp = 'chevron.up',
+  ChevronDown = 'chevron.down',
+  PersonCropCircleFill = 'person.crop.circle.fill',
+  Person3Fill = 'person.3.fill',
+  PersonBadgePlus = 'person.badge.plus',
+  KeyFill = 'key.fill',
+  Plus = 'plus',
+  PlusCircleFill = 'plus.circle.fill',
+  Pencil = 'pencil',
+  Xmark = 'xmark',
+  Sparkles = 'sparkles',
+  Checkmark = 'checkmark',
+  CheckmarkSealFill = 'checkmark.seal.fill',
+  SquareAndArrowUp = 'square.and.arrow.up',
+  DocOnDocFill = 'doc.on.doc.fill',
+  TrashFill = 'trash.fill',
+  PaperplaneFill = 'paperplane.fill',
+  Eye = 'eye',
+  EyeSlash = 'eye.slash',
+  ArrowRightToLineCycle = 'arrow.right.to.line.cycle',
+  DocFill = 'doc.fill',
+  Waveform = 'waveform',
+  Paperclip = 'paperclip',
+  MicFill = 'mic.fill',
+  PlayFill = 'play.fill',
+  PauseFill = 'pause.fill',
+}
 
 interface IconProps {
-  name: SFSymbolName;
+  name: IconName;
   size?: number;
   tintColor?: string;
   style?: StyleProp<ViewStyle>;

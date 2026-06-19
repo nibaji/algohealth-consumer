@@ -3,7 +3,7 @@ import { View, Pressable } from 'react-native';
 import { Typography } from '@/components/ui/Typography';
 import { styles } from './editMemberModalStyles';
 
-export type GenderType = 'Male' | 'Female' | 'Other' | 'Unknown';
+import { GenderType } from '@/src/features/family/familyTypes';
 
 interface GenderSelectorProps {
   gender: GenderType;

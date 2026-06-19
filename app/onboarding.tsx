@@ -1,18 +1,18 @@
-import React, { useState, useEffect, useTransition } from 'react';
+import React, { useState, useEffect, useTransition, useCallback } from 'react';
 import { StyleSheet, View, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
-import { theme } from '@/constants/theme';
+import { theme, shadows } from '@/constants/theme';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/src/contexts/AuthContext';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
-import { Icon } from '@/components/ui/Icon';
+import { Icon, IconName } from '@/components/ui/Icon';
 import { InvitesSkeleton } from '@/components/ui/Skeleton';
 import { familyService } from '@/src/services/family/familyService';
 import { FamilyOut } from '@/src/features/family/familyTypes';
 import { refreshTracker } from '@/src/utils/refreshTracker';
 
-export default function Onboarding() {
+export default function Onboarding(): React.JSX.Element {
   const router = useRouter();
   const { logout, user, isFamilyPending, setHasSkippedOnboarding, refreshProfile } = useAuth();
   const [pendingFamily, setPendingFamily] = useState<FamilyOut | null>(null);
@@ -45,20 +45,20 @@ export default function Onboarding() {
     fetchPendingFamily();
   }, [isFamilyPending]);
 
-  const handleJoinPress = React.useCallback(() => {
+  const handleJoinPress = useCallback(() => {
     router.push('/family/join');
   }, [router]);
 
-  const handleCreatePress = React.useCallback(() => {
+  const handleCreatePress = useCallback(() => {
     router.push('/family/create');
   }, [router]);
 
-  const handleSkipOnboarding = React.useCallback(() => {
+  const handleSkipOnboarding = useCallback(() => {
     setHasSkippedOnboarding(true);
     router.replace('/');
   }, [setHasSkippedOnboarding, router]);
 
-  const handleAcceptInvite = React.useCallback(() => {
+  const handleAcceptInvite = useCallback(() => {
     if (!pendingFamily) return;
     setInviteError(null);
     startActionTransition(async () => {
@@ -78,7 +78,7 @@ export default function Onboarding() {
     });
   }, [pendingFamily, refreshProfile, router]);
 
-  const handleRejectInvite = React.useCallback(() => {
+  const handleRejectInvite = useCallback(() => {
     if (!pendingFamily) return;
     setInviteError(null);
     startActionTransition(async () => {
@@ -95,6 +95,10 @@ export default function Onboarding() {
       }
     });
   }, [pendingFamily, refreshProfile]);
+
+  const handleReloadInvite = useCallback(() => {
+    refreshProfile();
+  }, [refreshProfile]);
 
   return (
     <View style={styles.container}>
@@ -125,8 +129,8 @@ export default function Onboarding() {
                 style={[styles.inviteCard, { borderCurve: 'continuous' }]}
               >
                 <View style={styles.inviteCardHeader}>
-                  <View style={[styles.iconContainer, { backgroundColor: '#F3E8FF' }]}>
-                    <Icon name="envelope.fill" size={24} tintColor={theme.colors.primary.DEFAULT} />
+                  <View style={[styles.iconContainer, { backgroundColor: theme.colors.background.purpleLight }]}>
+                    <Icon name={IconName.EnvelopeFill} size={24} tintColor={theme.colors.primary.DEFAULT} />
                   </View>
                   <View style={styles.cardTextContainer}>
                     <Typography.Subheading style={styles.cardTitle} truncate>
@@ -155,8 +159,8 @@ export default function Onboarding() {
                     title="Reject" 
                     onPress={handleRejectInvite}
                     loading={isActionPending}
-                    textStyle={{ color: theme.colors.status.error }}
-                    style={[styles.actionButton, { borderColor: theme.colors.status.error }]}
+                    textStyle={styles.rejectText}
+                    style={styles.rejectButton}
                   />
                 </View>
               </Animated.View>
@@ -165,7 +169,7 @@ export default function Onboarding() {
                 <Typography.Label style={styles.errorText}>
                   {inviteError || 'Failed to retrieve invitation details.'}
                 </Typography.Label>
-                <Button.Secondary title="Reload Invite" onPress={() => refreshProfile()} />
+                <Button.Secondary title="Reload Invite" onPress={handleReloadInvite} />
               </View>
             )}
 
@@ -226,9 +230,9 @@ export default function Onboarding() {
                 ]}
               >
                 <View style={styles.cardHeader}>
-                  <View style={[styles.iconContainer, { backgroundColor: '#EEF2FF' }]}>
+                  <View style={[styles.iconContainer, { backgroundColor: theme.colors.background.infoLight }]}>
                     <Icon 
-                      name="person.3.fill" 
+                      name={IconName.Person3Fill} 
                       size={24}
                       tintColor={theme.colors.primary.DEFAULT}
                     />
@@ -259,9 +263,9 @@ export default function Onboarding() {
                 ]}
               >
                 <View style={styles.cardHeader}>
-                  <View style={[styles.iconContainer, { backgroundColor: '#ECFDF5' }]}>
+                  <View style={[styles.iconContainer, { backgroundColor: theme.colors.background.successLight }]}>
                     <Icon 
-                      name="key.fill" 
+                      name={IconName.KeyFill} 
                       size={24}
                       tintColor={theme.colors.status.success}
                     />
@@ -359,7 +363,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border.light,
     gap: theme.spacing.lg,
-    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
+    ...shadows.md,
   },
   cardPressed: {
     borderColor: theme.colors.border.default,
@@ -376,10 +380,6 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.lg,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  icon: {
-    width: 24,
-    height: 24,
   },
   cardTextContainer: {
     flex: 1,
@@ -431,9 +431,6 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border.light,
     gap: theme.spacing.md,
   },
-  loadingInviteText: {
-    color: theme.colors.text.secondary,
-  },
   inviteCard: {
     backgroundColor: theme.colors.background.surface,
     padding: theme.spacing.lg,
@@ -441,7 +438,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border.light,
     gap: theme.spacing.lg,
-    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
+    ...shadows.md,
   },
   inviteCardHeader: {
     flexDirection: 'row',
@@ -454,6 +451,13 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     width: '100%',
+  },
+  rejectButton: {
+    width: '100%',
+    borderColor: theme.colors.status.error,
+  },
+  rejectText: {
+    color: theme.colors.status.error,
   },
   errorText: {
     color: theme.colors.status.error,

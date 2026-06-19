@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useTransition } from 'react';
 import { StyleSheet, View, ScrollView, Pressable, KeyboardAvoidingView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { theme } from '@/constants/theme';
+import { theme, shadows } from '@/constants/theme';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
@@ -9,11 +9,11 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import { familyService } from '@/src/services/family/familyService';
 import { refreshTracker } from '@/src/utils/refreshTracker';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Icon } from '@/components/ui/Icon';
+import { Icon, IconName } from '@/components/ui/Icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
 
-export default function JoinFamily() {
+export default function JoinFamily(): React.JSX.Element {
   const router = useRouter();
   const { refreshProfile } = useAuth();
   const insets = useSafeAreaInsets();
@@ -67,6 +67,10 @@ export default function JoinFamily() {
     }
   }, [router]);
 
+  const handleInviteCodeChange = useCallback((text: string) => {
+    setInviteCode(text);
+  }, []);
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -83,7 +87,7 @@ export default function JoinFamily() {
           ]}
         >
           <Icon 
-            name="chevron.left" 
+            name={IconName.ChevronLeft} 
             size={20}
             tintColor={theme.colors.text.primary}
           />
@@ -108,7 +112,7 @@ export default function JoinFamily() {
           >
             <View style={styles.successIconCircle}>
               <Icon 
-                name="checkmark.seal.fill" 
+                name={IconName.CheckmarkSealFill} 
                 size={40}
                 tintColor={theme.colors.status.success}
               />
@@ -140,7 +144,7 @@ export default function JoinFamily() {
                 label="Invite Code"
                 placeholder="e.g. FAM-123456"
                 value={inviteCode}
-                onChangeText={setInviteCode}
+                onChangeText={handleInviteCodeChange}
                 error={error ? error : undefined}
                 autoCapitalize="characters"
                 autoFocus
@@ -184,10 +188,6 @@ const styles = StyleSheet.create({
   backButtonPressed: {
     opacity: 0.6,
   },
-  backIcon: {
-    width: 20,
-    height: 20,
-  },
   headerTitle: {
     fontWeight: '700',
     color: theme.colors.text.primary,
@@ -226,13 +226,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border.light,
     gap: theme.spacing.lg,
-    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+    ...shadows.sm,
   },
   submitButton: {
     marginTop: theme.spacing.md,
   },
-  
-  // Success states
   successContainer: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -245,14 +243,10 @@ const styles = StyleSheet.create({
     height: 72,
     borderRadius: theme.radius.xl,
     borderCurve: 'continuous',
-    backgroundColor: '#ECFDF5',
+    backgroundColor: theme.colors.background.successLight,
     justifyContent: 'center',
     alignItems: 'center',
-    boxShadow: "0 10px 15px -3px rgba(16, 185, 129, 0.15)",
-  },
-  successIcon: {
-    width: 40,
-    height: 40,
+    ...shadows.success,
   },
   successTitle: {
     fontSize: theme.fontSize['2xl'],
