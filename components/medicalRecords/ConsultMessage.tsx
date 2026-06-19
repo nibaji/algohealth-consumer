@@ -1,9 +1,9 @@
-import React from 'react';
-import { StyleSheet, View, useWindowDimensions, Pressable } from 'react-native';
 import { Icon } from '@/components/ui/Icon';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
 import { ChatMessage } from '@/src/utils/consultCache';
+import React from 'react';
+import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { AudioPlayerView } from './AudioPlayerView';
 
 interface ConsultMessageProps {
@@ -41,10 +41,10 @@ export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({
           <Icon name="sparkles" size={12} tintColor={theme.colors.primary.DEFAULT} />
         </View>
       )}
-      
-      <View 
+
+      <View
         style={[
-          styles.messageBubble, 
+          styles.messageBubble,
           isUser ? styles.bubbleUser : styles.bubbleBot,
           { borderCurve: 'continuous' }
         ]}
@@ -72,10 +72,10 @@ export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({
           <View style={styles.documentsContainer}>
             {item.documents.map((doc, idx) => (
               <View key={idx} style={[styles.docChip, isUser ? styles.docChipUser : styles.docChipBot, { borderCurve: 'continuous' }]}>
-                <Icon 
-                  name="doc.fill" 
-                  size={12} 
-                  tintColor={isUser ? '#FFFFFF' : theme.colors.primary.DEFAULT} 
+                <Icon
+                  name="doc.fill"
+                  size={12}
+                  tintColor={isUser ? '#FFFFFF' : theme.colors.primary.DEFAULT}
                 />
                 <Typography.Label style={[styles.docText, isUser ? styles.docTextUser : styles.docTextBot]} numberOfLines={1}>
                   {doc.name}
@@ -105,17 +105,15 @@ export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({
                 isSpeaking
                   ? 'Pause speaking'
                   : isSpeechPaused
-                  ? 'Resume speaking'
-                  : 'Read message aloud'
+                    ? 'Resume speaking'
+                    : 'Read message aloud'
               }
             >
               <Icon
                 name={
                   isSpeaking
                     ? 'pause.fill'
-                    : isSpeechPaused
-                    ? 'play.fill'
-                    : 'waveform'
+                    : 'play.fill'
                 }
                 size={12}
                 tintColor={
