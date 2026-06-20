@@ -208,7 +208,7 @@ export const EditMemberModal: React.FC<EditMemberModalProps> = React.memo(({
                   />
 
                   <TextInput
-                    label="Email ID (Optional)"
+                    label="Email ID"
                     placeholder="jane.smith@example.com"
                     value={memberEmail}
                     onChangeText={handleEmailChange}

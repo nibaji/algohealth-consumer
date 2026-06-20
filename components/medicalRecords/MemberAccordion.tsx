@@ -108,6 +108,22 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
           />
         ) : null}
 
+        {/* Edit button next to accordion expand/close icon. Present for all members, including pending */}
+        <Pressable 
+          onPress={handleEditMember}
+          style={({ pressed }) => [
+            styles.editChevronButton,
+            pressed ? styles.editChevronButtonPressed : null
+          ]}
+          accessibilityLabel="Edit member"
+        >
+          <Icon 
+            name={IconName.Pencil} 
+            size={16}
+            tintColor={theme.colors.primary.DEFAULT}
+          />
+        </Pressable>
+
         {member.invite_status !== 'pending' ? (
           <Pressable 
             onPress={handleToggleExpand}
@@ -145,6 +161,15 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
           <View style={styles.sectionTitleContainer}>
             <Typography.Label style={styles.sectionTitle}>Medical Records</Typography.Label>
           </View>
+
+          <Button.Secondary
+            title="Add Medical Record"
+            onPress={handleNavigateCreateRecord}
+            iconName={IconName.Plus}
+            iconColor={theme.colors.text.primary}
+            style={styles.addRecordTopButton}
+            textStyle={styles.addRecordTopText}
+          />
           
           {records.length > 0 ? (
             <View style={styles.recordsList}>
@@ -163,27 +188,6 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
               </Typography.Paragraph>
             </View>
           )}
-
-          {/* Add record and edit member shortcuts */}
-          <View style={styles.actionsFooterRow}>
-            <Button.Secondary
-              title="Add Record"
-              onPress={handleNavigateCreateRecord}
-              iconName={IconName.Plus}
-              iconColor={theme.colors.text.primary}
-              style={styles.addRecordShortcutButton}
-              textStyle={styles.addRecordShortcutText}
-            />
-
-            <Button.Secondary
-              title="Edit Member"
-              onPress={handleEditMember}
-              iconName={IconName.Pencil}
-              iconColor={theme.colors.primary.DEFAULT}
-              style={styles.editMemberShortcutButton}
-              textStyle={styles.editMemberShortcutText}
-            />
-          </View>
         </Animated.View>
       ) : null}
     </View>
@@ -307,61 +311,32 @@ const styles = StyleSheet.create({
     color: theme.colors.text.tertiary,
     fontSize: theme.fontSize.sm,
   },
-  addRecordShortcutText: {
+  addRecordTopButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.background.default,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
+    borderRadius: theme.radius.md,
+    paddingVertical: theme.spacing.sm,
+    gap: theme.spacing.xs,
+    marginTop: theme.spacing.xs,
+    marginBottom: theme.spacing.xs,
+    width: '100%',
+  },
+  addRecordTopText: {
     fontSize: theme.fontSize.sm,
     fontWeight: '600',
     color: theme.colors.text.primary,
   },
-  actionsFooterRow: {
-    flexDirection: 'row',
-    gap: theme.spacing.sm,
-    marginTop: theme.spacing.xs,
-    width: '100%',
-  },
-  addRecordShortcutButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+  editChevronButton: {
+    padding: theme.spacing.xs,
     justifyContent: 'center',
-    backgroundColor: theme.colors.background.default,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-    borderRadius: theme.radius.md,
-    paddingVertical: theme.spacing.sm,
-    gap: theme.spacing.xs,
-  },
-  addRecordShortcutButtonPressed: {
-    backgroundColor: theme.colors.border.light,
-  },
-  plusMini: {
-    width: 12,
-    height: 12,
-    tintColor: theme.colors.text.primary,
-  },
-  editMemberShortcutButton: {
-    flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.background.default,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-    borderRadius: theme.radius.md,
-    paddingVertical: theme.spacing.sm,
-    gap: theme.spacing.xs,
   },
-  editMemberShortcutButtonPressed: {
-    backgroundColor: theme.colors.border.light,
-  },
-  pencilMini: {
-    width: 12,
-    height: 12,
-    tintColor: theme.colors.primary.DEFAULT,
-  },
-  editMemberShortcutText: {
-    fontSize: theme.fontSize.sm,
-    fontWeight: '600',
-    color: theme.colors.primary.DEFAULT,
+  editChevronButtonPressed: {
+    opacity: 0.6,
   },
   summaryCard: {
     backgroundColor: theme.colors.background.primaryLight,

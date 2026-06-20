@@ -12,6 +12,7 @@ import { MedicalRecordResponse } from '@/src/features/medicalRecords/medicalReco
 import { familyService } from '@/src/services/family/familyService';
 import { medicalRecordService } from '@/src/services/medicalRecords/medicalRecordService';
 import { refreshTracker } from '@/src/utils/refreshTracker';
+import { isMemberSelf } from '@/src/utils/relation';
 import * as Clipboard from 'expo-clipboard';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
@@ -70,14 +71,29 @@ export default function Index() {
         };
       });
 
+      // Sort members: self first, then family head, then others alphabetically
+      const sortedMembers = [...mergedMembers].sort((a, b) => {
+        const aIsSelf = isMemberSelf(a, user);
+        const bIsSelf = isMemberSelf(b, user);
+        if (aIsSelf && !bIsSelf) return -1;
+        if (!aIsSelf && bIsSelf) return 1;
+
+        const aIsHead = a.relation.toLowerCase() === 'self';
+        const bIsHead = b.relation.toLowerCase() === 'self';
+        if (aIsHead && !bIsHead) return -1;
+        if (!aIsHead && bIsHead) return 1;
+
+        return a.name.localeCompare(b.name);
+      });
+
       setFamily({
         ...familyData,
-        members: mergedMembers,
+        members: sortedMembers,
       });
 
       // Expand the first member who has records by default, or the owner
-      if (mergedMembers.length > 0) {
-        const defaultExpandedId = mergedMembers[0].id;
+      if (sortedMembers.length > 0) {
+        const defaultExpandedId = sortedMembers[0].id;
         setExpandedMembers(prev => {
           if (Object.keys(prev).length > 0) return prev;
           return { [defaultExpandedId]: true };
@@ -87,7 +103,7 @@ export default function Index() {
       const message = err instanceof Error ? err.message : 'Failed to load family details';
       setError(message);
     }
-  }, []);
+  }, [user]);
 
   // Fetch Medical Records
   const loadRecordsData = useCallback(async () => {
