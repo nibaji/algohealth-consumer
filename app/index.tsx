@@ -326,7 +326,7 @@ export default function Index() {
       <View style={[styles.headerBar, { paddingTop: insets.top, height: 56 + insets.top }]}>
         <View style={styles.headerLeft}>
           <Image
-            source={require('@/assets/images/icon.png')}
+            source={require('@/assets/images/android-icon-foreground.png')}
             style={styles.headerLogo}
             contentFit="contain"
           />
