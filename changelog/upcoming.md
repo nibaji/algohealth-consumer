@@ -1,2 +1,4 @@
 ## Unreleased
+- 2026-06-20: Fixed TTS voice initialization in Edge and Chromium browsers by asynchronously waiting for the native `voiceschanged` event, and increased the speech timeout guard on web to 30 seconds. Changed in `src/utils/ttsManager.ts`.
+- 2026-06-20: Added a copy message feature with a 2-second checkmark confirmation to all chat bubbles containing text. Changed in `components/medicalRecords/ConsultMessage.tsx`.
 - 2026-06-19: Fixed chat messages overflowing the screen width on web in the Consult chat. Replaced percentage-based `maxWidth: '85%'` (unreliable on RN Web) with a pixel-based `width * 0.82` value from `useWindowDimensions`. Added `flexShrink: 1` and `overflow: 'hidden'` to the bubble container so long unbreakable strings wrap instead of expanding past the viewport. Also added `width: '100%'` and `overflow: 'hidden'` to the `chatArea` in `ConsultModal` to prevent horizontal scroll. Changed in `ConsultMessage.tsx`, `ConsultModal.tsx`.

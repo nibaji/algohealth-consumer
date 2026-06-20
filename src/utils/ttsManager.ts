@@ -2,22 +2,28 @@
  * ttsManager.ts
  *
  * Singleton module that wraps expo-speech for per-message TTS playback
- * in the Health Consultant chat. Key design decisions (ported from algoscribe):
+ * in the Health Consultant chat. Key design decisions:
  *
  * - US English only (en-US), best-matching voice picked on init
  * - One message speaking at a time; starting a new one stops the previous
  * - Per-message play/pause state tracked via `speakingMessageId`
  * - Pause/resume is simulated: expo-speech has no native pause, so we
- *   track a character offset so the user can "resume" from roughly the
- *   same point. On resume we re-speak from that sentence boundary.
- * - Safari/web: speech synthesis sometimes swallows completion callbacks
- *   → 12 s timeout guard prevents deadlock
- * - AppState: caller is responsible for calling stopSpeaking() on background
+ *   track a sentence index and re-speak from that boundary on resume.
+ * - Safari / Edge / Chromium web: speechSynthesis.getVoices() is async and
+ *   requires the `voiceschanged` event to be populated. We wait for it with
+ *   a 3 s deadline so Edge doesn't silently fall back to no voice.
+ * - Timeout guard (30 s on web, 12 s on native) prevents deadlock when
+ *   completion callbacks are swallowed by the browser engine.
+ * - AppState: caller is responsible for calling stopSpeaking() on background.
  */
 import * as Speech from 'expo-speech';
 
 const LANGUAGE = 'en-US';
-const SPEECH_TIMEOUT_MS = 12_000;
+const IS_WEB = process.env.EXPO_OS === 'web';
+// Edge/Chrome sometimes take >12 s for long sentences. Use a generous timeout.
+const SPEECH_TIMEOUT_MS = IS_WEB ? 30_000 : 12_000;
+// How long to wait for voiceschanged before giving up (Edge loads voices async)
+const VOICES_READY_TIMEOUT_MS = 3_000;
 
 interface TtsListenerCallback {
   (messageId: string | null, isPaused: boolean): void;
@@ -47,11 +53,61 @@ const splitIntoSentences = (text: string): string[] => {
   return parts.map(s => s.trim()).filter(s => s.length > 0);
 };
 
+/**
+ * On Chromium-based browsers (Edge, Chrome) `speechSynthesis.getVoices()`
+ * returns an empty array until voices are loaded. We wait for the
+ * `voiceschanged` event with a timeout fallback so Edge works correctly.
+ */
+const getVoicesWithFallback = async (): Promise<Speech.Voice[]> => {
+  if (!IS_WEB) {
+    return Speech.getAvailableVoicesAsync();
+  }
+
+  // Web path: use the native speechSynthesis API directly to handle Edge
+  const synth = typeof window !== 'undefined' ? window.speechSynthesis : null;
+  if (!synth) return [];
+
+  const immediateVoices = synth.getVoices();
+  if (immediateVoices.length > 0) {
+    // Already available (e.g., Firefox, or subsequent calls after first load)
+    return immediateVoices.map(v => ({
+      identifier: v.voiceURI,
+      name: v.name,
+      language: v.lang,
+      quality: 'Default' as Speech.VoiceQuality,
+    }));
+  }
+
+  // Edge / Chrome: wait for voiceschanged event
+  return new Promise<Speech.Voice[]>((resolve) => {
+    const timeout = setTimeout(() => {
+      // Deadline reached — return whatever is available (may be empty)
+      resolve(synth.getVoices().map(v => ({
+        identifier: v.voiceURI,
+        name: v.name,
+        language: v.lang,
+        quality: 'Default' as Speech.VoiceQuality,
+      })));
+    }, VOICES_READY_TIMEOUT_MS);
+
+    synth.onvoiceschanged = () => {
+      clearTimeout(timeout);
+      synth.onvoiceschanged = null;
+      resolve(synth.getVoices().map(v => ({
+        identifier: v.voiceURI,
+        name: v.name,
+        language: v.lang,
+        quality: 'Default' as Speech.VoiceQuality,
+      })));
+    };
+  });
+};
+
 const init = async (): Promise<void> => {
   if (isInitialized || isInitializing) return;
   isInitializing = true;
   try {
-    const voices = await Speech.getAvailableVoicesAsync();
+    const voices = await getVoicesWithFallback();
     // Prefer exact en-US match, then any en-* voice
     const exact = voices.find(v => v.language === LANGUAGE);
     const fallback = voices.find(v => v.language.startsWith('en'));
@@ -117,7 +173,8 @@ const speakSentence = (
 
   Speech.speak(sentence, options);
 
-  // Timeout guard: Safari/web sometimes swallows completion callbacks
+  // Timeout guard: Edge/Safari/web sometimes swallows completion callbacks.
+  // Use a longer timeout on web to handle long sentences gracefully.
   setTimeout(() => {
     if (!hasCompleted && generation === currentGeneration) {
       complete();

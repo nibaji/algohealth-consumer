@@ -2,8 +2,8 @@ import { Icon, IconName } from '@/components/ui/Icon';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
 import { ChatMessage } from '@/src/utils/consultCache';
-import React, { useCallback } from 'react';
-import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { Clipboard, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { AudioPlayerView } from './AudioPlayerView';
 
 interface ConsultMessageProps {
@@ -33,6 +33,7 @@ export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({
   const { width } = useWindowDimensions();
   const isUser = item.sender === 'user';
   const hasText = Boolean(item.text && item.text.trim() !== '');
+  const [copied, setCopied] = useState(false);
 
   const handlePlayPause = useCallback((): void => {
     if (item.audio_uri) {
@@ -47,6 +48,13 @@ export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({
   const handleToggleSpeech = useCallback((): void => {
     onToggleSpeech(item.id, item.text || '');
   }, [item.id, item.text, onToggleSpeech]);
+
+  const handleCopy = useCallback((): void => {
+    if (!item.text) return;
+    Clipboard.setString(item.text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, [item.text]);
 
   return (
     <View style={[styles.messageBubbleRow, isUser ? styles.rowUser : styles.rowBot, { maxWidth: width * 0.82 }]}>
@@ -99,45 +107,66 @@ export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({
           </View>
         ) : null}
 
-        {/* Bottom row: timestamp + TTS button (bot only) */}
+        {/* Bottom row: timestamp + copy button + TTS button (bot only) */}
         <View style={[styles.bottomRow, isUser ? styles.bottomRowUser : styles.bottomRowBot]}>
           <Typography.Label style={isUser ? styles.timeUser : styles.timeBot}>
             {item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
           </Typography.Label>
 
-          {/* Speak button — only for bot messages that have text */}
-          {!isUser && hasText ? (
-            <Pressable
-              onPress={handleToggleSpeech}
-              style={({ pressed }) => [
-                styles.speakButton,
-                (isSpeaking || isSpeechPaused) ? styles.speakButtonActive : null,
-                pressed ? styles.speakButtonPressed : null,
-                { borderCurve: 'continuous' },
-              ]}
-              accessibilityLabel={
-                isSpeaking
-                  ? 'Pause speaking'
-                  : isSpeechPaused
-                    ? 'Resume speaking'
-                    : 'Read message aloud'
-              }
-            >
-              <Icon
-                name={
+          <View style={styles.actionButtons}>
+            {/* Copy button — only for messages that have text */}
+            {hasText ? (
+              <Pressable
+                onPress={handleCopy}
+                style={({ pressed }) => [
+                  styles.actionButton,
+                  pressed ? styles.actionButtonPressed : null,
+                  { borderCurve: 'continuous' },
+                ]}
+                accessibilityLabel="Copy message"
+              >
+                <Icon
+                  name={copied ? IconName.CheckmarkCircleFill : IconName.DocOnDocFill}
+                  size={12}
+                  tintColor={copied ? theme.colors.status.success : theme.colors.text.tertiary}
+                />
+              </Pressable>
+            ) : null}
+
+            {/* Speak button — only for bot messages that have text */}
+            {!isUser && hasText ? (
+              <Pressable
+                onPress={handleToggleSpeech}
+                style={({ pressed }) => [
+                  styles.actionButton,
+                  (isSpeaking || isSpeechPaused) ? styles.actionButtonActive : null,
+                  pressed ? styles.actionButtonPressed : null,
+                  { borderCurve: 'continuous' },
+                ]}
+                accessibilityLabel={
                   isSpeaking
-                    ? IconName.PauseFill
-                    : IconName.PlayFill
+                    ? 'Pause speaking'
+                    : isSpeechPaused
+                      ? 'Resume speaking'
+                      : 'Read message aloud'
                 }
-                size={12}
-                tintColor={
-                  isSpeaking || isSpeechPaused
-                    ? theme.colors.primary.DEFAULT
-                    : theme.colors.text.tertiary
-                }
-              />
-            </Pressable>
-          ) : null}
+              >
+                <Icon
+                  name={
+                    isSpeaking
+                      ? IconName.PauseFill
+                      : IconName.PlayFill
+                  }
+                  size={12}
+                  tintColor={
+                    isSpeaking || isSpeechPaused
+                      ? theme.colors.primary.DEFAULT
+                      : theme.colors.text.tertiary
+                  }
+                />
+              </Pressable>
+            ) : null}
+          </View>
         </View>
       </View>
     </View>
@@ -221,8 +250,13 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginTop: theme.spacing.xxs,
   },
-  // Speak button
-  speakButton: {
+  // Action buttons row (copy + speak)
+  actionButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+  },
+  actionButton: {
     width: 22,
     height: 22,
     borderRadius: theme.radius.full,
@@ -232,11 +266,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border.light,
   },
-  speakButtonActive: {
+  actionButtonActive: {
     backgroundColor: theme.colors.background.infoLight,
     borderColor: theme.colors.border.primaryLight,
   },
-  speakButtonPressed: {
+  actionButtonPressed: {
     opacity: 0.6,
   },
   documentsContainer: {
