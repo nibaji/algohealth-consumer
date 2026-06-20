@@ -17,7 +17,7 @@ import * as Clipboard from 'expo-clipboard';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown, LayoutAnimationConfig } from 'react-native-reanimated';
+import Animated, { FadeInDown, LayoutAnimationConfig, LinearTransition } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HomeSkeleton } from '@/components/ui/Skeleton';
 
@@ -406,17 +406,21 @@ export default function Index() {
                            );
  
                            return (
-                             <MemberAccordion
+                             <Animated.View
                                key={member.id}
-                               member={member}
-                               records={memberRecords}
-                               isExpanded={isExpanded}
-                               onToggleExpand={toggleExpand}
-                               onNavigateCreateRecord={handleNavigateCreateRecord}
-                               onNavigateRecordDetails={handleNavigateRecordDetails}
-                               onConsult={handleOpenConsult}
-                               onEditMember={handleOpenEditMember}
-                             />
+                               layout={LinearTransition.duration(300)}
+                             >
+                               <MemberAccordion
+                                 member={member}
+                                 records={memberRecords}
+                                 isExpanded={isExpanded}
+                                 onToggleExpand={toggleExpand}
+                                 onNavigateCreateRecord={handleNavigateCreateRecord}
+                                 onNavigateRecordDetails={handleNavigateRecordDetails}
+                                 onConsult={handleOpenConsult}
+                                 onEditMember={handleOpenEditMember}
+                               />
+                             </Animated.View>
                            );
                          })}
                        </View>

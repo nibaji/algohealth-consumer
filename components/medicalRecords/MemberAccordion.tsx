@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View, Pressable } from 'react-native';
 import { Icon, IconName } from '@/components/ui/Icon';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
 import { FamilyMemberOut } from '@/src/features/family/familyTypes';
@@ -33,6 +33,22 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
   onEditMember,
 }) => {
   const { user } = useAuth();
+  const [measuredHeight, setMeasuredHeight] = React.useState<number>(0);
+  const height = useSharedValue<number>(0);
+
+  React.useEffect(() => {
+    height.value = withTiming(isExpanded ? measuredHeight : 0, {
+      duration: 300,
+    });
+  }, [isExpanded, measuredHeight, height]);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      height: height.value,
+      opacity: withTiming(isExpanded ? 1 : 0, { duration: 250 }),
+      overflow: 'hidden',
+    };
+  });
 
   const handleToggleExpand = React.useCallback((): void => {
     onToggleExpand(member.id);
@@ -145,8 +161,13 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
       </View>
 
       {/* Accordion Content */}
-      {isExpanded ? (
-        <Animated.View entering={FadeInDown.duration(300)} style={styles.accordionContent}>
+      <Animated.View style={animatedStyle} pointerEvents={isExpanded ? 'auto' : 'none'}>
+        <View 
+          onLayout={(e) => {
+            setMeasuredHeight(e.nativeEvent.layout.height);
+          }}
+          style={styles.accordionContent}
+        >
           <View style={styles.accordionDivider} />
           
           {member.health_summary ? (
@@ -191,8 +212,8 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
               </Typography.Paragraph>
             </View>
           )}
-        </Animated.View>
-      ) : null}
+        </View>
+      </Animated.View>
     </View>
   );
 });
