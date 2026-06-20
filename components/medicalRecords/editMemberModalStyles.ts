@@ -25,10 +25,6 @@ export const styles = StyleSheet.create({
   closeButtonPressed: {
     opacity: 0.6,
   },
-  closeIcon: {
-    width: 20,
-    height: 20,
-  },
   headerTitle: {
     fontWeight: '700',
     color: theme.colors.text.primary,
@@ -47,16 +43,6 @@ export const styles = StyleSheet.create({
     gap: theme.spacing.xl,
     paddingBottom: theme.spacing['4xl'],
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: theme.spacing['8xl'],
-  },
-  loadingText: {
-    color: theme.colors.text.secondary,
-    marginTop: theme.spacing.md,
-  },
   formContainer: {
     gap: theme.spacing.lg,
   },
@@ -68,14 +54,6 @@ export const styles = StyleSheet.create({
     borderColor: theme.colors.border.light,
     gap: theme.spacing.md,
     ...shadows.sm,
-  },
-  formRow: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-    width: '100%',
-  },
-  flexHalf: {
-    flex: 1,
   },
   selectLabel: {
     color: theme.colors.text.secondary,

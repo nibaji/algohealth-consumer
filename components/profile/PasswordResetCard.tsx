@@ -162,10 +162,6 @@ const styles = StyleSheet.create({
   eyeButtonPressed: {
     opacity: 0.5,
   },
-  eyeIcon: {
-    width: 20,
-    height: 20,
-  },
   saveButton: {
     marginTop: theme.spacing.md,
   },

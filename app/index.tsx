@@ -12,7 +12,7 @@ import { MedicalRecordResponse } from '@/src/features/medicalRecords/medicalReco
 import { familyService } from '@/src/services/family/familyService';
 import { medicalRecordService } from '@/src/services/medicalRecords/medicalRecordService';
 import { refreshTracker } from '@/src/utils/refreshTracker';
-import { isMemberSelf } from '@/src/utils/relation';
+import { isMemberSelf, sortFamilyMembers } from '@/src/utils/relation';
 import * as Clipboard from 'expo-clipboard';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
@@ -89,31 +89,8 @@ export default function Index() {
         };
       });
 
-      // Sort members:
-      //   1. Logged-in user's own member (isMemberSelf)
-      //   2. Family head (relation === 'Self'), if different from logged-in user
-      //   3. Other accepted/non-pending members alphabetically
-      //   4. Pending members alphabetically at the very bottom
-      const sortedMembers = [...mergedMembers].sort((a, b) => {
-        const aIsSelf = isMemberSelf(a, user);
-        const bIsSelf = isMemberSelf(b, user);
-        if (aIsSelf && !bIsSelf) return -1;
-        if (!aIsSelf && bIsSelf) return 1;
-
-        // Pending members go to the bottom
-        const aIsPending = a.invite_status === 'pending';
-        const bIsPending = b.invite_status === 'pending';
-        if (aIsPending && !bIsPending) return 1;
-        if (!aIsPending && bIsPending) return -1;
-
-        // Among non-pending, family head (relation 'Self') comes first
-        const aIsHead = a.relation.toLowerCase() === 'self';
-        const bIsHead = b.relation.toLowerCase() === 'self';
-        if (aIsHead && !bIsHead) return -1;
-        if (!aIsHead && bIsHead) return 1;
-
-        return a.name.localeCompare(b.name);
-      });
+      // Sort members using the centralized sorting utility
+      const sortedMembers = sortFamilyMembers(mergedMembers, user);
 
       setFamily({
         ...familyData,

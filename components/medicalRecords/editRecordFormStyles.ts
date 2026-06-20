@@ -50,9 +50,6 @@ export const styles = StyleSheet.create({
     borderRadius: theme.radius.lg,
     borderCurve: 'continuous',
   },
-  editAttachButtonPressed: {
-    opacity: 0.6,
-  },
   editAttachButtonText: {
     color: theme.colors.primary.DEFAULT,
     fontWeight: '600',

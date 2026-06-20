@@ -361,10 +361,6 @@ const styles = StyleSheet.create({
   backButtonPressed: {
     opacity: 0.6,
   },
-  backIcon: {
-    width: 20,
-    height: 20,
-  },
   headerTitle: {
     fontWeight: '700',
     color: theme.colors.text.primary,
@@ -392,14 +388,6 @@ const styles = StyleSheet.create({
     gap: theme.spacing.md,
     ...shadows.md,
   },
-  formRow: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-    width: '100%',
-  },
-  flexHalf: {
-    flex: 1,
-  },
   addButton: {
     marginTop: theme.spacing.md,
   },
@@ -425,10 +413,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     ...shadows.success,
-  },
-  successIcon: {
-    width: 40,
-    height: 40,
   },
   successTitle: {
     fontSize: theme.fontSize['2xl'],

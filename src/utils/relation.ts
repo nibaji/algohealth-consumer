@@ -36,3 +36,37 @@ export function getDisplayRelationFromRelation(relation: string): string {
   if (lower === 'self') return 'Family Head';
   return relation;
 }
+
+/**
+ * Sorts family members according to business rules:
+ *   1. Logged-in user's own member (isMemberSelf)
+ *   2. Family head (relation === 'Self'), if different from logged-in user
+ *   3. Other accepted/non-pending members alphabetically
+ *   4. Pending members alphabetically at the very bottom
+ */
+export function sortFamilyMembers<T extends { name: string; relation: string; invite_status?: string | null; user_id?: string | null; email_id?: string | null }>(
+  members: T[],
+  user: UserProfileResponse | null
+): T[] {
+  return [...members].sort((a, b) => {
+    const aIsSelf = isMemberSelf(a, user);
+    const bIsSelf = isMemberSelf(b, user);
+    if (aIsSelf && !bIsSelf) return -1;
+    if (!aIsSelf && bIsSelf) return 1;
+
+    // Pending members go to the bottom
+    const aIsPending = a.invite_status === 'pending';
+    const bIsPending = b.invite_status === 'pending';
+    if (aIsPending && !bIsPending) return 1;
+    if (!aIsPending && bIsPending) return -1;
+
+    // Among non-pending, family head (relation 'Self') comes first
+    const aIsHead = a.relation.toLowerCase() === 'self';
+    const bIsHead = b.relation.toLowerCase() === 'self';
+    if (aIsHead && !bIsHead) return -1;
+    if (!aIsHead && bIsHead) return 1;
+
+    return a.name.localeCompare(b.name);
+  });
+}
+
