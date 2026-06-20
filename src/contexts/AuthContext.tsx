@@ -1,8 +1,8 @@
-import React, { createContext, use, useState, useEffect, useCallback } from 'react';
-import { UserProfileResponse, LoginRequest, RegisterRequest } from '@/src/features/auth/authTypes';
+import { LoginRequest, RegisterRequest, UserProfileResponse } from '@/src/features/auth/authTypes';
 import { authService } from '@/src/services/auth/authService';
 import { familyService } from '@/src/services/family/familyService';
 import { consultCache } from '@/src/utils/consultCache';
+import React, { createContext, use, useCallback, useEffect, useState } from 'react';
 
 interface AuthContextType {
   user: UserProfileResponse | null;
@@ -28,10 +28,10 @@ const checkIfFamilyPending = async (
 
   try {
     const members = await familyService.getFamilyMembers();
-    const selfMember = members.find(m => 
+    const selfMember = members.find(m =>
       m.email_id !== null && m.email_id !== undefined && m.email_id.toLowerCase() === user.email.toLowerCase()
-    ) || members.find(m => 
-      m.user_id === user.id
+    ) || members.find(m =>
+      m.user_id !== null && m.user_id !== undefined && m.user_id === user.id
     );
     if (selfMember) {
       return selfMember.invite_status === 'pending';
@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (response && response.user) {
           const familyId = response.user.family_id || response.family_id || response.invite_family_id || null;
           const isPending = await checkIfFamilyPending(response.user, familyId, !!response.pending_invite);
-          
+
           setIsFamilyPending(isPending);
           setUser({
             ...response.user,
@@ -103,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const isPending = await checkIfFamilyPending(profile, profile.family_id || null, false);
         setIsFamilyPending(isPending);
         setUser(profile);
-      } catch {}
+      } catch { }
     }
     return response;
   }, []);

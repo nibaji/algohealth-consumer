@@ -4,6 +4,7 @@ import { familyService } from '@/src/services/family/familyService';
 import { apiDateToInputDate, inputDateToApiDate, validateDateString } from '@/src/utils/date';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useAlert } from '@/src/contexts/AlertContext';
+import { isMemberSelf } from '@/src/utils/relation';
 
 interface UseEditMemberFormParams {
   visible: boolean;
@@ -24,7 +25,7 @@ export const useEditMemberForm = ({
   const { showAlert } = useAlert();
 
   const isOwner = !!(user && ownerId && user.id === ownerId);
-  const isSelf = !!(user && member && member.user_id && member.user_id === user.id);
+  const isSelf = isMemberSelf(member, user);
   const canDelete = isOwner || isSelf;
 
   const [loadingDetails, setLoadingDetails] = useState(false);

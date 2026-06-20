@@ -1,10 +1,14 @@
 import { UserProfileResponse } from '@/src/features/auth/authTypes';
 
 export function isMemberSelf(
-  member: { user_id?: string | null } | null | undefined,
+  member: { user_id?: string | null; email_id?: string | null } | null | undefined,
   user: UserProfileResponse | null
 ): boolean {
-  if (!user || !member || !member.user_id) return false;
+  if (!user || !member) return false;
+  if (member.email_id !== null && member.email_id !== undefined && user.email !== null && user.email !== undefined && member.email_id.toLowerCase() === user.email.toLowerCase()) {
+    return true;
+  }
+  if (!member.user_id) return false;
   return member.user_id === user.id;
 }
 
