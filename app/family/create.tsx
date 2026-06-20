@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, View, ScrollView, Pressable, KeyboardAvoidingView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { theme, shadows } from '@/constants/theme';
@@ -20,7 +20,7 @@ import { RelationSelector } from '@/components/medicalRecords/RelationSelector';
 
 export default function CreateFamily(): React.JSX.Element {
   const router = useRouter();
-  const { refreshProfile } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const insets = useSafeAreaInsets();
   const keyboardAvoidingEnabled = useKeyboardAvoiding();
 
@@ -50,6 +50,9 @@ export default function CreateFamily(): React.JSX.Element {
 
   // Clipboard feedback
   const [copied, setCopied] = useState(false);
+  const [existingEmails, setExistingEmails] = useState<string[]>(() => {
+    return user?.email ? [user.email.toLowerCase()] : [];
+  });
 
   // Create Family submission handler
   const handleCreateFamily = useCallback(async () => {
@@ -93,12 +96,21 @@ export default function CreateFamily(): React.JSX.Element {
       return;
     }
 
-    if (memberEmail.trim()) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(memberEmail.trim())) {
-        setMemberError('Please enter a valid email address');
-        return;
-      }
+    const emailTrimmed = memberEmail.trim();
+    if (!emailTrimmed) {
+      setMemberError('Email is required');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailTrimmed)) {
+      setMemberError('Please enter a valid email address');
+      return;
+    }
+
+    if (existingEmails.includes(emailTrimmed.toLowerCase())) {
+      setMemberError('This email is already in use by another family member');
+      return;
     }
 
     if (memberMobile.trim()) {
@@ -119,7 +131,7 @@ export default function CreateFamily(): React.JSX.Element {
         relation: memberRelation === RelationType.Other ? customRelation : memberRelation,
         gender: memberGender,
         date_of_birth: inputDateToApiDate(memberDob),
-        email_id: memberEmail.trim() ? memberEmail : null,
+        email_id: emailTrimmed,
         mobile_no: memberMobile.trim() ? memberMobile : null,
       };
 
@@ -127,6 +139,7 @@ export default function CreateFamily(): React.JSX.Element {
       
       // Update local list
       setAddedMembers(prev => [...prev, { name: memberName, relation: payload.relation }]);
+      setExistingEmails(prev => [...prev, emailTrimmed.toLowerCase()]);
       
       // Clear member input fields
       setMemberName('');
@@ -144,7 +157,7 @@ export default function CreateFamily(): React.JSX.Element {
     } finally {
       setMemberLoading(false);
     }
-  }, [memberName, memberRelation, memberGender, memberDob, memberEmail, memberMobile, customRelation]);
+  }, [memberName, memberRelation, memberGender, memberDob, memberEmail, memberMobile, customRelation, existingEmails]);
 
   // Complete onboarding / Navigate to Home
   const handleFinish = useCallback(async () => {

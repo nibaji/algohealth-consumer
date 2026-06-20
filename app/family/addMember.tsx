@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useTransition } from 'react';
+import React, { useState, useEffect, useCallback, useTransition } from 'react';
 import { StyleSheet, View, ScrollView, Pressable, KeyboardAvoidingView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { theme, shadows } from '@/constants/theme';
@@ -19,7 +19,7 @@ import { RelationSelector } from '@/components/medicalRecords/RelationSelector';
 
 export default function AddMember() {
   const router = useRouter();
-  const { refreshProfile } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const insets = useSafeAreaInsets();
   const keyboardAvoidingEnabled = useKeyboardAvoiding();
 
@@ -41,6 +41,25 @@ export default function AddMember() {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [existingEmails, setExistingEmails] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchExistingMembers = async () => {
+      try {
+        const members = await familyService.getFamilyMembers();
+        const emails = members
+          .map(m => m.email_id)
+          .filter((email): email is string => typeof email === 'string' && email.trim() !== '');
+        if (user?.email) {
+          emails.push(user.email);
+        }
+        setExistingEmails([...new Set(emails.map(e => e.toLowerCase()))]);
+      } catch (err) {
+        console.error('Failed to fetch existing family member emails:', err);
+      }
+    };
+    fetchExistingMembers();
+  }, [user?.email]);
 
   // Form field validation handler (runs on blur & submission)
   const validateField = useCallback((field: 'name' | 'dob' | 'email' | 'mobile', value: string) => {
@@ -56,10 +75,15 @@ export default function AddMember() {
         errorMsg = dobError;
       }
     } else if (field === 'email') {
-      if (value.trim()) {
+      const emailTrimmed = value.trim();
+      if (!emailTrimmed) {
+        errorMsg = 'Email is required';
+      } else {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(value.trim())) {
+        if (!emailRegex.test(emailTrimmed)) {
           errorMsg = 'Please enter a valid email address';
+        } else if (existingEmails.includes(emailTrimmed.toLowerCase())) {
+          errorMsg = 'This email is already in use by another family member';
         }
       }
     } else if (field === 'mobile') {
@@ -77,7 +101,7 @@ export default function AddMember() {
     }));
 
     return !errorMsg;
-  }, []);
+  }, [existingEmails]);
 
   const handleRelationChange = useCallback((relation: RelationType) => {
     setMemberRelation(relation);

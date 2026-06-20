@@ -41,6 +41,7 @@ export const useEditMemberForm = ({
   const [memberMobile, setMemberMobile] = useState('');
   const [customRelation, setCustomRelation] = useState('');
   const [isFamilyHead, setIsFamilyHead] = useState(false);
+  const [existingEmails, setExistingEmails] = useState<string[]>([]);
 
   const [errors, setErrors] = useState<{
     name?: string;
@@ -87,6 +88,26 @@ export const useEditMemberForm = ({
     fetchMemberDetails();
   }, [visible, member]);
 
+  useEffect(() => {
+    const fetchEmails = async () => {
+      if (!visible) return;
+      try {
+        const members = await familyService.getFamilyMembers();
+        const emails = members
+          .filter(m => m.id !== member?.id) // Exclude current member being edited
+          .map(m => m.email_id)
+          .filter((email): email is string => typeof email === 'string' && email.trim() !== '');
+        if (user?.email) {
+          emails.push(user.email);
+        }
+        setExistingEmails([...new Set(emails.map(e => e.toLowerCase()))]);
+      } catch (err) {
+        console.error('Failed to fetch existing member emails in edit form:', err);
+      }
+    };
+    fetchEmails();
+  }, [visible, member?.id, user?.email]);
+
   const validateField = useCallback((field: 'name' | 'dob' | 'email' | 'mobile', value: string) => {
     let errorMsg = '';
     if (field === 'name') {
@@ -95,8 +116,16 @@ export const useEditMemberForm = ({
       const dobError = validateDateString(value, { label: 'Date of birth' });
       if (dobError) errorMsg = dobError;
     } else if (field === 'email') {
-      if (value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) {
-        errorMsg = 'Please enter a valid email address';
+      const emailTrimmed = value.trim();
+      if (!emailTrimmed) {
+        errorMsg = 'Email is required';
+      } else {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(emailTrimmed)) {
+          errorMsg = 'Please enter a valid email address';
+        } else if (existingEmails.includes(emailTrimmed.toLowerCase())) {
+          errorMsg = 'This email is already in use by another family member';
+        }
       }
     } else if (field === 'mobile') {
       if (value.trim() && !/^\+?[0-9]{7,15}$/.test(value.trim())) {
@@ -106,7 +135,7 @@ export const useEditMemberForm = ({
 
     setErrors(prev => ({ ...prev, [field]: errorMsg ? errorMsg : undefined }));
     return !errorMsg;
-  }, []);
+  }, [existingEmails]);
 
   const handleUpdateMember = useCallback(async () => {
     if (!member) return;
@@ -130,7 +159,7 @@ export const useEditMemberForm = ({
         relation: isFamilyHead ? (member?.relation || 'Self') : (memberRelation === RelationType.Other && customRelation.trim() ? customRelation.trim() : memberRelation),
         gender: memberGender,
         date_of_birth: inputDateToApiDate(memberDob),
-        email_id: memberEmail.trim() ? memberEmail : null,
+        email_id: memberEmail.trim(),
         mobile_no: memberMobile.trim() ? memberMobile : null,
       };
 
