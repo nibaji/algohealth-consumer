@@ -86,6 +86,7 @@ function InitialLayout() {
       <Stack.Screen name="family/join" />
       <Stack.Screen name="family/add-member" />
       <Stack.Screen name="profile" />
+      <Stack.Screen name="settings" />
       <Stack.Screen name="medicalRecords/create" />
       <Stack.Screen name="medicalRecords/[id]" />
     </Stack>

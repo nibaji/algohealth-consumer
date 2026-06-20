@@ -45,6 +45,7 @@ const MATERIAL_MAP: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   'checkmark.circle.fill': 'check-circle',
   'xmark.circle.fill': 'cancel',
   'exclamationmark.circle.fill': 'error',
+  'gearshape.fill': 'settings',
 };
 
 export enum IconName {
@@ -83,6 +84,7 @@ export enum IconName {
   CheckmarkCircleFill = 'checkmark.circle.fill',
   XmarkCircleFill = 'xmark.circle.fill',
   ExclamationmarkCircleFill = 'exclamationmark.circle.fill',
+  GearshapeFill = 'gearshape.fill',
 }
 
 interface IconProps {

@@ -14,6 +14,7 @@ import {
   toggleMessageSpeech,
 } from '@/src/utils/ttsManager';
 import { uriToBlob } from '@/src/utils/file';
+import { settingsStorage } from '@/src/services/settings/settingsStorage';
 
 interface UseConsultParams {
   visible: boolean;
@@ -239,7 +240,10 @@ export const useConsult = ({ visible, member }: UseConsultParams) => {
       };
 
       setMessages((prev) => [...prev, botMessage]);
-      handleToggleSpeech(botMessage.id, botMessage.text);
+      const isMuted = await settingsStorage.getMuteBotSpeech();
+      if (!isMuted) {
+        handleToggleSpeech(botMessage.id, botMessage.text);
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error communicating with assistant';
       const errorMessage: ChatMessage = {
@@ -249,7 +253,10 @@ export const useConsult = ({ visible, member }: UseConsultParams) => {
         timestamp: new Date()
       };
       setMessages((prev) => [...prev, errorMessage]);
-      handleToggleSpeech(errorMessage.id, errorMessage.text);
+      const isMuted = await settingsStorage.getMuteBotSpeech();
+      if (!isMuted) {
+        handleToggleSpeech(errorMessage.id, errorMessage.text);
+      }
     } finally {
       setIsProcessing(false);
       scrollToBottom();

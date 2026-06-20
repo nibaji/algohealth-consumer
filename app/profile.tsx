@@ -107,6 +107,33 @@ export default function Profile(): React.JSX.Element {
             <View style={styles.separator} />
 
             <PasswordResetCard email={user?.email} />
+
+            <View style={styles.separator} />
+
+            {/* App Settings Navigation Link */}
+            <Pressable
+              onPress={() => router.push('/settings')}
+              style={({ pressed }) => [
+                styles.settingsLinkRow,
+                pressed ? styles.settingsLinkRowPressed : null,
+              ]}
+            >
+              <View style={styles.settingsLinkLeft}>
+                <Icon
+                  name={IconName.GearshapeFill}
+                  size={20}
+                  tintColor={theme.colors.primary.DEFAULT}
+                />
+                <Typography.Paragraph style={styles.settingsLinkText}>
+                  App Settings
+                </Typography.Paragraph>
+              </View>
+              <Icon
+                name={IconName.ChevronRight}
+                size={16}
+                tintColor={theme.colors.text.tertiary}
+              />
+            </Pressable>
           </View>
 
           {/* Actions */}
@@ -216,5 +243,25 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     width: '100%',
+  },
+  settingsLinkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.lg,
+    backgroundColor: theme.colors.background.surface,
+  },
+  settingsLinkRowPressed: {
+    backgroundColor: theme.colors.background.default,
+  },
+  settingsLinkLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+  },
+  settingsLinkText: {
+    fontWeight: '600',
+    color: theme.colors.text.primary,
   },
 });
