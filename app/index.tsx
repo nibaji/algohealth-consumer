@@ -22,7 +22,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HomeSkeleton } from '@/components/ui/Skeleton';
 
 export default function Index() {
-  const { user, refreshProfile, isFamilyPending } = useAuth();
+  const { user, refreshProfile, isFamilyPending, clearFamilyId } = useAuth();
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
@@ -70,6 +70,7 @@ export default function Index() {
           // User not found in family members — treat as "no family" and show
           // the onboarding flow without displaying an error banner.
           setFamily(null);
+          clearFamilyId();
           return;
         }
       } catch (err) {
@@ -130,10 +131,11 @@ export default function Index() {
       // Clear stale family data so the UI doesn't show records the user
       // can no longer access (handles backend bug where family_id is stale).
       setFamily(null);
+      clearFamilyId();
       const message = err instanceof Error ? err.message : 'Failed to load family details';
       setError(message);
     }
-  }, [user]);
+  }, [user, clearFamilyId]);
 
   // Fetch Medical Records
   const loadRecordsData = useCallback(async () => {
@@ -171,6 +173,7 @@ export default function Index() {
       } catch {
         // family_id present but membership check failed — treat as no family.
         setFamily(null);
+        clearFamilyId();
         setRecords([]);
         setLoading(false);
         return;
@@ -186,7 +189,7 @@ export default function Index() {
     } finally {
       setLoading(false);
     }
-  }, [refreshProfile, loadFamilyData, loadRecordsData]);
+  }, [refreshProfile, loadFamilyData, loadRecordsData, clearFamilyId]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -503,25 +506,30 @@ export default function Index() {
                   </View>
                 ) : (
                   <View style={styles.errorContainer}>
-                    <Typography.Paragraph style={styles.errorText}>
-                      {error ? error : 'No active family found. Setup family to get started.'}
-                    </Typography.Paragraph>
+                    {error ? (
+                      <Typography.Paragraph style={styles.errorText}>
+                        {error}
+                      </Typography.Paragraph>
+                    ) : (
+                      <Typography.Paragraph style={styles.errorText}>
+                        No active family found.
+                      </Typography.Paragraph>
+                    )}
                   </View>
                 )}
 
-                {/* Separator if both family list and settings actions are shown */}
-                {family && !user?.family_id ? (
-                  <View style={styles.separator} />
-                ) : null}
+                {/* Separator between family card and settings actions */}
+                {family ? <View style={styles.separator} /> : null}
 
-                {/* Circle Actions (Switch/Create/Join post-onboarding) */}
-                {user?.family_id ? null : (
+                {/* Create/Join actions — shown whenever verified family state is null,
+                    even if user.family_id is set (backend bug / stale data). */}
+                {family ? null : (
                   <View style={styles.actionsContainer}>
                     <Typography.Subheading style={styles.actionsTitle}>
-                      Family Settings
+                      Get Started
                     </Typography.Subheading>
                     <Typography.Paragraph style={styles.actionsDesc}>
-                      Need to switch? Start a new family or join another family using a different invite code.
+                      Create a new family circle or join an existing one with an invite code.
                     </Typography.Paragraph>
                     <View style={styles.actionsRow}>
                       <Button.Secondary
@@ -532,7 +540,7 @@ export default function Index() {
                         style={styles.actionButton}
                         textStyle={styles.actionButtonText}
                       />
- 
+
                       <Button.Secondary
                         title="Join Family"
                         onPress={handleNavigateJoinFamily}

@@ -36,17 +36,26 @@ function InitialLayout() {
         router.replace('/(auth)/login');
       }
     } else {
-      // User is logged in. They need onboarding if they don't have a family (or the family is pending) AND they haven't explicitly skipped it.
-      const needsOnboarding = (!user.family_id || isFamilyPending) && !hasSkippedOnboarding;
-      if (needsOnboarding) {
-        if (!inOnboardingGroup) {
-          router.replace('/onboarding');
-        }
-      } else {
-        // User has an active family or skipped onboarding.
-        // Redirect away from auth and onboarding landing screens (and family setup/creation screens).
+      const hasActiveFamily = user.family_id && !isFamilyPending;
+
+      if (hasActiveFamily) {
+        // User has an active family. Redirect away from auth and onboarding/family setup screens.
         if (inAuthGroup || inOnboardingGroup) {
           router.replace('/');
+        }
+      } else {
+        // User has no active family (either no family_id or pending invite).
+        // They need onboarding unless they explicitly skipped it.
+        if (!hasSkippedOnboarding) {
+          if (!inOnboardingGroup) {
+            router.replace('/onboarding');
+          }
+        } else {
+          // User skipped onboarding. They can be on the home screen or family setup screens.
+          // If they land on the onboarding landing page or auth group, redirect them to home.
+          if (inAuthGroup || segments[0] === 'onboarding') {
+            router.replace('/');
+          }
         }
       }
     }

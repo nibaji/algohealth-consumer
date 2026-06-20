@@ -15,6 +15,7 @@ interface AuthContextType {
   setIsFamilyPending: (val: boolean) => void;
   hasSkippedOnboarding: boolean;
   setHasSkippedOnboarding: (val: boolean) => void;
+  clearFamilyId: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -128,7 +129,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-
+  const clearFamilyId = useCallback(() => {
+    setUser(prev => prev ? { ...prev, family_id: null } : null);
+  }, []);
 
   const value = {
     user,
@@ -141,6 +144,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsFamilyPending,
     hasSkippedOnboarding,
     setHasSkippedOnboarding,
+    clearFamilyId,
   };
 
   return <AuthContext value={value}>{children}</AuthContext>;
