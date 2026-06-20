@@ -7,7 +7,7 @@ import { Typography } from '@/components/ui/Typography';
 import { theme, shadows } from '@/constants/theme';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/src/contexts/AuthContext';
-import { FamilyMemberOut, FamilyOut } from '@/src/features/family/familyTypes';
+import { FamilyMemberOut, FamilyMemberResponse, FamilyOut } from '@/src/features/family/familyTypes';
 import { MedicalRecordResponse } from '@/src/features/medicalRecords/medicalRecordTypes';
 import { familyService } from '@/src/services/family/familyService';
 import { medicalRecordService } from '@/src/services/medicalRecords/medicalRecordService';
@@ -49,12 +49,14 @@ export default function Index() {
   const [isInvitesVisible, setIsInvitesVisible] = useState(false);
 
   // Fetch Family details
-  const loadFamilyData = useCallback(async () => {
+  const loadFamilyData = useCallback(async (prefetchedFamily?: FamilyOut) => {
     try {
-      const familyData = await familyService.getMyFamily();
+      // Use pre-fetched data when available (avoids a second API call after verification);
+      // otherwise fetch directly (e.g. during surgical refreshes).
+      const familyData = prefetchedFamily ?? await familyService.getMyFamily();
 
       // Fetch members list to populate summaries
-      let membersWithSummaries: any[] = [];
+      let membersWithSummaries: FamilyMemberResponse[] = [];
       try {
         membersWithSummaries = await familyService.getFamilyMembers();
       } catch (err) {
@@ -111,6 +113,9 @@ export default function Index() {
         });
       }
     } catch (err: unknown) {
+      // Clear stale family data so the UI doesn't show records the user
+      // can no longer access (handles backend bug where family_id is stale).
+      setFamily(null);
       const message = err instanceof Error ? err.message : 'Failed to load family details';
       setError(message);
     }
@@ -141,8 +146,24 @@ export default function Index() {
         return;
       }
 
+      // Verify actual family membership via GET /families/me.
+      // This guards against a backend bug where /users/me returns a stale
+      // family_id even though the user is no longer in the family.
+      // Pre-fetch the family data here so loadFamilyData can reuse it
+      // without making a second network round-trip.
+      let verifiedFamily: FamilyOut | undefined;
+      try {
+        verifiedFamily = await familyService.getMyFamily();
+      } catch {
+        // family_id present but membership check failed — treat as no family.
+        setFamily(null);
+        setRecords([]);
+        setLoading(false);
+        return;
+      }
+
       await Promise.all([
-        loadFamilyData(),
+        loadFamilyData(verifiedFamily),
         loadRecordsData(),
       ]);
     } catch (err: unknown) {
