@@ -152,6 +152,9 @@ export default function Index() {
   // Fetch Family details and Medical Records
   const loadDashboardData = useCallback(async () => {
     setError(null);
+    if (!loading) {
+      setRefreshing(true);
+    }
     try {
       // Refresh user profile first to ensure we have the latest family_id
       const updatedUser = await refreshProfile();
@@ -189,13 +192,12 @@ export default function Index() {
       setError(message);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  }, [refreshProfile, loadFamilyData, loadRecordsData, clearFamilyId]);
+  }, [refreshProfile, loadFamilyData, loadRecordsData, clearFamilyId, loading]);
 
   const onRefresh = useCallback(async () => {
-    setRefreshing(true);
     await loadDashboardData();
-    setRefreshing(false);
   }, [loadDashboardData]);
 
   const isInitial = useRef(true);
@@ -214,6 +216,7 @@ export default function Index() {
 
       if (needsProfile || needsFamily || needsRecords) {
         const performSurgicalRefresh = async () => {
+          setRefreshing(true);
           try {
             let currentFamilyId = family?.id;
 
@@ -221,7 +224,7 @@ export default function Index() {
               const updatedUser = await refreshProfile();
               if (updatedUser?.family_id !== currentFamilyId) {
                 // If family ID has changed, we must reload everything!
-                loadDashboardData();
+                await loadDashboardData();
                 return;
               }
             }
@@ -236,6 +239,8 @@ export default function Index() {
             }
           } catch (err) {
             console.error('Surgical refresh failed:', err);
+          } finally {
+            setRefreshing(false);
           }
         };
         performSurgicalRefresh();
