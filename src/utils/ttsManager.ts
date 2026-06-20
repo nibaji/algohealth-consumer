@@ -46,8 +46,23 @@ let currentGeneration = 0; // incremented on every stop/start to cancel stale ca
 // ─── Initialization ───────────────────────────────────────────────────────────
 
 const splitIntoSentences = (text: string): string[] => {
+  if (!text) return [];
+
+  // Remove markdown headers (e.g., "### Header" -> "Header")
+  let cleaned = text.replace(/^#+\s+(.+)$/gm, '$1');
+
+  // Remove list item bullet points (e.g., "- Item" or "* Item" -> "Item")
+  cleaned = cleaned.replace(/^\s*[-*•]\s+/gm, '');
+
   // Strip markdown-style bold/italic markers for cleaner TTS
-  const cleaned = text.replace(/\*{1,2}([^*]+)\*{1,2}/g, '$1').trim();
+  cleaned = cleaned.replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1');
+  cleaned = cleaned.replace(/_{1,3}([^_]+)_{1,3}/g, '$1');
+
+  // Remove inline code backticks (e.g., "`code`" -> "code")
+  cleaned = cleaned.replace(/`([^`]+)`/g, '$1');
+
+  cleaned = cleaned.trim();
+
   // Split on sentence-ending punctuation followed by whitespace or end of string
   const parts = cleaned.match(/[^.!?\n]+[.!?\n]+|[^.!?\n]+$/g) ?? [cleaned];
   return parts.map(s => s.trim()).filter(s => s.length > 0);
