@@ -71,13 +71,24 @@ export default function Index() {
         };
       });
 
-      // Sort members: self first, then family head, then others alphabetically
+      // Sort members:
+      //   1. Logged-in user's own member (isMemberSelf)
+      //   2. Family head (relation === 'Self'), if different from logged-in user
+      //   3. Other accepted/non-pending members alphabetically
+      //   4. Pending members alphabetically at the very bottom
       const sortedMembers = [...mergedMembers].sort((a, b) => {
         const aIsSelf = isMemberSelf(a, user);
         const bIsSelf = isMemberSelf(b, user);
         if (aIsSelf && !bIsSelf) return -1;
         if (!aIsSelf && bIsSelf) return 1;
 
+        // Pending members go to the bottom
+        const aIsPending = a.invite_status === 'pending';
+        const bIsPending = b.invite_status === 'pending';
+        if (aIsPending && !bIsPending) return 1;
+        if (!aIsPending && bIsPending) return -1;
+
+        // Among non-pending, family head (relation 'Self') comes first
         const aIsHead = a.relation.toLowerCase() === 'self';
         const bIsHead = b.relation.toLowerCase() === 'self';
         if (aIsHead && !bIsHead) return -1;
@@ -353,79 +364,106 @@ export default function Index() {
                             {family.name}
                           </Typography.Subheading>
                           <Typography.Paragraph style={styles.cardSubtitle}>
-                            Tap a family member to view their medical records.
+                            {isFamilyPending
+                              ? 'You have a pending invitation to join this family.'
+                              : 'Tap a family member to view their medical records.'}
                           </Typography.Paragraph>
                         </View>
 
-                        {/* Share invite code pill */}
-                        <Pressable
-                          onPress={handleCopyCode}
-                          style={({ pressed }) => [
-                            styles.inviteBadge,
-                            pressed ? styles.inviteBadgePressed : null,
-                            { borderCurve: 'continuous' }
-                          ]}
-                        >
-                          <Icon
-                            name={copied ? IconName.Checkmark : IconName.DocOnDocFill}
-                            size={14}
-                            tintColor={copied ? theme.colors.status.success : theme.colors.primary.DEFAULT}
-                          />
-                          <Typography.Label style={[styles.badgeText, copied ? styles.badgeTextSuccess : null]}>
-                            {copied ? 'Copied' : `Invite: ${family.invite_code}`}
-                          </Typography.Label>
-                        </Pressable>
+                        {/* Share invite code pill — only visible to full members */}
+                        {isFamilyPending ? null : (
+                          <Pressable
+                            onPress={handleCopyCode}
+                            style={({ pressed }) => [
+                              styles.inviteBadge,
+                              pressed ? styles.inviteBadgePressed : null,
+                              { borderCurve: 'continuous' }
+                            ]}
+                          >
+                            <Icon
+                              name={copied ? IconName.Checkmark : IconName.DocOnDocFill}
+                              size={14}
+                              tintColor={copied ? theme.colors.status.success : theme.colors.primary.DEFAULT}
+                            />
+                            <Typography.Label style={[styles.badgeText, copied ? styles.badgeTextSuccess : null]}>
+                              {copied ? 'Copied' : `Invite: ${family.invite_code}`}
+                            </Typography.Label>
+                          </Pressable>
+                        )}
                       </View>
- 
-                      <Typography.Paragraph style={styles.inviteInstructions}>
-                        Share this invite code with family members so they can enter it in their &quot;Join Family&quot; screen to join this family.
-                      </Typography.Paragraph>
-                    </View>
- 
-                    <View style={styles.divider} />
- 
-                    {/* Add Family Member CTA */}
-                    <Button.Secondary
-                      title="Add Family Member"
-                      onPress={handleNavigateAddMember}
-                      iconName={IconName.PersonBadgePlus}
-                      iconColor={theme.colors.primary.DEFAULT}
-                      style={styles.addMemberButton}
-                      textStyle={styles.addMemberText}
-                    />
- 
-                    {/* ACCORDION SECTION GROUPED BY FAMILY MEMBER */}
-                    {family.members.length > 0 ? (
-                       <View style={styles.accordionsList}>
-                         {family.members.map((member) => {
-                           const isExpanded = expandedMembers[member.id] || false;
- 
-                           // Filter records for this member
-                           const memberRecords = records.filter(
-                             (r) => r.family_member_id === member.id
-                           );
- 
-                           return (
-                             <MemberAccordion
-                               key={member.id}
-                               member={member}
-                               records={memberRecords}
-                               isExpanded={isExpanded}
-                               onToggleExpand={toggleExpand}
-                               onNavigateCreateRecord={handleNavigateCreateRecord}
-                               onNavigateRecordDetails={handleNavigateRecordDetails}
-                               onConsult={handleOpenConsult}
-                               onEditMember={handleOpenEditMember}
-                             />
-                           );
-                         })}
-                       </View>
-                    ) : (
-                      <View style={styles.emptyState}>
-                        <Typography.Paragraph style={styles.emptyStateText}>
-                          No family members registered in this family.
+
+                      {isFamilyPending ? null : (
+                        <Typography.Paragraph style={styles.inviteInstructions}>
+                          Share this invite code with family members so they can enter it in their &quot;Join Family&quot; screen to join this family.
                         </Typography.Paragraph>
+                      )}
+                    </View>
+
+                    <View style={styles.divider} />
+
+                    {/* Pending-invite users cannot manage members or see the member list */}
+                    {isFamilyPending ? (
+                      <View style={styles.pendingNotice}>
+                        <Icon
+                          name={IconName.EnvelopeFill}
+                          size={20}
+                          tintColor={theme.colors.primary.DEFAULT}
+                        />
+                        <Typography.Paragraph style={styles.pendingNoticeText}>
+                          Accept your pending invitation to access family members and medical records.
+                        </Typography.Paragraph>
+                        <Button.Primary
+                          title="View Invitation"
+                          onPress={handleOpenInvites}
+                          style={styles.pendingNoticeButton}
+                        />
                       </View>
+                    ) : (
+                      <>
+                        {/* Add Family Member CTA */}
+                        <Button.Secondary
+                          title="Add Family Member"
+                          onPress={handleNavigateAddMember}
+                          iconName={IconName.PersonBadgePlus}
+                          iconColor={theme.colors.primary.DEFAULT}
+                          style={styles.addMemberButton}
+                          textStyle={styles.addMemberText}
+                        />
+
+                        {/* ACCORDION SECTION GROUPED BY FAMILY MEMBER */}
+                        {family.members.length > 0 ? (
+                          <View style={styles.accordionsList}>
+                            {family.members.map((member) => {
+                              const isExpanded = expandedMembers[member.id] || false;
+
+                              // Filter records for this member
+                              const memberRecords = records.filter(
+                                (r) => r.family_member_id === member.id
+                              );
+
+                              return (
+                                <MemberAccordion
+                                  key={member.id}
+                                  member={member}
+                                  records={memberRecords}
+                                  isExpanded={isExpanded}
+                                  onToggleExpand={toggleExpand}
+                                  onNavigateCreateRecord={handleNavigateCreateRecord}
+                                  onNavigateRecordDetails={handleNavigateRecordDetails}
+                                  onConsult={handleOpenConsult}
+                                  onEditMember={handleOpenEditMember}
+                                />
+                              );
+                            })}
+                          </View>
+                        ) : (
+                          <View style={styles.emptyState}>
+                            <Typography.Paragraph style={styles.emptyStateText}>
+                              No family members registered in this family.
+                            </Typography.Paragraph>
+                          </View>
+                        )}
+                      </>
                     )}
                   </View>
                 ) : (
@@ -776,5 +814,20 @@ const styles = StyleSheet.create({
   actionButtonText: {
     fontWeight: '600',
     color: theme.colors.text.primary,
+  },
+  pendingNotice: {
+    alignItems: 'center',
+    gap: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.xl,
+  },
+  pendingNoticeText: {
+    textAlign: 'center',
+    color: theme.colors.text.secondary,
+    fontSize: theme.fontSize.sm,
+    lineHeight: theme.lineHeight.sm,
+  },
+  pendingNoticeButton: {
+    width: '100%',
   },
 });

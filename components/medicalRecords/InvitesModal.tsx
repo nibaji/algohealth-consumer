@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useTransition, useCallback } from 'react';
-import { StyleSheet, View, Modal, Pressable } from 'react-native';
+import { StyleSheet, View, Modal, Pressable, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { InvitesSkeleton } from '@/components/ui/Skeleton';
 import { Icon, IconName } from '@/components/ui/Icon';
@@ -8,9 +8,10 @@ import { Button } from '@/components/ui/Button';
 import { theme, shadows } from '@/constants/theme';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { familyService } from '@/src/services/family/familyService';
-import { FamilyOut } from '@/src/features/family/familyTypes';
+import { FamilyMemberOut, FamilyOut } from '@/src/features/family/familyTypes';
 import { refreshTracker } from '@/src/utils/refreshTracker';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { getDisplayRelationFromRelation } from '@/src/utils/relation';
 
 interface InvitesModalProps {
   visible: boolean;
@@ -28,7 +29,7 @@ export const InvitesModal: React.FC<InvitesModalProps> = React.memo(({ visible, 
 
   useEffect(() => {
     if (visible && isFamilyPending) {
-      const fetchInviteDetails = async () => {
+      const fetchInviteDetails = async (): Promise<void> => {
         setLoading(true);
         setError(null);
         try {
@@ -47,7 +48,7 @@ export const InvitesModal: React.FC<InvitesModalProps> = React.memo(({ visible, 
     }
   }, [visible, isFamilyPending]);
 
-  const handleAccept = useCallback(() => {
+  const handleAccept = useCallback((): void => {
     if (!pendingFamily) return;
     setError(null);
     startActionTransition(async () => {
@@ -68,7 +69,7 @@ export const InvitesModal: React.FC<InvitesModalProps> = React.memo(({ visible, 
     });
   }, [pendingFamily, refreshProfile, onActionSuccess, onClose]);
 
-  const handleReject = useCallback(() => {
+  const handleReject = useCallback((): void => {
     if (!pendingFamily) return;
     setError(null);
     startActionTransition(async () => {
@@ -88,9 +89,14 @@ export const InvitesModal: React.FC<InvitesModalProps> = React.memo(({ visible, 
     });
   }, [pendingFamily, refreshProfile, onActionSuccess, onClose]);
 
-  const handleReload = useCallback(() => {
+  const handleReload = useCallback((): void => {
     refreshProfile();
   }, [refreshProfile]);
+
+  // Accepted (non-pending) members to show in the read-only list
+  const acceptedMembers: FamilyMemberOut[] = pendingFamily
+    ? pendingFamily.members.filter((m) => m.invite_status !== 'pending')
+    : [];
 
   return (
     <Modal
@@ -117,11 +123,15 @@ export const InvitesModal: React.FC<InvitesModalProps> = React.memo(({ visible, 
           <View style={styles.headerRightPlaceholder} />
         </View>
 
-        <View style={styles.content}>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          contentInsetAdjustmentBehavior="automatic"
+        >
           {loading ? (
             <InvitesSkeleton />
           ) : pendingFamily ? (
             <Animated.View entering={FadeInDown.duration(400)} style={styles.inviteDetails}>
+              {/* Invite card */}
               <View style={[styles.card, { borderCurve: 'continuous' }]}>
                 <View style={styles.cardHeader}>
                   <View style={styles.iconContainer}>
@@ -166,6 +176,24 @@ export const InvitesModal: React.FC<InvitesModalProps> = React.memo(({ visible, 
                   />
                 </View>
               </View>
+
+              {/* Read-only family members list */}
+              {acceptedMembers.length > 0 ? (
+                <View style={styles.membersSection}>
+                  <Typography.Label style={styles.membersSectionTitle}>
+                    Family Members
+                  </Typography.Label>
+                  <View style={[styles.membersCard, { borderCurve: 'continuous' }]}>
+                    {acceptedMembers.map((member, index) => (
+                      <ReadOnlyMemberRow
+                        key={member.id}
+                        member={member}
+                        isLast={index === acceptedMembers.length - 1}
+                      />
+                    ))}
+                  </View>
+                </View>
+              ) : null}
             </Animated.View>
           ) : (
             <View style={styles.emptyState}>
@@ -175,13 +203,48 @@ export const InvitesModal: React.FC<InvitesModalProps> = React.memo(({ visible, 
               <Button.Secondary title="Reload" onPress={handleReload} />
             </View>
           )}
-        </View>
+        </ScrollView>
       </View>
     </Modal>
   );
 });
 
 InvitesModal.displayName = 'InvitesModal';
+
+// ---------------------------------------------------------------------------
+// Read-only member row (no edit/consult — purely informational)
+// ---------------------------------------------------------------------------
+
+interface ReadOnlyMemberRowProps {
+  member: FamilyMemberOut;
+  isLast: boolean;
+}
+
+const ReadOnlyMemberRow: React.FC<ReadOnlyMemberRowProps> = React.memo(({ member, isLast }) => {
+  const relationLabel = getDisplayRelationFromRelation(member.relation);
+
+  return (
+    <View style={[styles.memberRow, isLast ? null : styles.memberRowBorder]}>
+      <View style={styles.memberAvatar}>
+        <Typography.Label style={styles.memberAvatarText}>
+          {member.name.charAt(0).toUpperCase()}
+        </Typography.Label>
+      </View>
+      <View style={styles.memberInfo}>
+        <Typography.Paragraph style={styles.memberName}>
+          {member.name}
+        </Typography.Paragraph>
+        <Typography.Label style={styles.memberRelation}>
+          {relationLabel}
+        </Typography.Label>
+      </View>
+    </View>
+  );
+});
+
+ReadOnlyMemberRow.displayName = 'ReadOnlyMemberRow';
+
+// ---------------------------------------------------------------------------
 
 const styles = StyleSheet.create({
   container: {
@@ -215,12 +278,12 @@ const styles = StyleSheet.create({
     width: 40,
   },
   content: {
-    flex: 1,
     padding: theme.spacing.lg,
-    justifyContent: 'center',
+    gap: theme.spacing.lg,
+    paddingBottom: theme.spacing['4xl'],
   },
   inviteDetails: {
-    width: '100%',
+    gap: theme.spacing.lg,
   },
   card: {
     backgroundColor: theme.colors.background.surface,
@@ -289,8 +352,64 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: 'center',
     gap: theme.spacing.md,
+    flex: 1,
+    justifyContent: 'center',
   },
   emptyText: {
+    color: theme.colors.text.secondary,
+  },
+  // Members section
+  membersSection: {
+    gap: theme.spacing.sm,
+  },
+  membersSectionTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: theme.colors.text.secondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    paddingHorizontal: theme.spacing.xs,
+  },
+  membersCard: {
+    backgroundColor: theme.colors.background.surface,
+    borderRadius: theme.radius.xl,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
+    overflow: 'hidden',
+    ...shadows.sm,
+  },
+  memberRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+    padding: theme.spacing.md,
+  },
+  memberRowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border.light,
+  },
+  memberAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.background.infoLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  memberAvatarText: {
+    fontWeight: '700',
+    color: theme.colors.primary.DEFAULT,
+  },
+  memberInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  memberName: {
+    fontWeight: '600',
+    color: theme.colors.text.primary,
+  },
+  memberRelation: {
+    fontSize: theme.fontSize.xs,
     color: theme.colors.text.secondary,
   },
 });

@@ -26,3 +26,13 @@ export function getDisplayRelation(
 
   return isSelf ? `Self (${member.relation})` : member.relation;
 }
+
+/**
+ * Returns a human-readable relation label without needing a logged-in user
+ * reference. Used for read-only contexts (e.g. invite modal member list).
+ */
+export function getDisplayRelationFromRelation(relation: string): string {
+  const lower = relation.toLowerCase();
+  if (lower === 'self') return 'Family Head';
+  return relation;
+}
