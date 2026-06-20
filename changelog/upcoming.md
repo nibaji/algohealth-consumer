@@ -1,4 +1,5 @@
 ## Unreleased
+- 2026-06-20: Implemented a custom lightweight markdown and formatting parser for consult chat messages, rendering inline bold, italic, and code blocks as well as structural headers and bulleted/numbered lists using nested native components. Changed in `components/medicalRecords/ConsultMessage.tsx`.
 - 2026-06-20: Configured the homepage dashboard to display the pull-to-refresh spinner during all subsequent data reloads, modal updates, and focus-surgical refreshes to make sure the user knows api queries are running. Changed in `app/index.tsx`.
 - 2026-06-20: Swapped the Home page dashboard header logo image source from `icon.png` (solid background) to `android-icon-foreground.png` (transparent background), rendering a clean transparent logo in the app header. Changed in `app/index.tsx`.
 - 2026-06-20: Adjusted user consult chat bubble footer layout to place the timestamp on the far left extreme, creating separation from the right-aligned clipboard copy button, and gated the `actionButtons` wrapper to prevent rendering empty elements. Changed in `components/medicalRecords/ConsultMessage.tsx`.
