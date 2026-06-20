@@ -113,9 +113,9 @@ export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({
             {item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
           </Typography.Label>
 
-          <View style={styles.actionButtons}>
-            {/* Copy button — only for messages that have text */}
-            {hasText ? (
+          {hasText ? (
+            <View style={styles.actionButtons}>
+              {/* Copy button — only for messages that have text */}
               <Pressable
                 onPress={handleCopy}
                 style={({ pressed }) => [
@@ -136,42 +136,42 @@ export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({
                   }
                 />
               </Pressable>
-            ) : null}
 
-            {/* Speak button — only for bot messages that have text */}
-            {!isUser && hasText ? (
-              <Pressable
-                onPress={handleToggleSpeech}
-                style={({ pressed }) => [
-                  styles.actionButton,
-                  (isSpeaking || isSpeechPaused) ? styles.actionButtonActive : null,
-                  pressed ? styles.actionButtonPressed : null,
-                  { borderCurve: 'continuous' },
-                ]}
-                accessibilityLabel={
-                  isSpeaking
-                    ? 'Pause speaking'
-                    : isSpeechPaused
-                      ? 'Resume speaking'
-                      : 'Read message aloud'
-                }
-              >
-                <Icon
-                  name={
+              {/* Speak button — only for bot messages that have text */}
+              {!isUser ? (
+                <Pressable
+                  onPress={handleToggleSpeech}
+                  style={({ pressed }) => [
+                    styles.actionButton,
+                    (isSpeaking || isSpeechPaused) ? styles.actionButtonActive : null,
+                    pressed ? styles.actionButtonPressed : null,
+                    { borderCurve: 'continuous' },
+                  ]}
+                  accessibilityLabel={
                     isSpeaking
-                      ? IconName.PauseFill
-                      : IconName.PlayFill
+                      ? 'Pause speaking'
+                      : isSpeechPaused
+                        ? 'Resume speaking'
+                        : 'Read message aloud'
                   }
-                  size={12}
-                  tintColor={
-                    isSpeaking || isSpeechPaused
-                      ? theme.colors.primary.DEFAULT
-                      : theme.colors.text.tertiary
-                  }
-                />
-              </Pressable>
-            ) : null}
-          </View>
+                >
+                  <Icon
+                    name={
+                      isSpeaking
+                        ? IconName.PauseFill
+                        : IconName.PlayFill
+                    }
+                    size={12}
+                    tintColor={
+                      isSpeaking || isSpeechPaused
+                        ? theme.colors.primary.DEFAULT
+                        : theme.colors.text.tertiary
+                    }
+                  />
+                </Pressable>
+              ) : null}
+            </View>
+          ) : null}
         </View>
       </View>
     </View>
@@ -242,18 +242,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   bottomRowUser: {
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
   },
   timeUser: {
     fontSize: theme.fontSize.tiny,
     color: theme.colors.translucent.white70,
-    alignSelf: 'flex-end',
     marginTop: theme.spacing.xxs,
   },
   timeBot: {
     fontSize: theme.fontSize.tiny,
     color: theme.colors.text.tertiary,
-    alignSelf: 'flex-start',
     marginTop: theme.spacing.xxs,
   },
   // Action buttons row (copy + speak)
