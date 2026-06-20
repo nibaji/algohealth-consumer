@@ -74,11 +74,13 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
 
   const innerAnimatedStyle = useAnimatedStyle(() => {
     'worklet';
-    // While animating open or collapsed, pin the child to the measured size so
-    // Yoga does not re-layout children on every animated frame (eliminates glitch).
-    const isAnimating = height.value > 0 && height.value < measuredHeight.value - 0.5;
+    // Always pin inner content to the measured height once known.
+    // This prevents Yoga from propagating the natural child height up through the
+    // clipping outer Animated.View, which would cause the card to jump to full
+    // size before withTiming can animate it open. Only fall back to undefined
+    // when measuredHeight = 0 (i.e., the first measurement pass is still in progress).
     return {
-      height: isAnimating || !isExpandedSV.value ? measuredHeight.value : undefined,
+      height: measuredHeight.value > 0 ? measuredHeight.value : undefined,
     };
   });
 
