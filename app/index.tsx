@@ -17,6 +17,7 @@ import * as Clipboard from 'expo-clipboard';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Image } from 'expo-image';
 import Animated, { FadeInDown, LayoutAnimationConfig } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HomeSkeleton } from '@/components/ui/Skeleton';
@@ -292,6 +293,10 @@ export default function Index() {
     router.push('/profile');
   }, [router]);
 
+  const handleNavigateSettings = useCallback(() => {
+    router.push('/settings');
+  }, [router]);
+
   const handleNavigateCreateRecord = useCallback((memberId: string) => {
     router.push({
       pathname: '/medicalRecords/create',
@@ -319,9 +324,16 @@ export default function Index() {
     <View style={styles.container}>
       {/* Header bar */}
       <View style={[styles.headerBar, { paddingTop: insets.top, height: 56 + insets.top }]}>
-        <Typography.Subheading style={styles.headerTitle}>
-          AlgoHealth Plus
-        </Typography.Subheading>
+        <View style={styles.headerLeft}>
+          <Image
+            source={require('@/assets/images/icon.png')}
+            style={styles.headerLogo}
+            contentFit="contain"
+          />
+          <Typography.Subheading style={styles.headerTitle}>
+            AlgoHealth Plus
+          </Typography.Subheading>
+        </View>
  
         <View style={styles.headerActions}>
           {isFamilyPending ? (
@@ -342,12 +354,28 @@ export default function Index() {
             </Pressable>
           ) : null}
  
-          {/* Profile icon top right */}
+          {/* Settings icon */}
+          <Pressable
+            onPress={handleNavigateSettings}
+            style={({ pressed }) => [
+              styles.headerActionButton,
+              pressed ? styles.headerActionButtonPressed : null,
+              { borderCurve: 'continuous' }
+            ]}
+          >
+            <Icon
+              name={IconName.GearshapeFill}
+              size={20}
+              tintColor={theme.colors.primary.DEFAULT}
+            />
+          </Pressable>
+
+          {/* Profile icon */}
           <Pressable
             onPress={handleNavigateProfile}
             style={({ pressed }) => [
-              styles.profileButton,
-              pressed ? styles.profileButtonPressed : null,
+              styles.headerActionButton,
+              pressed ? styles.headerActionButtonPressed : null,
               { borderCurve: 'continuous' }
             ]}
           >
@@ -356,9 +384,6 @@ export default function Index() {
               size={20}
               tintColor={theme.colors.primary.DEFAULT}
             />
-            <Typography.Label style={styles.profileText}>
-              Profile
-            </Typography.Label>
           </Pressable>
         </View>
       </View>
@@ -597,9 +622,19 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.border.light,
     backgroundColor: theme.colors.background.surface,
   },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
+  headerLogo: {
+    width: 28,
+    height: 28,
+    borderRadius: theme.radius.md,
+  },
   headerTitle: {
     fontWeight: '700',
-    color: theme.colors.text.primary,
+    color: theme.colors.primary.DEFAULT,
   },
   headerActions: {
     flexDirection: 'row',
@@ -631,28 +666,18 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: theme.colors.background.surface,
   },
-  profileButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.xs,
-    paddingVertical: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.sm,
+  headerActionButton: {
+    width: 36,
+    height: 36,
     backgroundColor: theme.colors.background.default,
     borderRadius: theme.radius.full,
     borderWidth: 1,
     borderColor: theme.colors.border.light,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  profileButtonPressed: {
+  headerActionButtonPressed: {
     opacity: 0.7,
-  },
-  profileIcon: {
-    width: 18,
-    height: 18,
-  },
-  profileText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: theme.colors.text.primary,
   },
   scrollView: {
     flex: 1,
