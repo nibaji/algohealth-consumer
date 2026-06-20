@@ -120,6 +120,7 @@ export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({
                 onPress={handleCopy}
                 style={({ pressed }) => [
                   styles.actionButton,
+                  isUser ? styles.actionButtonUser : null,
                   pressed ? styles.actionButtonPressed : null,
                   { borderCurve: 'continuous' },
                 ]}
@@ -128,7 +129,11 @@ export const ConsultMessage: React.FC<ConsultMessageProps> = React.memo(({
                 <Icon
                   name={copied ? IconName.CheckmarkCircleFill : IconName.DocOnDocFill}
                   size={12}
-                  tintColor={copied ? theme.colors.status.success : theme.colors.text.tertiary}
+                  tintColor={
+                    isUser
+                      ? theme.colors.common.white
+                      : (copied ? theme.colors.status.success : theme.colors.text.tertiary)
+                  }
                 />
               </Pressable>
             ) : null}
@@ -208,6 +213,7 @@ const styles = StyleSheet.create({
     gap: theme.spacing.xs,
     flexShrink: 1,      // allow bubble to shrink inside the row
     overflow: 'hidden', // prevent content from punching outside on web
+    minWidth: 140,      // prevent bottom row (time + copy buttons) clipping
   },
   bubbleUser: {
     backgroundColor: theme.colors.primary.DEFAULT,
@@ -265,6 +271,10 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background.default,
     borderWidth: 1,
     borderColor: theme.colors.border.light,
+  },
+  actionButtonUser: {
+    backgroundColor: theme.colors.translucent.white15,
+    borderColor: theme.colors.translucent.white25,
   },
   actionButtonActive: {
     backgroundColor: theme.colors.background.infoLight,

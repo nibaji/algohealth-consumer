@@ -43,9 +43,12 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
   }, [isExpanded, measuredHeight, height]);
 
   const animatedStyle = useAnimatedStyle(() => {
+    const isMeasuring = isExpanded && measuredHeight === 0;
     return {
-      height: height.value,
-      opacity: withTiming(isExpanded ? 1 : 0, { duration: 250 }),
+      height: isMeasuring ? undefined : height.value,
+      opacity: isMeasuring 
+        ? 0 
+        : withTiming(isExpanded ? 1 : 0, { duration: 250 }),
       overflow: 'hidden',
     };
   });
