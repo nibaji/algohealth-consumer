@@ -33,7 +33,7 @@ export default function Settings(): React.JSX.Element {
     if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace('/profile');
+      router.replace('/');
     }
   }, [router]);
 

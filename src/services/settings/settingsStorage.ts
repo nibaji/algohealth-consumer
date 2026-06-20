@@ -32,5 +32,19 @@ export const settingsStorage = {
     } catch (err) {
       console.error('Failed to save mute bot speech setting', err);
     }
+  },
+
+  async clear(): Promise<void> {
+    if (isWeb) {
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem(MUTE_BOT_SPEECH_KEY);
+      }
+      return;
+    }
+    try {
+      await SecureStore.deleteItemAsync(MUTE_BOT_SPEECH_KEY);
+    } catch (err) {
+      console.error('Failed to clear settings', err);
+    }
   }
 };

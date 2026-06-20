@@ -2,6 +2,7 @@ import { LoginRequest, RegisterRequest, UserProfileResponse } from '@/src/featur
 import { authService } from '@/src/services/auth/authService';
 import { familyService } from '@/src/services/family/familyService';
 import { consultCache } from '@/src/utils/consultCache';
+import { settingsStorage } from '@/src/services/settings/settingsStorage';
 import React, { createContext, use, useCallback, useEffect, useState } from 'react';
 
 interface AuthContextType {
@@ -111,6 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(async () => {
     await authService.logout();
+    await settingsStorage.clear();
     consultCache.clear();
     setIsFamilyPending(false);
     setHasSkippedOnboarding(false);
