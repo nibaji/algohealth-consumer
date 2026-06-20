@@ -39,10 +39,16 @@ function parseXhrError(xhr: XMLHttpRequest): Error {
 async function customXhr<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
   const { requiresAuth = true, ...customOptions } = options;
   const url = `${ENV.API_BASE_URL}${endpoint}`;
+  const isWeb = process.env.EXPO_OS === 'web';
 
   return new Promise<T>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open(customOptions.method || 'POST', url);
+
+    if (isWeb) {
+      xhr.withCredentials = true;
+      xhr.setRequestHeader('X-Platform', 'web');
+    }
 
     if (requiresAuth) {
       const accessToken = tokenStorage.getAccessToken();
@@ -61,16 +67,30 @@ async function customXhr<T>(endpoint: string, options: FetchOptions = {}): Promi
     xhr.onload = async () => {
       if (xhr.status === 401 && requiresAuth) {
         try {
-          const refreshToken = await tokenStorage.getRefreshToken();
-          if (!refreshToken) {
+          const refreshToken = isWeb ? null : await tokenStorage.getRefreshToken();
+          if (!isWeb && !refreshToken) {
             reject(new Error('Session expired'));
             return;
           }
-          const refreshResponse = await fetch(`${ENV.API_BASE_URL}/auth/refresh`, {
+
+          const refreshHeaders = new Headers();
+          if (isWeb) {
+            refreshHeaders.set('X-Platform', 'web');
+          } else {
+            refreshHeaders.set('Content-Type', 'application/json');
+          }
+
+          const refreshConfig: RequestInit = {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ refresh_token: refreshToken }),
-          });
+            headers: refreshHeaders,
+            body: isWeb ? null : JSON.stringify({ refresh_token: refreshToken }),
+          };
+
+          if (isWeb) {
+            refreshConfig.credentials = 'include';
+          }
+
+          const refreshResponse = await fetch(`${ENV.API_BASE_URL}/auth/refresh`, refreshConfig);
 
           if (!refreshResponse.ok) {
             await tokenStorage.clearTokens();
@@ -80,11 +100,17 @@ async function customXhr<T>(endpoint: string, options: FetchOptions = {}): Promi
 
           const data: AuthResponse = await refreshResponse.json();
           tokenStorage.setAccessToken(data.access_token);
-          await tokenStorage.setRefreshToken(data.refresh_token);
+          if (data.refresh_token) {
+            await tokenStorage.setRefreshToken(data.refresh_token);
+          }
 
           // Retry request
           const retryXhr = new XMLHttpRequest();
           retryXhr.open(customOptions.method || 'POST', url);
+          if (isWeb) {
+            retryXhr.withCredentials = true;
+            retryXhr.setRequestHeader('X-Platform', 'web');
+          }
           retryXhr.setRequestHeader('Authorization', `Bearer ${data.access_token}`);
           headers.forEach((value, key) => {
             if (key.toLowerCase() !== 'content-type') {
@@ -134,10 +160,15 @@ async function customFetch<T>(endpoint: string, options: FetchOptions = {}): Pro
     return customXhr<T>(endpoint, options);
   }
   const url = `${ENV.API_BASE_URL}${endpoint}`;
+  const isWeb = process.env.EXPO_OS === 'web';
 
   const headers = new Headers(customOptions.headers || {});
   if (!headers.has('Content-Type') && !(customOptions.body instanceof FormData)) {
     headers.set('Content-Type', 'application/json');
+  }
+
+  if (isWeb) {
+    headers.set('X-Platform', 'web');
   }
 
   if (requiresAuth) {
@@ -152,14 +183,18 @@ async function customFetch<T>(endpoint: string, options: FetchOptions = {}): Pro
     headers,
   };
 
+  if (isWeb) {
+    config.credentials = 'include';
+  }
+
   try {
     let response = await fetch(url, config);
 
     // Handle 401 token refresh
     if (response.status === 401 && requiresAuth) {
-      const refreshToken = await tokenStorage.getRefreshToken();
+      const refreshToken = isWeb ? null : await tokenStorage.getRefreshToken();
       
-      if (!refreshToken) {
+      if (!isWeb && !refreshToken) {
         throw new Error('No refresh token available');
       }
 
@@ -169,7 +204,11 @@ async function customFetch<T>(endpoint: string, options: FetchOptions = {}): Pro
             const newHeaders = new Headers(headers);
             newHeaders.set('Authorization', `Bearer ${newToken}`);
             try {
-              const retryResponse = await fetch(url, { ...config, headers: newHeaders });
+              const retryConfig: RequestInit = { ...config, headers: newHeaders };
+              if (isWeb) {
+                retryConfig.credentials = 'include';
+              }
+              const retryResponse = await fetch(url, retryConfig);
               if (!retryResponse.ok) throw new Error('Retry failed');
               resolve(retryResponse.json() as Promise<T>);
             } catch (err) {
@@ -182,11 +221,24 @@ async function customFetch<T>(endpoint: string, options: FetchOptions = {}): Pro
       isRefreshing = true;
 
       try {
-        const refreshResponse = await fetch(`${ENV.API_BASE_URL}/auth/refresh`, {
+        const refreshHeaders = new Headers();
+        if (isWeb) {
+          refreshHeaders.set('X-Platform', 'web');
+        } else {
+          refreshHeaders.set('Content-Type', 'application/json');
+        }
+
+        const refreshConfig: RequestInit = {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refresh_token: refreshToken }),
-        });
+          headers: refreshHeaders,
+          body: isWeb ? null : JSON.stringify({ refresh_token: refreshToken }),
+        };
+
+        if (isWeb) {
+          refreshConfig.credentials = 'include';
+        }
+
+        const refreshResponse = await fetch(`${ENV.API_BASE_URL}/auth/refresh`, refreshConfig);
 
         if (!refreshResponse.ok) {
           throw new Error('Session expired');
@@ -194,13 +246,19 @@ async function customFetch<T>(endpoint: string, options: FetchOptions = {}): Pro
 
         const data: AuthResponse = await refreshResponse.json();
         tokenStorage.setAccessToken(data.access_token);
-        await tokenStorage.setRefreshToken(data.refresh_token);
+        if (data.refresh_token) {
+          await tokenStorage.setRefreshToken(data.refresh_token);
+        }
         
         onRefreshed(data.access_token);
         
         // Retry original request
         headers.set('Authorization', `Bearer ${data.access_token}`);
-        response = await fetch(url, { ...config, headers });
+        const retryConfig: RequestInit = { ...config, headers };
+        if (isWeb) {
+          retryConfig.credentials = 'include';
+        }
+        response = await fetch(url, retryConfig);
       } catch (error) {
         await tokenStorage.clearTokens();
         throw error;
