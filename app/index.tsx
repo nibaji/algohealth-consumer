@@ -55,12 +55,26 @@ export default function Index() {
       // otherwise fetch directly (e.g. during surgical refreshes).
       const familyData = prefetchedFamily ?? await familyService.getMyFamily();
 
-      // Fetch members list to populate summaries
+      // Fetch the detailed members list. This doubles as the definitive
+      // membership check: if the API succeeds but the current user is absent,
+      // the family_id on /users/me is stale (backend bug) and we fall back to
+      // the onboarding flow silently. If the call fails entirely we can't
+      // verify, so we continue with whatever data we have.
       let membersWithSummaries: FamilyMemberResponse[] = [];
       try {
         membersWithSummaries = await familyService.getFamilyMembers();
+
+        // Verify the current user is actually in the members list.
+        const isUserInFamily = membersWithSummaries.some(m => isMemberSelf(m, user));
+        if (!isUserInFamily) {
+          // User not found in family members — treat as "no family" and show
+          // the onboarding flow without displaying an error banner.
+          setFamily(null);
+          return;
+        }
       } catch (err) {
         console.error('Failed to load family member summaries:', err);
+        // Cannot verify membership — proceed with family data from /families/me.
       }
 
       // Merge health summaries and user_id
