@@ -4,6 +4,7 @@ import {
   MedicalRecordUpdate,
   ConsultResponse
 } from '@/src/features/medicalRecords/medicalRecordTypes';
+import { uriToBlob } from '@/src/utils/file';
 
 export const medicalRecordService = {
   async listMedicalRecords(familyMemberId?: string): Promise<MedicalRecordResponse[]> {
@@ -62,11 +63,16 @@ export const medicalRecordService = {
       for (const asset of assets) {
         // Step 1: Upload the file binary
         const storeFormData = new FormData();
-        storeFormData.append('files', {
-          uri: asset.uri,
-          name: asset.name,
-          type: asset.mimeType ?? 'application/octet-stream',
-        } as unknown as Blob);
+        if (process.env.EXPO_OS === 'web') {
+          const blob = await uriToBlob(asset.uri);
+          storeFormData.append('files', blob, asset.name);
+        } else {
+          storeFormData.append('files', {
+            uri: asset.uri,
+            name: asset.name,
+            type: asset.mimeType ?? 'application/octet-stream',
+          } as unknown as Blob);
+        }
         storeFormData.append('folder', `medical-records/${recordId}`);
 
         const storeResult = await apiClient.post<StoredFile[] | StoredFile>(

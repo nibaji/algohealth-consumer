@@ -13,6 +13,7 @@ import {
   subscribeTtsState,
   toggleMessageSpeech,
 } from '@/src/utils/ttsManager';
+import { uriToBlob } from '@/src/utils/file';
 
 interface UseConsultParams {
   visible: boolean;
@@ -199,20 +200,30 @@ export const useConsult = ({ visible, member }: UseConsultParams) => {
 
       // Append documents
       for (const doc of docs) {
-        formData.append('files', {
-          uri: doc.uri,
-          name: doc.name,
-          type: doc.mimeType || 'application/octet-stream',
-        } as unknown as Blob);
+        if (process.env.EXPO_OS === 'web') {
+          const blob = await uriToBlob(doc.uri);
+          formData.append('files', blob, doc.name);
+        } else {
+          formData.append('files', {
+            uri: doc.uri,
+            name: doc.name,
+            type: doc.mimeType || 'application/octet-stream',
+          } as unknown as Blob);
+        }
       }
 
       // Append audio file
       if (audioFile) {
-        formData.append('audio_files', {
-          uri: audioFile.uri,
-          name: audioFile.name,
-          type: audioFile.mimeType || 'application/octet-stream',
-        } as unknown as Blob);
+        if (process.env.EXPO_OS === 'web') {
+          const blob = await uriToBlob(audioFile.uri);
+          formData.append('audio_files', blob, audioFile.name);
+        } else {
+          formData.append('audio_files', {
+            uri: audioFile.uri,
+            name: audioFile.name,
+            type: audioFile.mimeType || 'application/octet-stream',
+          } as unknown as Blob);
+        }
       }
 
       const res = await medicalRecordService.consult(formData);

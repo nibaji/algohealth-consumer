@@ -12,6 +12,7 @@ import {
   requestRecordingPermissionsAsync,
   getRecordingPermissionsAsync
 } from 'expo-audio';
+import { stopSpeaking } from '@/src/utils/ttsManager';
 
 interface UseAudioNoteRecordingParams {
   audioFile: DocumentPicker.DocumentPickerAsset | null;
@@ -81,6 +82,11 @@ export const useAudioNoteRecording = ({
 
   const startRecording = useCallback(async () => {
     try {
+      try {
+        stopSpeaking();
+      } catch (err) {
+        console.error('Failed to stop TTS speaking on recording start:', err);
+      }
       const permission = await getRecordingPermissionsAsync();
       let granted = permission.granted;
       

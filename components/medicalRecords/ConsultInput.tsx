@@ -5,6 +5,7 @@ import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
 import * as DocumentPicker from 'expo-document-picker';
 import { AudioNoteRecorder } from './AudioNoteRecorder';
+import { stopSpeaking } from '@/src/utils/ttsManager';
 
 interface AttachmentChipProps {
   doc: DocumentPicker.DocumentPickerAsset;
@@ -94,6 +95,11 @@ export const ConsultInput: React.FC<ConsultInputProps> = React.memo(({
   }, []);
 
   const handleStartRecording = useCallback(() => {
+    try {
+      stopSpeaking();
+    } catch (err) {
+      console.error('Failed to stop TTS speaking on start recording:', err);
+    }
     setIsRecordingMode(true);
   }, []);
 

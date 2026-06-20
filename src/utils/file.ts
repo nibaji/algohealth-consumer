@@ -10,3 +10,11 @@ export function formatFileSize(bytes?: number): string {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
+
+/**
+ * Resolves a file/blob URI into a standard Blob object (useful on Web platform).
+ */
+export async function uriToBlob(uri: string): Promise<Blob> {
+  const response = await fetch(uri);
+  return response.blob();
+}

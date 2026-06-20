@@ -17,6 +17,7 @@ import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { getDisplayRelation } from '@/src/utils/relation';
 import { refreshTracker } from '@/src/utils/refreshTracker';
+import { uriToBlob } from '@/src/utils/file';
 import { AudioNoteRecorder } from '@/components/medicalRecords/AudioNoteRecorder';
 import { MemberChipsSkeleton } from '@/components/ui/Skeleton';
 import { UserProfileResponse } from '@/src/features/auth/authTypes';
@@ -226,20 +227,30 @@ export default function CreateMedicalRecord(): React.JSX.Element {
 
         // Append files
         for (const doc of documents) {
-          formData.append('files', {
-            uri: doc.uri,
-            name: doc.name,
-            type: doc.mimeType || 'application/octet-stream',
-          } as unknown as Blob);
+          if (process.env.EXPO_OS === 'web') {
+            const blob = await uriToBlob(doc.uri);
+            formData.append('files', blob, doc.name);
+          } else {
+            formData.append('files', {
+              uri: doc.uri,
+              name: doc.name,
+              type: doc.mimeType || 'application/octet-stream',
+            } as unknown as Blob);
+          }
         }
 
         // Append audio files
         for (const audio of audioFiles) {
-          formData.append('audio_files', {
-            uri: audio.uri,
-            name: audio.name,
-            type: audio.mimeType || 'application/octet-stream',
-          } as unknown as Blob);
+          if (process.env.EXPO_OS === 'web') {
+            const blob = await uriToBlob(audio.uri);
+            formData.append('audio_files', blob, audio.name);
+          } else {
+            formData.append('audio_files', {
+              uri: audio.uri,
+              name: audio.name,
+              type: audio.mimeType || 'application/octet-stream',
+            } as unknown as Blob);
+          }
         }
 
         await medicalRecordService.createMedicalRecord(formData);
