@@ -95,6 +95,10 @@ export const useEditMemberForm = ({
         const members = await familyService.getFamilyMembers();
         const emails = members
           .filter(m => m.id !== member?.id) // Exclude current member being edited
+          // Only block emails for active members (accepted or pending invite).
+          // Deleted members may have any other status or null — treat their
+          // emails as available so re-inviting them works without a false conflict.
+          .filter(m => m.invite_status === 'accepted' || m.invite_status === 'pending')
           .map(m => m.email_id)
           .filter((email): email is string => typeof email === 'string' && email.trim() !== '');
         if (user?.email) {
