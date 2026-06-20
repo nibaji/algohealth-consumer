@@ -535,7 +535,7 @@ export default function Index() {
                       <Button.Secondary
                         title="New Family"
                         onPress={handleNavigateCreateFamily}
-                        iconName={IconName.PlusCircleFill}
+                        iconName={IconName.Person3Fill}
                         iconColor={theme.colors.primary.DEFAULT}
                         style={styles.actionButton}
                         textStyle={styles.actionButtonText}
@@ -544,7 +544,7 @@ export default function Index() {
                       <Button.Secondary
                         title="Join Family"
                         onPress={handleNavigateJoinFamily}
-                        iconName={IconName.ArrowRightToLineCycle}
+                        iconName={IconName.KeyFill}
                         iconColor={theme.colors.status.success}
                         style={styles.actionButton}
                         textStyle={styles.actionButtonText}
