@@ -71,33 +71,36 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
             </Typography.Label>
           </View>
           <View style={styles.memberInfo}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs, flexWrap: 'wrap' }}>
-              <Typography.Paragraph 
-                style={styles.memberName}
-                truncate
-              >
-                {member.name}
-              </Typography.Paragraph>
-              {member.invite_status === 'pending' ? (
-                <View style={[styles.pendingTag, { borderCurve: 'continuous' }]}>
-                  <Typography.Label style={styles.pendingTagText}>
-                    Pending
-                  </Typography.Label>
-                </View>
-              ) : null}
-            </View>
+            <Typography.Paragraph 
+              style={styles.memberName}
+              truncate
+            >
+              {member.name}
+            </Typography.Paragraph>
             <Typography.Label 
               style={styles.memberRelation}
               truncate
             >
-              {member.invite_status === 'pending'
-                ? getDisplayRelation(member, user)
-                : `${getDisplayRelation(member, user)} • ${records.length} ${records.length === 1 ? 'Record' : 'Records'}`}
+              {getDisplayRelation(member, user)}
             </Typography.Label>
+            {member.invite_status !== 'pending' ? (
+              <Typography.Label 
+                style={styles.memberRecordsCount}
+                truncate
+              >
+                {`${records.length} ${records.length === 1 ? 'Record' : 'Records'}`}
+              </Typography.Label>
+            ) : null}
           </View>
         </Pressable>
 
-        {member.invite_status !== 'pending' ? (
+        {member.invite_status === 'pending' ? (
+          <View style={[styles.pendingTagRight, { borderCurve: 'continuous' }]}>
+            <Typography.Label style={styles.pendingTagText}>
+              Pending
+            </Typography.Label>
+          </View>
+        ) : (
           <Button.Secondary
             title="Consult"
             onPress={handleConsult}
@@ -106,7 +109,7 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
             style={styles.consultButton}
             textStyle={styles.consultText}
           />
-        ) : null}
+        )}
 
         {/* Edit button next to accordion expand/close icon. Present for all members, including pending */}
         <Pressable 
@@ -276,6 +279,11 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.xs,
     color: theme.colors.text.secondary,
   },
+  memberRecordsCount: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.text.tertiary,
+    marginTop: 2,
+  },
   chevronIcon: {
     width: 16,
     height: 16,
@@ -369,13 +377,16 @@ const styles = StyleSheet.create({
     color: theme.colors.text.tertiary,
     marginTop: 2,
   },
-  pendingTag: {
-    paddingHorizontal: theme.spacing.xs,
-    paddingVertical: 2,
-    borderRadius: theme.radius.sm,
+  pendingTagRight: {
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.radius.full,
     backgroundColor: theme.colors.background.warningLight,
     borderWidth: 1,
     borderColor: theme.colors.border.warningLight,
+    marginRight: theme.spacing.xs,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   pendingTagText: {
     color: theme.colors.text.warningDark,
