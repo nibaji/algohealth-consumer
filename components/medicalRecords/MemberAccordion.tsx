@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View, Pressable } from 'react-native';
 import { Icon, IconName } from '@/components/ui/Icon';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing, runOnUI } from 'react-native-reanimated';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
 import { FamilyMemberOut } from '@/src/features/family/familyTypes';
@@ -33,23 +33,52 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
   onEditMember,
 }) => {
   const { user } = useAuth();
-  const [measuredHeight, setMeasuredHeight] = React.useState<number>(0);
+  // All measurement and animation state lives as shared values on the UI thread.
+  // This avoids JS→bridge round-trips during animation, eliminating proportional glitching.
+  const measuredHeight = useSharedValue<number>(0);
+  const isExpandedSV = useSharedValue<boolean>(isExpanded);
   const height = useSharedValue<number>(0);
+  const opacity = useSharedValue<number>(0);
 
+  // Sync the JS-side isExpanded prop into the shared value and drive animations.
   React.useEffect(() => {
-    height.value = withTiming(isExpanded ? measuredHeight : 0, {
-      duration: 300,
-    });
-  }, [isExpanded, measuredHeight, height]);
+    isExpandedSV.value = isExpanded;
+    runOnUI(() => {
+      'worklet';
+      const isMeasuring = isExpanded && measuredHeight.value === 0;
+      if (isMeasuring) {
+        height.value = 0;
+        opacity.value = 0;
+      } else {
+        height.value = withTiming(isExpanded ? measuredHeight.value : 0, {
+          duration: 250,
+          easing: Easing.out(Easing.quad),
+        });
+        opacity.value = withTiming(isExpanded ? 1 : 0, {
+          duration: 200,
+          easing: Easing.out(Easing.quad),
+        });
+      }
+    })();
+  }, [isExpanded, isExpandedSV, measuredHeight, height, opacity]);
 
   const animatedStyle = useAnimatedStyle(() => {
-    const isMeasuring = isExpanded && measuredHeight === 0;
+    'worklet';
+    const isMeasuring = isExpandedSV.value && measuredHeight.value === 0;
     return {
       height: isMeasuring ? undefined : height.value,
-      opacity: isMeasuring 
-        ? 0 
-        : withTiming(isExpanded ? 1 : 0, { duration: 250 }),
+      opacity: isMeasuring ? 0 : opacity.value,
       overflow: 'hidden',
+    };
+  });
+
+  const innerAnimatedStyle = useAnimatedStyle(() => {
+    'worklet';
+    // While animating open or collapsed, pin the child to the measured size so
+    // Yoga does not re-layout children on every animated frame (eliminates glitch).
+    const isAnimating = height.value > 0 && height.value < measuredHeight.value - 0.5;
+    return {
+      height: isAnimating || !isExpandedSV.value ? measuredHeight.value : undefined,
     };
   });
 
@@ -165,9 +194,29 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
 
       {/* Accordion Content */}
       <Animated.View style={animatedStyle} pointerEvents={isExpanded ? 'auto' : 'none'}>
+      <Animated.View style={innerAnimatedStyle}>
         <View 
           onLayout={(e) => {
-            setMeasuredHeight(e.nativeEvent.layout.height);
+            const currentHeight = e.nativeEvent.layout.height;
+            if (currentHeight > 0) {
+              runOnUI((h: number) => {
+                'worklet';
+                if (Math.abs(measuredHeight.value - h) > 0.5) {
+                  measuredHeight.value = h;
+                  // Re-trigger height animation now that we have the measurement.
+                  if (isExpandedSV.value) {
+                    height.value = withTiming(h, {
+                      duration: 250,
+                      easing: Easing.out(Easing.quad),
+                    });
+                    opacity.value = withTiming(1, {
+                      duration: 200,
+                      easing: Easing.out(Easing.quad),
+                    });
+                  }
+                }
+              })(currentHeight);
+            }
           }}
           style={styles.accordionContent}
         >
@@ -216,6 +265,7 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
             </View>
           )}
         </View>
+      </Animated.View>
       </Animated.View>
     </View>
   );
