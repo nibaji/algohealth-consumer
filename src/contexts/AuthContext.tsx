@@ -19,6 +19,30 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const checkIfFamilyPending = async (
+  user: UserProfileResponse,
+  familyId: string | null,
+  pendingInviteFromResponse: boolean
+): Promise<boolean> => {
+  if (!familyId) return false;
+
+  try {
+    const members = await familyService.getFamilyMembers();
+    const selfMember = members.find(m => 
+      m.email_id !== null && m.email_id !== undefined && m.email_id.toLowerCase() === user.email.toLowerCase()
+    ) || members.find(m => 
+      m.user_id === user.id
+    );
+    if (selfMember) {
+      return selfMember.invite_status === 'pending';
+    }
+  } catch (err) {
+    console.error('Failed to check pending family membership:', err);
+  }
+
+  return pendingInviteFromResponse;
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfileResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,21 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const response = await authService.restoreSession();
         if (response && response.user) {
           const familyId = response.user.family_id || response.family_id || response.invite_family_id || null;
-          let isPending = !!response.pending_invite;
-          
-          if (familyId) {
-            try {
-              const members = await familyService.getFamilyMembers();
-              const selfMember = members.find(m => 
-                m.user_id === response.user.id
-              );
-              if (selfMember && selfMember.invite_status === 'pending') {
-                isPending = true;
-              }
-            } catch (err) {
-              console.error('Failed to double check pending family membership on restore:', err);
-            }
-          }
+          const isPending = await checkIfFamilyPending(response.user, familyId, !!response.pending_invite);
           
           setIsFamilyPending(isPending);
           setUser({
@@ -67,7 +77,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const response = await authService.login(data);
     if (response.user) {
       const familyId = response.user.family_id || response.family_id || response.invite_family_id || null;
-      setIsFamilyPending(!!response.pending_invite);
+      const isPending = await checkIfFamilyPending(response.user, familyId, !!response.pending_invite);
+      setIsFamilyPending(isPending);
       setUser({
         ...response.user,
         family_id: familyId,
@@ -80,7 +91,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const response = await authService.register(data);
     if (response.user) {
       const familyId = response.user.family_id || response.family_id || response.invite_family_id || null;
-      setIsFamilyPending(!!response.pending_invite);
+      const isPending = await checkIfFamilyPending(response.user, familyId, !!response.pending_invite);
+      setIsFamilyPending(isPending);
       setUser({
         ...response.user,
         family_id: familyId,
@@ -88,18 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } else {
       try {
         const profile = await authService.getMyProfile();
-        let isPending = false;
-        if (profile.family_id) {
-          try {
-            const members = await familyService.getFamilyMembers();
-            const selfMember = members.find(m => 
-              m.user_id === profile.id
-            );
-            if (selfMember && selfMember.invite_status === 'pending') {
-              isPending = true;
-            }
-          } catch {}
-        }
+        const isPending = await checkIfFamilyPending(profile, profile.family_id || null, false);
         setIsFamilyPending(isPending);
         setUser(profile);
       } catch {}
@@ -118,18 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshProfile = useCallback(async (): Promise<UserProfileResponse | null> => {
     try {
       const profile = await authService.getMyProfile();
-      let isPending = false;
-      if (profile.family_id) {
-        try {
-          const members = await familyService.getFamilyMembers();
-          const selfMember = members.find(m => 
-            m.user_id === profile.id
-          );
-          if (selfMember && selfMember.invite_status === 'pending') {
-            isPending = true;
-          }
-        } catch {}
-      }
+      const isPending = await checkIfFamilyPending(profile, profile.family_id || null, false);
       setIsFamilyPending(isPending);
       setUser(profile);
       return profile;
@@ -137,6 +127,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return null;
     }
   }, []);
+
+
 
   const value = {
     user,
