@@ -48,11 +48,11 @@ function getNextVersion() {
 
   // Also check git tags just in case
   try {
-    const tags = execSync(`git tag --list "${today}.*"`, { encoding: 'utf8' })
+    const tags = execSync(`git tag --list "*${today}.*"`, { encoding: 'utf8' })
       .split('\n')
       .map(t => t.trim())
       .filter(Boolean);
-    const regex = new RegExp(`^${today}\\.(\\d+)$`);
+    const regex = new RegExp(`^v?${today}\\.(\\d+)$`);
     for (const tag of tags) {
       const match = tag.match(regex);
       if (match) {
@@ -115,6 +115,11 @@ async function main() {
         resolve(answer.trim() || calculatedVersion);
       });
     });
+  }
+
+  // Strip 'v' prefix if user typed it
+  if (selectedVersion.startsWith('v')) {
+    selectedVersion = selectedVersion.slice(1);
   }
 
   // Validate format YYYYMMDD.N
@@ -185,9 +190,9 @@ async function main() {
   console.log('\nRunning git commands...');
   try {
     runCommand('git add package.json app.json constants/version.ts CHANGELOG.md changelog/');
-    runCommand(`git commit -m "Release ${selectedVersion}"`);
-    runCommand(`git tag -a "${selectedVersion}" -m "Release ${selectedVersion}"`);
-    console.log(`\n🎉 Successfully tagged release: ${selectedVersion}`);
+    runCommand(`git commit -m "Release v${selectedVersion}"`);
+    runCommand(`git tag -a "v${selectedVersion}" -m "Release v${selectedVersion}"`);
+    console.log(`\n🎉 Successfully tagged release: v${selectedVersion}`);
     console.log(`To push commit and tag upstream, run:\n   git push origin main --tags\n`);
   } catch (err) {
     console.error('Git commands failed. Please complete committing and tagging manually.');
