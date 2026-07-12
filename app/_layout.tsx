@@ -89,6 +89,8 @@ function InitialLayout() {
       <Stack.Screen name="settings" />
       <Stack.Screen name="medicalRecords/create" />
       <Stack.Screen name="medicalRecords/[id]" />
+      <Stack.Screen name="consults/index" />
+      <Stack.Screen name="consults/[sessionId]" />
     </Stack>
   );
 }
@@ -149,5 +151,4 @@ const styles = StyleSheet.create({
     height: 200,
   },
 });
-
 

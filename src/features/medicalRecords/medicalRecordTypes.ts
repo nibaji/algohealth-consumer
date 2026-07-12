@@ -118,15 +118,3 @@ export interface MedicalRecordResponse {
   audio?: MedicalRecordFile[];
 }
 
-export interface ConsultRequest {
-  question: string;
-  family_member_id: string | null;
-}
-
-export interface ConsultResponse {
-  response?: string;
-  response_text?: string;
-  text?: string;
-  answer?: string;
-}
-

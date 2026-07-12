@@ -152,7 +152,7 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
           </View>
         ) : (
           <Button.Secondary
-            title="Consult"
+            title="Consults"
             onPress={handleConsult}
             iconName={IconName.Sparkles}
             iconColor={theme.colors.primary.DEFAULT}

@@ -1,10 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, RefObject } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import * as DocumentPicker from 'expo-document-picker';
-import { FamilyMemberOut } from '@/src/features/family/familyTypes';
-import { ChatMessage, consultCache } from '@/src/utils/consultCache';
-import { medicalRecordService } from '@/src/services/medicalRecords/medicalRecordService';
+import { ChatMessage } from '@/src/utils/consultCache';
+import { consultService } from '@/src/services/consults/consultService';
 import { FlashListRef } from '@shopify/flash-list';
 import {
   getSpeakingMessageId,
@@ -17,43 +16,52 @@ import { uriToBlob } from '@/src/utils/file';
 import { settingsStorage } from '@/src/services/settings/settingsStorage';
 
 interface UseConsultParams {
-  visible: boolean;
-  member: FamilyMemberOut | null;
+  sessionId: string | null;
+  familyMemberId: string | null;
+  familyMemberName: string | null;
+  onSessionCreated: (sessionId: string) => void;
 }
 
-export const useConsult = ({ visible, member }: UseConsultParams) => {
+interface UseConsultReturn {
+  messages: ChatMessage[];
+  isLoading: boolean;
+  isProcessing: boolean;
+  error: string | null;
+  playingMessageId: string | null;
+  ttsState: { speakingMessageId: string | null; isPaused: boolean };
+  activePlayerStatus: ReturnType<typeof useAudioPlayerStatus>;
+  flashListRef: RefObject<FlashListRef<ChatMessage> | null>;
+  handleSend: (
+    text: string,
+    audioFile: DocumentPicker.DocumentPickerAsset | null,
+    docs: DocumentPicker.DocumentPickerAsset[]
+  ) => Promise<void>;
+  handlePlayPauseMessage: (messageId: string, uri: string) => void;
+  handleSeekMessage: (messageId: string, percentage: number) => void;
+  handleToggleSpeech: (messageId: string, text: string) => Promise<void>;
+}
+
+const createWelcomeMessage = (familyMemberName: string | null): ChatMessage => ({
+  id: 'welcome',
+  text: familyMemberName
+    ? `Hi! I am your Health Consultant. I have loaded ${familyMemberName}'s medical records. How can I help you today?`
+    : 'Hi! I am your Health Consultant. How can I help you today?',
+  sender: 'bot',
+  timestamp: new Date(),
+});
+
+export const useConsult = ({
+  sessionId,
+  familyMemberId,
+  familyMemberName,
+  onSessionCreated,
+}: UseConsultParams): UseConsultReturn => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(sessionId !== null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [playingMessageId, setPlayingMessageId] = useState<string | null>(null);
-
-  // Synced prop tracking state for render-time updates
-  const [prevVisible, setPrevVisible] = useState(false);
-  const [prevMemberId, setPrevMemberId] = useState<string | null>(null);
-
-  // Sync state synchronously during render when visibility or member changes
-  if (visible !== prevVisible || (member && member.id !== prevMemberId)) {
-    setPrevVisible(visible);
-    setPrevMemberId(member ? member.id : null);
-
-    if (visible && member) {
-      const cached = consultCache.get(member.id);
-      if (cached && cached.length > 0) {
-        setMessages(cached);
-      } else {
-        const welcomeMessage: ChatMessage = {
-          id: 'welcome',
-          text: `Hi! I am your Health Consultant, your AlgoHealth assistant. I have loaded ${member.name}'s medical records. How can I help you today?`,
-          sender: 'bot',
-          timestamp: new Date()
-        };
-        setMessages([welcomeMessage]);
-      }
-      setIsProcessing(false);
-      setPlayingMessageId(null);
-    } else if (!visible) {
-      setPlayingMessageId(null);
-    }
-  }
+  const activeSessionIdRef = useRef(sessionId);
 
   // TTS state — synced from the module singleton via a subscriber
   const [ttsState, setTtsState] = useState({
@@ -75,12 +83,67 @@ export const useConsult = ({ visible, member }: UseConsultParams) => {
     return unsub;
   }, []);
 
-  // Synchronize messages with cache
   useEffect(() => {
-    if (member && messages.length > 0) {
-      consultCache.set(member.id, messages);
-    }
-  }, [messages, member]);
+    let isActive = true;
+
+    const loadSession = async (): Promise<void> => {
+      setError(null);
+      setPlayingMessageId(null);
+      if (!sessionId) {
+        setMessages([createWelcomeMessage(familyMemberName)]);
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const session = await consultService.getSession(sessionId);
+        if (!isActive) return;
+        const history = session.messages.flatMap<ChatMessage>((message) => {
+          const result: ChatMessage[] = [];
+          if (message.question) {
+            result.push({
+              id: `${message.id}-question`,
+              text: message.question,
+              sender: 'user',
+              timestamp: message.question_time ? new Date(message.question_time) : new Date(),
+            });
+          }
+          if (message.answer) {
+            result.push({
+              id: `${message.id}-answer`,
+              text: message.answer,
+              sender: 'bot',
+              timestamp: message.answer_time ? new Date(message.answer_time) : new Date(),
+            });
+          }
+          return result;
+        });
+        setMessages(history);
+      } catch (err: unknown) {
+        if (!isActive) return;
+        setError(err instanceof Error ? err.message : 'Failed to load consult history');
+      } finally {
+        if (isActive) setIsLoading(false);
+      }
+    };
+
+    loadSession();
+    return () => {
+      isActive = false;
+    };
+  }, [sessionId, familyMemberName]);
+
+  useEffect(() => {
+    return () => {
+      try {
+        activePlayer.pause();
+      } catch {
+        // Player may already be released.
+      }
+      stopTts();
+    };
+  }, [activePlayer]);
 
   // AppState listener: pause audio + stop TTS on background/inactive
   useEffect(() => {
@@ -100,21 +163,9 @@ export const useConsult = ({ visible, member }: UseConsultParams) => {
     };
   }, [activePlayer]);
 
-  // Pause audio + stop TTS when modal becomes invisible (effects only)
-  useEffect(() => {
-    if (!visible) {
-      try {
-        activePlayer.pause();
-      } catch {
-        // Safe catch in case player is already released
-      }
-      stopTts();
-    }
-  }, [visible, activePlayer]);
-
   // Auto-scroll to bottom after rendering or message changes
   useEffect(() => {
-    if (visible && member && messages.length > 0) {
+    if (messages.length > 0) {
       const timer = setTimeout(() => {
         if (flashListRef.current) {
           flashListRef.current.scrollToEnd({ animated: true });
@@ -122,7 +173,7 @@ export const useConsult = ({ visible, member }: UseConsultParams) => {
       }, 150);
       return () => clearTimeout(timer);
     }
-  }, [visible, member, messages.length]);
+  }, [messages.length]);
 
   // Auto scroll to bottom helper
   const scrollToBottom = useCallback(() => {
@@ -177,7 +228,7 @@ export const useConsult = ({ visible, member }: UseConsultParams) => {
     audioFile: DocumentPicker.DocumentPickerAsset | null,
     docs: DocumentPicker.DocumentPickerAsset[]
   ) => {
-    if (!member || isProcessing) return;
+    if (isProcessing) return;
 
     // Create user message
     const userMessage: ChatMessage = {
@@ -197,7 +248,8 @@ export const useConsult = ({ visible, member }: UseConsultParams) => {
       // Build FormData payload
       const formData = new FormData();
       formData.append('question', text);
-      formData.append('family_member_id', member.id);
+      if (familyMemberId) formData.append('family_member_id', familyMemberId);
+      if (activeSessionIdRef.current) formData.append('session_id', activeSessionIdRef.current);
 
       // Append documents
       for (const doc of docs) {
@@ -227,10 +279,14 @@ export const useConsult = ({ visible, member }: UseConsultParams) => {
         }
       }
 
-      const res = await medicalRecordService.consult(formData);
+      const res = await consultService.sendMessage(formData);
+      if (!activeSessionIdRef.current) {
+        activeSessionIdRef.current = res.session_id;
+        onSessionCreated(res.session_id);
+      }
 
       // Extract response text
-      const botText = res.response || res.response_text || res.text || res.answer || "Sorry, I couldn't formulate a response.";
+      const botText = res.answer || "Sorry, I couldn't formulate a response.";
 
       const botMessage: ChatMessage = {
         id: `bot-${Date.now()}`,
@@ -261,20 +317,20 @@ export const useConsult = ({ visible, member }: UseConsultParams) => {
       setIsProcessing(false);
       scrollToBottom();
     }
-  }, [member, isProcessing, scrollToBottom, handleToggleSpeech]);
+  }, [familyMemberId, isProcessing, scrollToBottom, handleToggleSpeech, onSessionCreated]);
 
   return {
     messages,
+    isLoading,
     isProcessing,
+    error,
     playingMessageId,
     ttsState,
-    activePlayer,
     activePlayerStatus,
     flashListRef,
     handleSend,
     handlePlayPauseMessage,
     handleSeekMessage,
     handleToggleSpeech,
-    scrollToBottom,
   };
 };

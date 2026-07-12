@@ -1,4 +1,3 @@
-import { ConsultModal } from '@/components/medicalRecords/ConsultModal';
 import { EditMemberModal } from '@/components/medicalRecords/EditMemberModal';
 import { InvitesModal } from '@/components/medicalRecords/InvitesModal';
 import { MemberAccordion } from '@/components/medicalRecords/MemberAccordion';
@@ -14,7 +13,7 @@ import { medicalRecordService } from '@/src/services/medicalRecords/medicalRecor
 import { refreshTracker } from '@/src/utils/refreshTracker';
 import { isMemberSelf, sortFamilyMembers } from '@/src/utils/relation';
 import * as Clipboard from 'expo-clipboard';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { Href, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
@@ -37,10 +36,6 @@ export default function Index() {
   // Accordion open/close states
   const [expandedMembers, setExpandedMembers] = useState<Record<string, boolean>>({});
   const [copied, setCopied] = useState(false);
-
-  // Consult modal states
-  const [isConsultVisible, setIsConsultVisible] = useState(false);
-  const [activeConsultMember, setActiveConsultMember] = useState<FamilyMemberOut | null>(null);
 
   // Edit member modal states
   const [isEditMemberVisible, setIsEditMemberVisible] = useState(false);
@@ -233,16 +228,12 @@ export default function Index() {
     }));
   }, []);
 
-  // Consult modal handlers
-  const handleOpenConsult = useCallback((member: FamilyMemberOut) => {
-    setActiveConsultMember(member);
-    setIsConsultVisible(true);
-  }, []);
-
-  const handleCloseConsult = useCallback(() => {
-    setIsConsultVisible(false);
-    setActiveConsultMember(null);
-  }, []);
+  const handleOpenConsults = useCallback((member: FamilyMemberOut): void => {
+    router.push({
+      pathname: '/consults',
+      params: { memberId: member.id, memberName: member.name },
+    } as unknown as Href);
+  }, [router]);
 
   const handleOpenEditMember = useCallback((member: FamilyMemberOut) => {
     setActiveEditMember(member);
@@ -495,7 +486,7 @@ export default function Index() {
                                   onToggleExpand={toggleExpand}
                                   onNavigateCreateRecord={handleNavigateCreateRecord}
                                   onNavigateRecordDetails={handleNavigateRecordDetails}
-                                  onConsult={handleOpenConsult}
+                                  onConsult={handleOpenConsults}
                                   onEditMember={handleOpenEditMember}
                                 />
                               );
@@ -565,12 +556,6 @@ export default function Index() {
           </LayoutAnimationConfig>
         )}
       </ScrollView>
- 
-      <ConsultModal
-        visible={isConsultVisible}
-        member={activeConsultMember}
-        onClose={handleCloseConsult}
-      />
  
       <EditMemberModal
         visible={isEditMemberVisible}

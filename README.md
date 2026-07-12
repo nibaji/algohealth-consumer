@@ -7,11 +7,18 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 - **Family Circles**: Create, join, and manage family circles. Delete members or leave circles based on owner/self permission guards.
 - **Onboarding Invite Flows**: Automatically detect invitations with options to Accept, Reject, or Decide Later.
 - **Pending Invites Widget**: Dashboard notification badge and modal to accept or reject pending invites at any time.
-- **AI Health Consultant**: Chat with our Health AI to query medical history. Supports voice note recording (using `expo-audio`) and multiple document attachments (using `expo-document-picker`).
+- **AI Health Consultant**: Browse consult history, resume earlier sessions, or start a new chat with voice notes and document attachments. New sessions are created by the API only after the first user message. Until backend family-member filtering is available, the Consults screen shows every session returned for the authenticated user.
 - **AI Health Summary**: Premium inline overview cards showcasing member health summaries in full above their record lists.
 - **Medical Record Attachments**: Securely retrieves, plays back, and downloads voice notes and document attachments within the medical record detail view.
 
 ## Get started
+
+### Consultation API flow
+
+- `GET /consultation-chats/sessions` loads the newest consult sessions.
+- `GET /consultation-chats/sessions/{session_id}` loads a session's full message history.
+- `POST /consultation-chats/chat` starts or continues a chat. Omit `session_id` for the first message, then reuse the returned `session_id` for later turns.
+- Session rows display `title` when present and fall back to the session ID.
 
 1. Install dependencies
 

@@ -1,8 +1,7 @@
 import { apiClient } from '@/src/services/api/apiClient';
 import { 
   MedicalRecordResponse, 
-  MedicalRecordUpdate,
-  ConsultResponse
+  MedicalRecordUpdate
 } from '@/src/features/medicalRecords/medicalRecordTypes';
 import { uriToBlob } from '@/src/utils/file';
 
@@ -26,10 +25,6 @@ export const medicalRecordService = {
 
   async deleteMedicalRecord(id: string): Promise<void> {
     return apiClient.delete<void>(`/medical-records/${id}`);
-  },
-
-  async consult(formData: FormData): Promise<ConsultResponse> {
-    return apiClient.post<ConsultResponse>('/medical-records/ask-benish', formData);
   },
 
   /**
