@@ -8,7 +8,7 @@ import { ChatMessageBotSkeleton } from '@/components/ui/Skeleton';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
 import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
-import { useConsult } from '@/src/features/medicalRecords/useConsult';
+import { useConsult } from '@/src/features/consults/useConsult';
 import { ChatMessage } from '@/src/utils/consultCache';
 
 interface ConsultChatProps {
