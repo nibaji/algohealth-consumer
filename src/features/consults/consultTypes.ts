@@ -39,3 +39,11 @@ export interface ConsultationChatResponse {
   files: unknown[];
   audio: unknown[];
 }
+
+export interface AskBenishResponse {
+  success: boolean;
+  answer: string;
+  strategy: Record<string, unknown>;
+  files: unknown[];
+  audio: unknown[];
+}

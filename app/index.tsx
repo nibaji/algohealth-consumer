@@ -1,6 +1,7 @@
 import { EditMemberModal } from '@/components/medicalRecords/EditMemberModal';
 import { InvitesModal } from '@/components/medicalRecords/InvitesModal';
 import { MemberAccordion } from '@/components/medicalRecords/MemberAccordion';
+import { AskBenishModal } from '@/components/consults/AskBenishModal';
 import { Icon, IconName } from '@/components/ui/Icon';
 import { Typography } from '@/components/ui/Typography';
 import { theme, shadows } from '@/constants/theme';
@@ -43,6 +44,9 @@ export default function Index() {
 
   // Invites modal states
   const [isInvitesVisible, setIsInvitesVisible] = useState(false);
+
+  // Ephemeral Ask Benish modal state
+  const [activeAskMember, setActiveAskMember] = useState<FamilyMemberOut | null>(null);
 
   // Fetch Family details
   const loadFamilyData = useCallback(async (prefetchedFamily?: FamilyOut) => {
@@ -228,12 +232,26 @@ export default function Index() {
     }));
   }, []);
 
-  const handleOpenConsults = useCallback((member: FamilyMemberOut): void => {
+  const handleOpenConsults = useCallback((): void => {
     router.push({
       pathname: '/consults',
-      params: { memberId: member.id, memberName: member.name },
     } as unknown as Href);
   }, [router]);
+
+  const handleStartConsult = useCallback((member: FamilyMemberOut): void => {
+    router.push({
+      pathname: '/consults/[sessionId]',
+      params: { sessionId: 'new', memberId: member.id, memberName: member.name },
+    } as unknown as Href);
+  }, [router]);
+
+  const handleOpenAsk = useCallback((member: FamilyMemberOut): void => {
+    setActiveAskMember(member);
+  }, []);
+
+  const handleCloseAsk = useCallback((): void => {
+    setActiveAskMember(null);
+  }, []);
 
   const handleOpenEditMember = useCallback((member: FamilyMemberOut) => {
     setActiveEditMember(member);
@@ -456,6 +474,15 @@ export default function Index() {
                       </View>
                     ) : (
                       <>
+                        <Button.Secondary
+                          title="Consults"
+                          onPress={handleOpenConsults}
+                          iconName={IconName.Sparkles}
+                          iconColor={theme.colors.primary.DEFAULT}
+                          style={styles.consultsButton}
+                          textStyle={styles.addMemberText}
+                        />
+
                         {/* Add Family Member CTA */}
                         <Button.Secondary
                           title="Add Family Member"
@@ -486,7 +513,8 @@ export default function Index() {
                                   onToggleExpand={toggleExpand}
                                   onNavigateCreateRecord={handleNavigateCreateRecord}
                                   onNavigateRecordDetails={handleNavigateRecordDetails}
-                                  onConsult={handleOpenConsults}
+                                  onConsult={handleStartConsult}
+                                  onAsk={handleOpenAsk}
                                   onEditMember={handleOpenEditMember}
                                 />
                               );
@@ -570,6 +598,14 @@ export default function Index() {
         onClose={handleCloseInvites}
         onActionSuccess={loadDashboardData}
       />
+
+      {activeAskMember ? (
+        <AskBenishModal
+          familyMemberId={activeAskMember.id}
+          familyMemberName={activeAskMember.name}
+          onClose={handleCloseAsk}
+        />
+      ) : null}
     </View>
   );
 }
@@ -799,6 +835,19 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border.light,
     gap: theme.spacing.xs,
     marginBottom: theme.spacing.lg,
+    marginHorizontal: theme.spacing.lg,
+  },
+  consultsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.background.primaryLight,
+    paddingVertical: theme.spacing.md,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border.primaryLight,
+    gap: theme.spacing.xs,
+    marginBottom: theme.spacing.md,
     marginHorizontal: theme.spacing.lg,
   },
   addMemberButtonPressed: {

@@ -12,8 +12,8 @@ import {
   subscribeTtsState,
   toggleMessageSpeech,
 } from '@/src/utils/ttsManager';
-import { uriToBlob } from '@/src/utils/file';
 import { settingsStorage } from '@/src/services/settings/settingsStorage';
+import { createChatFormData } from '@/src/features/consults/chatFormData';
 
 interface UseConsultParams {
   sessionId: string | null;
@@ -235,39 +235,13 @@ export const useConsult = ({
     setIsProcessing(true);
 
     try {
-      // Build FormData payload
-      const formData = new FormData();
-      formData.append('question', text);
-      if (familyMemberId) formData.append('family_member_id', familyMemberId);
-      if (activeSessionIdRef.current) formData.append('session_id', activeSessionIdRef.current);
-
-      // Append documents
-      for (const doc of docs) {
-        if (process.env.EXPO_OS === 'web') {
-          const blob = await uriToBlob(doc.uri);
-          formData.append('files', blob, doc.name);
-        } else {
-          formData.append('files', {
-            uri: doc.uri,
-            name: doc.name,
-            type: doc.mimeType || 'application/octet-stream',
-          } as unknown as Blob);
-        }
-      }
-
-      // Append audio file
-      if (audioFile) {
-        if (process.env.EXPO_OS === 'web') {
-          const blob = await uriToBlob(audioFile.uri);
-          formData.append('audio_files', blob, audioFile.name);
-        } else {
-          formData.append('audio_files', {
-            uri: audioFile.uri,
-            name: audioFile.name,
-            type: audioFile.mimeType || 'application/octet-stream',
-          } as unknown as Blob);
-        }
-      }
+      const formData = await createChatFormData({
+        question: text,
+        familyMemberId,
+        audioFile,
+        documents: docs,
+        sessionId: activeSessionIdRef.current,
+      });
 
       const res = await consultService.sendMessage(formData);
       if (!activeSessionIdRef.current) {

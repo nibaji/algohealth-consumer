@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
-import { Href, Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { Href, Stack, useFocusEffect, useRouter } from 'expo-router';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { Icon, IconName } from '@/components/ui/Icon';
@@ -17,7 +17,6 @@ const formatCreatedAt = (value: string): string => new Intl.DateTimeFormat(undef
 
 export default function ConsultsScreen(): React.JSX.Element {
   const router = useRouter();
-  const params = useLocalSearchParams<{ memberId?: string; memberName?: string }>();
   const [sessions, setSessions] = useState<ConsultationSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -43,17 +42,6 @@ export default function ConsultsScreen(): React.JSX.Element {
   useFocusEffect(useCallback((): void => {
     loadSessions();
   }, [loadSessions]));
-
-  const handleNewConsult = useCallback((): void => {
-    router.push({
-      pathname: '/consults/[sessionId]',
-      params: {
-        sessionId: 'new',
-        ...(params.memberId ? { memberId: params.memberId } : {}),
-        ...(params.memberName ? { memberName: params.memberName } : {}),
-      },
-    } as unknown as Href);
-  }, [router, params.memberId, params.memberName]);
 
   const renderSession = useCallback(({ item }: { item: ConsultationSession }): React.JSX.Element => {
     const handlePress = (): void => router.push({
@@ -86,15 +74,6 @@ export default function ConsultsScreen(): React.JSX.Element {
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: true, title: 'Consults' }} />
-      <View style={styles.actionBand}>
-        <Pressable
-          onPress={handleNewConsult}
-          style={({ pressed }) => [styles.newButton, pressed ? styles.newButtonPressed : null]}
-        >
-          <Icon name={IconName.Plus} size={18} tintColor={theme.colors.primary.content} />
-          <Typography.Label style={styles.newButtonText}>New consult</Typography.Label>
-        </Pressable>
-      </View>
       {isLoading ? (
         <View style={styles.centered}>
           <ActivityIndicator color={theme.colors.primary.DEFAULT} />
@@ -139,24 +118,6 @@ const EmptyConsults = (): React.JSX.Element => (
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background.default },
-  actionBand: {
-    padding: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border.light,
-    backgroundColor: theme.colors.background.surface,
-  },
-  newButton: {
-    minHeight: theme.spacing['3xl'],
-    borderRadius: theme.radius.md,
-    borderCurve: 'continuous',
-    backgroundColor: theme.colors.primary.DEFAULT,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    gap: theme.spacing.sm,
-  },
-  newButtonPressed: { backgroundColor: theme.colors.primary.dark },
-  newButtonText: { color: theme.colors.primary.content, fontWeight: '700' },
   list: { flex: 1 },
   listContent: { paddingVertical: theme.spacing.sm },
   sessionRow: {
