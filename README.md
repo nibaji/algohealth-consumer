@@ -8,7 +8,7 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 - **Onboarding Invite Flows**: Automatically detect invitations with options to Accept, Reject, or Decide Later.
 - **Pending Invites Widget**: Dashboard notification badge and modal to accept or reject pending invites at any time.
 - **AI Health Consultant**: Start a saved consult from an individual family member, or use the Consults entry above the member list to browse and resume earlier sessions. Consult chats support text, voice notes, and document attachments.
-- **Ask Benish**: Open an ephemeral general health query from the global Ask button beside Consults. Ask supports the full chat input, playback, formatting, copy, and text-to-speech experience, but messages are not saved and are discarded when the modal closes.
+- **Ask**: Open an ephemeral general health query from the global Ask button beside Consults. Ask supports the full chat input, playback, formatting, copy, and text-to-speech experience, but messages are not saved and are discarded when the modal closes.
 - **AI Health Summary**: Premium inline overview cards showcasing member health summaries in full above their record lists.
 - **Medical Record Attachments**: Securely retrieves, plays back, and downloads voice notes and document attachments within the medical record detail view.
 
@@ -22,10 +22,10 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 - Chat screens render only user and assistant messages supplied by these endpoints; new consults start empty without a synthetic greeting. Successful sends adopt the response's `message_id`, `question_time`, and `answer_time` so the live thread matches its persisted history.
 - Session rows display `title` when present and fall back to the session ID.
 
-### Ask Benish API flow
+### Ask API flow
 
 - `POST /medical-records/ask-benish` sends a standalone general multipart question with document `files` and `audio_files`; the app does not attach a family member.
-- Ask Benish does not create or reuse a consultation session. Its modal state is memory-only and is cleared on close or app termination.
+- Ask does not create or reuse a consultation session. Its modal state is memory-only and is cleared on close or app termination.
 
 1. Install dependencies
 

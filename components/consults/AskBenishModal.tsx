@@ -81,12 +81,12 @@ export const AskBenishModal = React.memo(({
       >
         <View style={[styles.header, { paddingTop: Math.max(insets.top, theme.spacing.md) }]}>
           <View style={styles.headerText}>
-            <Typography.Subheading style={styles.title}>Ask Benish</Typography.Subheading>
+            <Typography.Subheading style={styles.title}>Ask</Typography.Subheading>
             <Typography.Label style={styles.subtitle}>General health query</Typography.Label>
           </View>
           <Pressable
             onPress={onClose}
-            accessibilityLabel="Close Ask Benish"
+            accessibilityLabel="Close Ask"
             style={({ pressed }) => [styles.closeButton, pressed ? styles.closeButtonPressed : null]}
           >
             <Icon name={IconName.Xmark} size={18} tintColor={theme.colors.text.primary} />
