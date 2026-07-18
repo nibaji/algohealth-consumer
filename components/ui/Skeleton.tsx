@@ -1,13 +1,20 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import {
+  DimensionValue,
+  StyleProp,
+  StyleSheet,
+  View,
+  ViewStyle,
+  useWindowDimensions,
+} from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { theme } from '@/constants/theme';
 
 interface SkeletonProps {
-  width?: number | string;
-  height?: number | string;
+  width?: DimensionValue;
+  height?: DimensionValue;
   borderRadius?: number;
-  style?: any;
+  style?: StyleProp<ViewStyle>;
 }
 
 export const Skeleton: React.FC<SkeletonProps> = ({
@@ -181,6 +188,32 @@ export const MemberChipsSkeleton: React.FC = () => {
   );
 };
 
+export const ConsultsListSkeleton: React.FC = () => {
+  return (
+    <View>
+      {[1, 2, 3, 4].map((item) => (
+        <View key={item} style={styles.consultSessionSkeleton}>
+          <Skeleton width={theme.spacing['2xl']} height={theme.spacing['2xl']} borderRadius={theme.radius.md} />
+          <View style={styles.flexOneGap}>
+            <Skeleton width="55%" height={16} />
+            <Skeleton width="75%" height={12} />
+          </View>
+          <Skeleton width={18} height={18} borderRadius={theme.radius.full} />
+        </View>
+      ))}
+    </View>
+  );
+};
+
+export const ConsultChatSkeleton: React.FC = () => {
+  return (
+    <View style={styles.consultChatSkeleton}>
+      <ChatMessageSkeleton />
+      <ChatMessageSkeleton />
+    </View>
+  );
+};
+
 // 4. Edit Member Fields Skeleton
 export const EditMemberSkeleton: React.FC = () => {
   return (
@@ -340,5 +373,21 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border.light,
     borderRadius: theme.radius.lg,
     gap: theme.spacing.md,
+  },
+  consultSessionSkeleton: {
+    minHeight: theme.spacing['6xl'],
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border.light,
+    backgroundColor: theme.colors.background.surface,
+  },
+  consultChatSkeleton: {
+    flex: 1,
+    padding: theme.spacing.lg,
+    gap: theme.spacing.lg,
   },
 });

@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { Href, Stack, useFocusEffect, useRouter } from 'expo-router';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -9,6 +9,7 @@ import {
   ConsultMemberFilterOption,
 } from '@/components/consults/ConsultMemberFilter';
 import { Icon, IconName } from '@/components/ui/Icon';
+import { ConsultsListSkeleton, MemberChipsSkeleton } from '@/components/ui/Skeleton';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
 import { ConsultationSession } from '@/src/features/consults/consultTypes';
@@ -127,8 +128,11 @@ export default function ConsultsScreen(): React.JSX.Element {
         />
       ) : null}
       {isLoading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator color={theme.colors.primary.DEFAULT} />
+        <View style={styles.loadingSkeleton}>
+          <View style={styles.memberChipsSkeleton}>
+            <MemberChipsSkeleton />
+          </View>
+          <ConsultsListSkeleton />
         </View>
       ) : error ? (
         <View style={styles.centered}>
@@ -175,6 +179,14 @@ const EmptyConsults = ({ memberName }: { memberName: string | null }): React.JSX
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background.default },
   list: { flex: 1 },
+  loadingSkeleton: { flex: 1 },
+  memberChipsSkeleton: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border.light,
+    backgroundColor: theme.colors.background.surface,
+  },
   listContent: { paddingVertical: theme.spacing.sm },
   sessionRow: {
     minHeight: theme.spacing['6xl'],

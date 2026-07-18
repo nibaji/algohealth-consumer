@@ -1,10 +1,10 @@
 import React, { useCallback } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, StyleSheet, View } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 
 import { ConsultInput } from '@/components/medicalRecords/ConsultInput';
 import { ConsultMessage } from '@/components/medicalRecords/ConsultMessage';
-import { ChatMessageBotSkeleton } from '@/components/ui/Skeleton';
+import { ChatMessageBotSkeleton, ConsultChatSkeleton } from '@/components/ui/Skeleton';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
 import { useKeyboardAvoiding } from '@/hooks/useKeyboardAvoiding';
@@ -75,9 +75,7 @@ export const ConsultChat = React.memo(({
       enabled={keyboardAvoidingEnabled}
     >
       {isLoading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator color={theme.colors.primary.DEFAULT} />
-        </View>
+        <ConsultChatSkeleton />
       ) : error ? (
         <View style={styles.centered}>
           <Typography.Paragraph selectable style={styles.errorText}>{error}</Typography.Paragraph>
