@@ -14,14 +14,12 @@ import { ChatMessage } from '@/src/utils/consultCache';
 interface ConsultChatProps {
   sessionId: string | null;
   familyMemberId: string | null;
-  familyMemberName: string | null;
   onSessionCreated: (sessionId: string) => void;
 }
 
 export const ConsultChat = React.memo(({
   sessionId,
   familyMemberId,
-  familyMemberName,
   onSessionCreated,
 }: ConsultChatProps): React.JSX.Element => {
   const keyboardAvoidingEnabled = useKeyboardAvoiding();
@@ -38,7 +36,7 @@ export const ConsultChat = React.memo(({
     handlePlayPauseMessage,
     handleSeekMessage,
     handleToggleSpeech,
-  } = useConsult({ sessionId, familyMemberId, familyMemberName, onSessionCreated });
+  } = useConsult({ sessionId, familyMemberId, onSessionCreated });
 
   const renderMessageItem = useCallback(({ item }: { item: ChatMessage }): React.JSX.Element => {
     const isCurrentPlaying = playingMessageId === item.id;

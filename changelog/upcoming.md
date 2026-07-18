@@ -1,3 +1,4 @@
 ## Unreleased
 
+- 2026-07-18: Removed the synthetic consult greeting and aligned newly sent chat messages with the server-provided message ID and timestamps so live chats match persisted consult history. Updated the consultation response types for strategy, file, and audio metadata. Changed in `app/consults/[sessionId].tsx`, `components/consults/ConsultChat.tsx`, `src/features/consults/useConsult.ts`, `src/features/consults/consultTypes.ts`, and `README.md`.
 - 2026-07-12: Added consult history and resumable session chats, replaced member Consult actions with Consults navigation, and migrated chat traffic to the consultation-chats endpoints. Changed in `app/consults/index.tsx`, `app/consults/[sessionId].tsx`, `app/index.tsx`, `components/consults/ConsultChat.tsx`, `components/medicalRecords/MemberAccordion.tsx`, `src/features/consults/useConsult.ts`, `src/features/consults/consultTypes.ts`, `src/services/consults/consultService.ts`, and `README.md`.

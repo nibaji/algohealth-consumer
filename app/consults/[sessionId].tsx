@@ -34,7 +34,6 @@ export default function ConsultSessionScreen(): React.JSX.Element {
       <ConsultChat
         sessionId={sessionId}
         familyMemberId={memberId}
-        familyMemberName={memberName}
         onSessionCreated={handleSessionCreated}
       />
     </>

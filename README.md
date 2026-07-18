@@ -18,6 +18,7 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 - `GET /consultation-chats/sessions` loads the newest consult sessions.
 - `GET /consultation-chats/sessions/{session_id}` loads a session's full message history.
 - `POST /consultation-chats/chat` starts or continues a chat. Omit `session_id` for the first message, then reuse the returned `session_id` for later turns.
+- Chat screens render only user and assistant messages supplied by these endpoints; new consults start empty without a synthetic greeting. Successful sends adopt the response's `message_id`, `question_time`, and `answer_time` so the live thread matches its persisted history.
 - Session rows display `title` when present and fall back to the session ID.
 
 1. Install dependencies

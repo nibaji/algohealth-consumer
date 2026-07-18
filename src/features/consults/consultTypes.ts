@@ -5,6 +5,12 @@ export interface ConsultationSession {
   created_at: string;
 }
 
+export interface ConsultationStrategy {
+  intent: string;
+  limit: number;
+  range: string;
+}
+
 export interface ConsultationMessage {
   id: string;
   user_id: string;
@@ -12,7 +18,7 @@ export interface ConsultationMessage {
   answer: string | null;
   question_time: string | null;
   answer_time: string | null;
-  strategy: Record<string, unknown> | null;
+  strategy: ConsultationStrategy | null;
   has_files: boolean;
   has_audio: boolean;
 }
@@ -29,5 +35,7 @@ export interface ConsultationChatResponse {
   question_time: string;
   answer_time: string;
   answer: string;
-  strategy: Record<string, unknown>;
+  strategy: ConsultationStrategy;
+  files: unknown[];
+  audio: unknown[];
 }

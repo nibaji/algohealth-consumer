@@ -18,7 +18,6 @@ import { settingsStorage } from '@/src/services/settings/settingsStorage';
 interface UseConsultParams {
   sessionId: string | null;
   familyMemberId: string | null;
-  familyMemberName: string | null;
   onSessionCreated: (sessionId: string) => void;
 }
 
@@ -41,19 +40,9 @@ interface UseConsultReturn {
   handleToggleSpeech: (messageId: string, text: string) => Promise<void>;
 }
 
-const createWelcomeMessage = (familyMemberName: string | null): ChatMessage => ({
-  id: 'welcome',
-  text: familyMemberName
-    ? `Hi! I am your Health Consultant. I have loaded ${familyMemberName}'s medical records. How can I help you today?`
-    : 'Hi! I am your Health Consultant. How can I help you today?',
-  sender: 'bot',
-  timestamp: new Date(),
-});
-
 export const useConsult = ({
   sessionId,
   familyMemberId,
-  familyMemberName,
   onSessionCreated,
 }: UseConsultParams): UseConsultReturn => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -87,10 +76,11 @@ export const useConsult = ({
     let isActive = true;
 
     const loadSession = async (): Promise<void> => {
+      activeSessionIdRef.current = sessionId;
       setError(null);
       setPlayingMessageId(null);
       if (!sessionId) {
-        setMessages([createWelcomeMessage(familyMemberName)]);
+        setMessages([]);
         setIsLoading(false);
         return;
       }
@@ -132,7 +122,7 @@ export const useConsult = ({
     return () => {
       isActive = false;
     };
-  }, [sessionId, familyMemberName]);
+  }, [sessionId, familyMemberId]);
 
   useEffect(() => {
     return () => {
@@ -285,17 +275,21 @@ export const useConsult = ({
         onSessionCreated(res.session_id);
       }
 
-      // Extract response text
-      const botText = res.answer || "Sorry, I couldn't formulate a response.";
-
       const botMessage: ChatMessage = {
-        id: `bot-${Date.now()}`,
-        text: botText,
+        id: `${res.message_id}-answer`,
+        text: res.answer || "Sorry, I couldn't formulate a response.",
         sender: 'bot',
-        timestamp: new Date()
+        timestamp: new Date(res.answer_time),
       };
 
-      setMessages((prev) => [...prev, botMessage]);
+      setMessages((prev) => [
+        ...prev.map((message) => message.id === userMessage.id ? {
+          ...message,
+          id: `${res.message_id}-question`,
+          timestamp: new Date(res.question_time),
+        } : message),
+        botMessage,
+      ]);
       const isMuted = await settingsStorage.getMuteBotSpeech();
       if (!isMuted) {
         handleToggleSpeech(botMessage.id, botMessage.text);
