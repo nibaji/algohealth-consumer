@@ -1,14 +1,20 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { Href, Stack, useFocusEffect, useRouter } from 'expo-router';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
+import {
+  ConsultMemberFilter,
+  ConsultMemberFilterOption,
+} from '@/components/consults/ConsultMemberFilter';
 import { Icon, IconName } from '@/components/ui/Icon';
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
 import { ConsultationSession } from '@/src/features/consults/consultTypes';
+import { FamilyMemberResponse } from '@/src/features/family/familyTypes';
 import { consultService } from '@/src/services/consults/consultService';
+import { familyService } from '@/src/services/family/familyService';
 
 const formatCreatedAt = (value: string): string => new Intl.DateTimeFormat(undefined, {
   dateStyle: 'medium',
@@ -18,6 +24,8 @@ const formatCreatedAt = (value: string): string => new Intl.DateTimeFormat(undef
 export default function ConsultsScreen(): React.JSX.Element {
   const router = useRouter();
   const [sessions, setSessions] = useState<ConsultationSession[]>([]);
+  const [familyMembers, setFamilyMembers] = useState<FamilyMemberResponse[]>([]);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +38,15 @@ export default function ConsultsScreen(): React.JSX.Element {
     }
     setError(null);
     try {
-      setSessions(await consultService.listSessions());
+      const [nextSessions, nextFamilyMembers] = await Promise.all([
+        consultService.listSessions(),
+        familyService.getFamilyMembers(),
+      ]);
+      setSessions(nextSessions);
+      setFamilyMembers(nextFamilyMembers);
+      setSelectedMemberId((current) => (
+        current && nextFamilyMembers.some((member) => member.id === current) ? current : null
+      ));
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to load consults');
     } finally {
@@ -43,10 +59,39 @@ export default function ConsultsScreen(): React.JSX.Element {
     loadSessions();
   }, [loadSessions]));
 
+  const memberNameById = useMemo(
+    () => new Map(familyMembers.map((member) => [member.id, member.name])),
+    [familyMembers]
+  );
+  const filterOptions = useMemo<ConsultMemberFilterOption[]>(() => [
+    { id: null, label: 'All' },
+    ...familyMembers.map((member) => ({ id: member.id, label: member.name })),
+  ], [familyMembers]);
+  const filteredSessions = useMemo(
+    () => selectedMemberId
+      ? sessions.filter((session) => session.family_member_id === selectedMemberId)
+      : sessions,
+    [selectedMemberId, sessions]
+  );
+  const selectedMemberName = selectedMemberId ? memberNameById.get(selectedMemberId) ?? null : null;
+
+  const handleSelectMember = useCallback((memberId: string | null): void => {
+    setSelectedMemberId(memberId);
+  }, []);
+
+  const handleRefresh = useCallback((): void => {
+    loadSessions(true);
+  }, [loadSessions]);
+
   const renderSession = useCallback(({ item }: { item: ConsultationSession }): React.JSX.Element => {
+    const memberName = item.family_member_id ? memberNameById.get(item.family_member_id) : null;
     const handlePress = (): void => router.push({
       pathname: '/consults/[sessionId]',
-      params: { sessionId: item.id },
+      params: {
+        sessionId: item.id,
+        ...(item.family_member_id ? { memberId: item.family_member_id } : {}),
+        ...(memberName ? { memberName } : {}),
+      },
     } as unknown as Href);
     return (
       <Pressable
@@ -61,19 +106,26 @@ export default function ConsultsScreen(): React.JSX.Element {
             {item.title || item.id}
           </Typography.Paragraph>
           <Typography.Label style={styles.sessionMeta}>
-            {`${item.message_count} ${item.message_count === 1 ? 'message' : 'messages'} · ${formatCreatedAt(item.created_at)}`}
+            {`${memberName ? `${memberName} · ` : ''}${item.message_count} ${item.message_count === 1 ? 'message' : 'messages'} · ${formatCreatedAt(item.created_at)}`}
           </Typography.Label>
         </View>
         <Icon name={IconName.ChevronRight} size={18} tintColor={theme.colors.text.tertiary} />
       </Pressable>
     );
-  }, [router]);
+  }, [memberNameById, router]);
 
   const keyExtractor = useCallback((item: ConsultationSession): string => item.id, []);
 
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: true, title: 'Consults' }} />
+      {!isLoading && !error ? (
+        <ConsultMemberFilter
+          options={filterOptions}
+          selectedId={selectedMemberId}
+          onSelect={handleSelectMember}
+        />
+      ) : null}
       {isLoading ? (
         <View style={styles.centered}>
           <ActivityIndicator color={theme.colors.primary.DEFAULT} />
@@ -85,7 +137,7 @@ export default function ConsultsScreen(): React.JSX.Element {
       ) : (
         <Animated.View entering={FadeIn.duration(200)} style={styles.list}>
           <FlashList
-            data={sessions}
+            data={filteredSessions}
             renderItem={renderSession}
             keyExtractor={keyExtractor}
             contentInsetAdjustmentBehavior="automatic"
@@ -94,12 +146,12 @@ export default function ConsultsScreen(): React.JSX.Element {
             refreshControl={
               <RefreshControl
                 refreshing={isRefreshing}
-                onRefresh={() => loadSessions(true)}
+                onRefresh={handleRefresh}
                 tintColor={theme.colors.primary.DEFAULT}
                 colors={[theme.colors.primary.DEFAULT]}
               />
             }
-            ListEmptyComponent={EmptyConsults}
+            ListEmptyComponent={<EmptyConsults memberName={selectedMemberName} />}
           />
         </Animated.View>
       )}
@@ -109,10 +161,14 @@ export default function ConsultsScreen(): React.JSX.Element {
 
 const SessionSeparator = (): React.JSX.Element => <View style={styles.separator} />;
 
-const EmptyConsults = (): React.JSX.Element => (
+const EmptyConsults = ({ memberName }: { memberName: string | null }): React.JSX.Element => (
   <View style={styles.empty}>
-    <Typography.Subheading style={styles.emptyTitle}>No consults yet</Typography.Subheading>
-    <Typography.Paragraph style={styles.emptyText}>Start a new consult to ask a health question.</Typography.Paragraph>
+    <Typography.Subheading style={styles.emptyTitle}>
+      {memberName ? `No consults for ${memberName}` : 'No consults yet'}
+    </Typography.Subheading>
+    <Typography.Paragraph style={styles.emptyText}>
+      {memberName ? 'Start a consult from their family member card.' : 'Start a new consult to ask a health question.'}
+    </Typography.Paragraph>
   </View>
 );
 

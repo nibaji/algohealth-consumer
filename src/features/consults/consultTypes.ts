@@ -1,5 +1,6 @@
 export interface ConsultationSession {
   id: string;
+  family_member_id?: string | null;
   title: string | null;
   message_count: number;
   created_at: string;
