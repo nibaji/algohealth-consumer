@@ -19,7 +19,6 @@ interface MemberAccordionProps {
   onNavigateCreateRecord: (memberId: string) => void;
   onNavigateRecordDetails: (recordId: string) => void;
   onConsult: (member: FamilyMemberOut) => void;
-  onAsk: (member: FamilyMemberOut) => void;
   onEditMember: (member: FamilyMemberOut) => void;
 }
 
@@ -31,7 +30,6 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
   onNavigateCreateRecord,
   onNavigateRecordDetails,
   onConsult,
-  onAsk,
   onEditMember,
 }) => {
   const { user } = useAuth();
@@ -94,10 +92,6 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
     onConsult(member);
   }, [onConsult, member]);
 
-  const handleAsk = React.useCallback((): void => {
-    onAsk(member);
-  }, [onAsk, member]);
-
   const handleNavigateCreateRecord = React.useCallback((): void => {
     onNavigateCreateRecord(member.id);
   }, [onNavigateCreateRecord, member.id]);
@@ -157,26 +151,15 @@ export const MemberAccordion: React.FC<MemberAccordionProps> = React.memo(({
             </Typography.Label>
           </View>
         ) : (
-          <View style={styles.chatActions}>
-            <Button.Secondary
-              title="Consult"
-              onPress={handleConsult}
-              iconName={IconName.Sparkles}
-              iconSize={12}
-              iconColor={theme.colors.primary.DEFAULT}
-              style={styles.consultButton}
-              textStyle={styles.consultText}
-            />
-            <Button.Secondary
-              title="Ask"
-              onPress={handleAsk}
-              iconName={IconName.PaperplaneFill}
-              iconSize={12}
-              iconColor={theme.colors.primary.DEFAULT}
-              style={styles.consultButton}
-              textStyle={styles.consultText}
-            />
-          </View>
+          <Button.Secondary
+            title="Consult"
+            onPress={handleConsult}
+            iconName={IconName.Sparkles}
+            iconSize={12}
+            iconColor={theme.colors.primary.DEFAULT}
+            style={styles.consultButton}
+            textStyle={styles.consultText}
+          />
         )}
 
         {/* Edit button next to accordion expand/close icon. Present for all members, including pending */}
@@ -317,11 +300,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: theme.spacing.md,
   },
-  chatActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.xxs,
-  },
   consultButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -332,6 +310,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background.default,
     borderWidth: 1,
     borderColor: theme.colors.border.light,
+    marginRight: theme.spacing.xs,
   },
   consultButtonPressed: {
     backgroundColor: theme.colors.border.light,

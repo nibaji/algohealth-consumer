@@ -14,14 +14,10 @@ import { useAskBenish } from '@/src/features/consults/useAskBenish';
 import { ChatMessage } from '@/src/utils/consultCache';
 
 interface AskBenishModalProps {
-  familyMemberId: string | null;
-  familyMemberName: string | null;
   onClose: () => void;
 }
 
 export const AskBenishModal = React.memo(({
-  familyMemberId,
-  familyMemberName,
   onClose,
 }: AskBenishModalProps): React.JSX.Element => {
   const insets = useSafeAreaInsets();
@@ -37,7 +33,7 @@ export const AskBenishModal = React.memo(({
     handlePlayPauseMessage,
     handleSeekMessage,
     handleToggleSpeech,
-  } = useAskBenish(familyMemberId);
+  } = useAskBenish();
 
   const renderMessage = useCallback(({ item }: { item: ChatMessage }): React.JSX.Element => {
     const isCurrentPlaying = playingMessageId === item.id;
@@ -86,9 +82,7 @@ export const AskBenishModal = React.memo(({
         <View style={[styles.header, { paddingTop: Math.max(insets.top, theme.spacing.md) }]}>
           <View style={styles.headerText}>
             <Typography.Subheading style={styles.title}>Ask Benish</Typography.Subheading>
-            <Typography.Label style={styles.subtitle} truncate>
-              {familyMemberName ? `General health query for ${familyMemberName}` : 'General health query'}
-            </Typography.Label>
+            <Typography.Label style={styles.subtitle}>General health query</Typography.Label>
           </View>
           <Pressable
             onPress={onClose}

@@ -19,9 +19,7 @@ interface UseAskBenishReturn extends ReturnType<typeof useChatPlayback> {
   ) => Promise<void>;
 }
 
-export const useAskBenish = (
-  familyMemberId: string | null
-): UseAskBenishReturn => {
+export const useAskBenish = (): UseAskBenishReturn => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const flashListRef = useRef<FlashListRef<ChatMessage>>(null);
@@ -67,7 +65,7 @@ export const useAskBenish = (
     try {
       const formData = await createChatFormData({
         question: text,
-        familyMemberId,
+        familyMemberId: null,
         audioFile,
         documents,
       });
@@ -104,7 +102,7 @@ export const useAskBenish = (
         scrollToBottom();
       }
     }
-  }, [familyMemberId, handleToggleSpeech, isProcessing, scrollToBottom]);
+  }, [handleToggleSpeech, isProcessing, scrollToBottom]);
 
   return { messages, isProcessing, flashListRef, handleSend, ...playback };
 };

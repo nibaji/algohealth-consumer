@@ -46,7 +46,7 @@ export default function Index() {
   const [isInvitesVisible, setIsInvitesVisible] = useState(false);
 
   // Ephemeral Ask Benish modal state
-  const [activeAskMember, setActiveAskMember] = useState<FamilyMemberOut | null>(null);
+  const [isAskVisible, setIsAskVisible] = useState(false);
 
   // Fetch Family details
   const loadFamilyData = useCallback(async (prefetchedFamily?: FamilyOut) => {
@@ -245,12 +245,12 @@ export default function Index() {
     } as unknown as Href);
   }, [router]);
 
-  const handleOpenAsk = useCallback((member: FamilyMemberOut): void => {
-    setActiveAskMember(member);
+  const handleOpenAsk = useCallback((): void => {
+    setIsAskVisible(true);
   }, []);
 
   const handleCloseAsk = useCallback((): void => {
-    setActiveAskMember(null);
+    setIsAskVisible(false);
   }, []);
 
   const handleOpenEditMember = useCallback((member: FamilyMemberOut) => {
@@ -474,14 +474,24 @@ export default function Index() {
                       </View>
                     ) : (
                       <>
-                        <Button.Secondary
-                          title="Consults"
-                          onPress={handleOpenConsults}
-                          iconName={IconName.Sparkles}
-                          iconColor={theme.colors.primary.DEFAULT}
-                          style={styles.consultsButton}
-                          textStyle={styles.addMemberText}
-                        />
+                        <View style={styles.chatEntryActions}>
+                          <Button.Secondary
+                            title="Consults"
+                            onPress={handleOpenConsults}
+                            iconName={IconName.Sparkles}
+                            iconColor={theme.colors.primary.DEFAULT}
+                            style={styles.chatEntryButton}
+                            textStyle={styles.addMemberText}
+                          />
+                          <Button.Secondary
+                            title="Ask"
+                            onPress={handleOpenAsk}
+                            iconName={IconName.PaperplaneFill}
+                            iconColor={theme.colors.primary.DEFAULT}
+                            style={styles.chatEntryButton}
+                            textStyle={styles.addMemberText}
+                          />
+                        </View>
 
                         {/* Add Family Member CTA */}
                         <Button.Secondary
@@ -514,7 +524,6 @@ export default function Index() {
                                   onNavigateCreateRecord={handleNavigateCreateRecord}
                                   onNavigateRecordDetails={handleNavigateRecordDetails}
                                   onConsult={handleStartConsult}
-                                  onAsk={handleOpenAsk}
                                   onEditMember={handleOpenEditMember}
                                 />
                               );
@@ -599,12 +608,8 @@ export default function Index() {
         onActionSuccess={loadDashboardData}
       />
 
-      {activeAskMember ? (
-        <AskBenishModal
-          familyMemberId={activeAskMember.id}
-          familyMemberName={activeAskMember.name}
-          onClose={handleCloseAsk}
-        />
+      {isAskVisible ? (
+        <AskBenishModal onClose={handleCloseAsk} />
       ) : null}
     </View>
   );
@@ -837,7 +842,14 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg,
     marginHorizontal: theme.spacing.lg,
   },
-  consultsButton: {
+  chatEntryActions: {
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+    marginHorizontal: theme.spacing.lg,
+  },
+  chatEntryButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -847,8 +859,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border.primaryLight,
     gap: theme.spacing.xs,
-    marginBottom: theme.spacing.md,
-    marginHorizontal: theme.spacing.lg,
   },
   addMemberButtonPressed: {
     backgroundColor: theme.colors.border.light,
