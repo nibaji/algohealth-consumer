@@ -7,6 +7,7 @@ import { Typography } from '@/components/ui/Typography';
 import { theme, shadows } from '@/constants/theme';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { useNotifications } from '@/src/contexts/NotificationContext';
 import { FamilyMemberOut, FamilyMemberResponse, FamilyOut } from '@/src/features/family/familyTypes';
 import { MedicalRecordResponse } from '@/src/features/medicalRecords/medicalRecordTypes';
 import { familyService } from '@/src/services/family/familyService';
@@ -24,6 +25,7 @@ import { HomeSkeleton } from '@/components/ui/Skeleton';
 
 export default function Index() {
   const { user, refreshProfile, isFamilyPending, clearFamilyId } = useAuth();
+  const { unreadCount } = useNotifications();
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
@@ -288,6 +290,10 @@ export default function Index() {
     router.push('/settings');
   }, [router]);
 
+  const handleNavigateAlerts = useCallback((): void => {
+    router.push('/alerts' as Href);
+  }, [router]);
+
   const handleNavigateCreateRecord = useCallback((memberId: string) => {
     router.push({
       pathname: '/medicalRecords/create',
@@ -321,7 +327,7 @@ export default function Index() {
             style={styles.headerLogo}
             contentFit="contain"
           />
-          <Typography.Subheading style={styles.headerTitle}>
+          <Typography.Subheading style={styles.headerTitle} truncate>
             AlgoHealth Plus
           </Typography.Subheading>
         </View>
@@ -344,7 +350,34 @@ export default function Index() {
               <View style={styles.badgeDot} />
             </Pressable>
           ) : null}
- 
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={
+              unreadCount > 0
+                ? `Alerts, ${unreadCount} unread`
+                : 'Alerts, no unread alerts'
+            }
+            onPress={handleNavigateAlerts}
+            style={({ pressed }) => [
+              styles.headerActionButton,
+              pressed ? styles.headerActionButtonPressed : null,
+            ]}
+          >
+            <Icon
+              name={IconName.BellFill}
+              size={20}
+              tintColor={theme.colors.primary.DEFAULT}
+            />
+            {unreadCount > 0 ? (
+              <View style={styles.alertBadge}>
+                <Typography.Label style={styles.alertBadgeText}>
+                  {unreadCount > 99 ? '99+' : String(unreadCount)}
+                </Typography.Label>
+              </View>
+            ) : null}
+          </Pressable>
+
           {/* Settings icon */}
           <Pressable
             onPress={handleNavigateSettings}
@@ -631,6 +664,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background.surface,
   },
   headerLeft: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.sm,
@@ -648,6 +682,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.sm,
+    flexShrink: 0,
   },
   invitesButton: {
     width: 36,
@@ -673,6 +708,27 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.status.error,
     borderWidth: 1.5,
     borderColor: theme.colors.background.surface,
+  },
+  alertBadge: {
+    position: 'absolute',
+    top: -theme.spacing.xs,
+    right: -theme.spacing.xs,
+    minWidth: theme.spacing.md,
+    height: theme.spacing.md,
+    paddingHorizontal: theme.spacing.xs,
+    borderRadius: theme.radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.status.error,
+    borderWidth: 1,
+    borderColor: theme.colors.background.surface,
+  },
+  alertBadgeText: {
+    color: theme.colors.text.inverse,
+    fontSize: theme.fontSize.tiny,
+    lineHeight: theme.spacing.md,
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
   },
   headerActionButton: {
     width: 36,

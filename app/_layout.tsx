@@ -3,6 +3,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from '@/src/contexts/AuthContext';
 import { AlertProvider } from '@/src/contexts/AlertContext';
+import { NotificationProvider } from '@/src/contexts/NotificationContext';
 import { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
@@ -87,6 +88,10 @@ function InitialLayout() {
       <Stack.Screen name="family/add-member" />
       <Stack.Screen name="profile" />
       <Stack.Screen name="settings" />
+      <Stack.Screen
+        name="alerts"
+        options={{ headerShown: true, title: 'Alerts' }}
+      />
       <Stack.Screen name="medicalRecords/create" />
       <Stack.Screen name="medicalRecords/[id]" />
       <Stack.Screen name="consults/index" />
@@ -101,8 +106,10 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <AlertProvider>
         <AuthProvider>
-          <StatusBar style="dark" />
-          <InitialLayout />
+          <NotificationProvider>
+            <StatusBar style="dark" />
+            <InitialLayout />
+          </NotificationProvider>
         </AuthProvider>
       </AlertProvider>
     </SafeAreaProvider>
@@ -151,4 +158,3 @@ const styles = StyleSheet.create({
     height: 200,
   },
 });
-

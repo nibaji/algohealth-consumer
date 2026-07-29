@@ -3,6 +3,7 @@ import { authService } from '@/src/services/auth/authService';
 import { familyService } from '@/src/services/family/familyService';
 import { consultCache } from '@/src/utils/consultCache';
 import { settingsStorage } from '@/src/services/settings/settingsStorage';
+import { pushNotificationService } from '@/src/services/alerts/pushNotificationService';
 import React, { createContext, use, useCallback, useEffect, useState } from 'react';
 
 interface AuthContextType {
@@ -110,14 +111,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return response;
   }, []);
 
-  const logout = useCallback(async () => {
+  const logout = useCallback(async (): Promise<void> => {
+    if (user) {
+      try {
+        await pushNotificationService.unlinkCurrentDevice(user.id);
+      } catch {
+        console.error('Failed to unlink the push notification device during logout');
+      }
+    }
     await authService.logout();
     await settingsStorage.clear();
     consultCache.clear();
     setIsFamilyPending(false);
     setHasSkippedOnboarding(false);
     setUser(null);
-  }, []);
+  }, [user]);
 
   const refreshProfile = useCallback(async (): Promise<UserProfileResponse | null> => {
     try {
