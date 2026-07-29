@@ -8,6 +8,7 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 - **Onboarding Invite Flows**: Automatically detect invitations with options to Accept, Reject, or Decide Later.
 - **Pending Invites Widget**: Dashboard notification badge and modal to accept or reject pending invites at any time.
 - **Alerts and Push Notifications**: Android and iOS users receive Expo push notifications, see foreground notifications in-app, and can open Alerts from a push or the dashboard bell. Web users can review and mark clinical, reminder, and system alerts without any push registration.
+- **Route-aware Web Titles**: Browser tab titles reflect the current page while native navigation remains unchanged.
 - **AI Health Consultant**: Start a saved consult from an individual family member, or use the Consults entry above the member list to browse and resume earlier sessions. The history screen includes an All/family-member horizontal filter. Member filters, consult lists, and consult history use layout-matched skeleton loading states. Consult chats support text, voice notes, and document attachments.
 - **Ask**: Open an ephemeral general health query from the global Ask button beside Consults. Ask supports the full chat input, playback, formatting, copy, and text-to-speech experience, but messages are not saved and are discarded when the modal closes.
 - **AI Health Summary**: Premium inline overview cards showcasing member health summaries in full above their record lists.

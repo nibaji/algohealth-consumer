@@ -9,6 +9,7 @@ import { View, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import * as SplashScreen from 'expo-splash-screen';
 import { theme } from '@/constants/theme';
+import { buildWebPageTitle } from '@/src/utils/navigation/webPageTitle';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
@@ -22,6 +23,14 @@ function InitialLayout() {
   const { user, isLoading, isFamilyPending, hasSkippedOnboarding } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+
+  useEffect((): void => {
+    if (process.env.EXPO_OS !== 'web' || typeof document === 'undefined') {
+      return;
+    }
+
+    document.title = buildWebPageTitle(segments);
+  }, [segments]);
 
   useEffect(() => {
     if (isLoading) return;
