@@ -7,7 +7,7 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 - **Family Circles**: Create, join, and manage family circles. Delete members or leave circles based on owner/self permission guards.
 - **Onboarding Invite Flows**: Automatically detect invitations with options to Accept, Reject, or Decide Later.
 - **Pending Invites Widget**: Dashboard notification badge and modal to accept or reject pending invites at any time.
-- **Alerts and Push Notifications**: Authenticated users receive Expo push notifications, see foreground notifications in-app, open Alerts from a push or the dashboard bell, and review clinical, reminder, and system alerts.
+- **Alerts and Push Notifications**: Android and iOS users receive Expo push notifications, see foreground notifications in-app, and can open Alerts from a push or the dashboard bell. Web users can review and mark clinical, reminder, and system alerts without any push registration.
 - **AI Health Consultant**: Start a saved consult from an individual family member, or use the Consults entry above the member list to browse and resume earlier sessions. The history screen includes an All/family-member horizontal filter. Member filters, consult lists, and consult history use layout-matched skeleton loading states. Consult chats support text, voice notes, and document attachments.
 - **Ask**: Open an ephemeral general health query from the global Ask button beside Consults. Ask supports the full chat input, playback, formatting, copy, and text-to-speech experience, but messages are not saved and are discarded when the modal closes.
 - **AI Health Summary**: Premium inline overview cards showcasing member health summaries in full above their record lists.
@@ -31,12 +31,13 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 
 ### Alerts and push notification flow
 
-- After authentication, the app requests notification permission, obtains an Expo push token using the configured EAS project ID, and links it with `POST /alerts/add-device`.
-- Existing linked devices are checked with `GET /alerts/linked-devices` so app restarts do not create duplicate links. The returned device UUID is stored in SecureStore.
-- Logout removes the linked device with `DELETE /alerts/linked-devices/{device_id}` before clearing the local registration.
-- `GET /alerts/unread-count` drives the dashboard bell badge. Foreground pushes refresh the badge and display a native in-app banner.
+- On Android and iOS only, the app requests notification permission after authentication, obtains an Expo push token using the configured EAS project ID, and links it with `POST /alerts/add-device`.
+- On Android and iOS, existing linked devices are checked with `GET /alerts/linked-devices` so app restarts do not create duplicate links. The returned device UUID is stored in SecureStore.
+- Native logout removes the linked device with `DELETE /alerts/linked-devices/{device_id}` before clearing the local registration.
+- `GET /alerts/unread-count` drives the dashboard bell badge on every platform. Native foreground pushes refresh the badge and display an in-app banner.
 - Opening Alerts loads every page from `GET /alerts/`, then marks every unread alert through `PATCH /alerts/{alert_id}/read`. Failed read updates remain unread and can be retried with pull-to-refresh.
-- Tapping a push notification opens the Alerts screen.
+- On Android and iOS, tapping a push notification opens the Alerts screen.
+- Web does not request notification permission, obtain or link push tokens, register push listeners, or delete linked devices. It only uses the alert listing, unread-count, and mark-as-read APIs.
 
 The Alerts screen includes loading, empty, error, success, pull-to-refresh, and partial mark-as-read warning states.
 
