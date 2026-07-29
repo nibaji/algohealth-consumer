@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "261404296780",
+    "project_id": "algohealth-87323",
+    "storage_bucket": "algohealth-87323.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:261404296780:android:89b8d90577a0ab082296e9",
+        "android_client_info": {
+          "package_name": "com.algohealthplus.consumer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDkFtLgsxxnarUmxWAQu1KRKLYGItibnHs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

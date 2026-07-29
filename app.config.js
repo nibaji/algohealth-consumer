@@ -8,6 +8,9 @@ module.exports = ({ config }) => {
   const bundleId = isDev 
     ? 'com.algohealthplus.consumer.dev' 
     : 'com.algohealthplus.consumer';
+  const googleServicesFile = isDev
+    ? './google-services.dev.json'
+    : './google-services.prod.json';
 
   return {
     ...config,
@@ -19,6 +22,7 @@ module.exports = ({ config }) => {
     android: {
       ...config.android,
       package: bundleId,
+      googleServicesFile,
     },
   };
 };

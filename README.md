@@ -44,6 +44,8 @@ The Alerts screen includes loading, empty, error, success, pull-to-refresh, and 
 
 Remote push notifications require an EAS development or production build with valid APNs and FCM credentials. Android remote push notifications are not available in Expo Go; local/foreground notification behavior can still be developed there where supported.
 
+Android builds select their Firebase client configuration through `APP_ENV`. The development profile uses `google-services.dev.json` with `com.algohealthplus.consumer.dev`; preview and production use `google-services.prod.json` with `com.algohealthplus.consumer`. After installing a development build, start its matching Metro server with `bun run start:dev`.
+
 1. Install dependencies
 
    ```bash

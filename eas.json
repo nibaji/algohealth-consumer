@@ -17,13 +17,19 @@
     },
     "preview": {
       "distribution": "internal",
+      "env": {
+        "APP_ENV": "production"
+      },
       "android": {
         "buildType": "apk",
         "gradleCommand": ":app:assembleRelease -PreactNativeArchitectures=arm64-v8a"
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "APP_ENV": "production"
+      }
     }
   },
   "submit": {
