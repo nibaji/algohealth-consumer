@@ -17,11 +17,13 @@ import { isMemberSelf, sortFamilyMembers } from '@/src/utils/relation';
 import * as Clipboard from 'expo-clipboard';
 import { Href, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { AccessibilityInfo, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
-import Animated, { FadeInDown, LayoutAnimationConfig } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown, FadeOut, LayoutAnimationConfig } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HomeSkeleton } from '@/components/ui/Skeleton';
+
+const COPY_FEEDBACK_ANIMATION_MS = 160;
 
 export default function Index() {
   const { user, refreshProfile, isFamilyPending, clearFamilyId } = useAuth();
@@ -278,6 +280,7 @@ export default function Index() {
     if (!family?.invite_code) return;
     await Clipboard.setStringAsync(family.invite_code);
     setCopied(true);
+    AccessibilityInfo.announceForAccessibility('Invite code copied');
     setTimeout(() => setCopied(false), 2000);
   }, [family]);
 
@@ -487,6 +490,11 @@ export default function Index() {
                         {/* Share invite code pill — only visible to full members */}
                         {isFamilyPending ? null : (
                           <Pressable
+                            accessibilityRole="button"
+                            accessibilityLabel={
+                              copied ? 'Invite code copied' : 'Copy family invite code'
+                            }
+                            accessibilityHint="Copies the family invite code to the clipboard"
                             onPress={handleCopyCode}
                             style={({ pressed }) => [
                               styles.inviteBadge,
@@ -499,9 +507,29 @@ export default function Index() {
                               size={14}
                               tintColor={copied ? theme.colors.status.success : theme.colors.primary.DEFAULT}
                             />
-                            <Typography.Label style={[styles.badgeText, copied ? styles.badgeTextSuccess : null]}>
-                              {copied ? 'Copied' : `Invite: ${family.invite_code}`}
-                            </Typography.Label>
+                            <View style={styles.inviteBadgeLabel}>
+                              <Typography.Label
+                                style={[
+                                  styles.badgeText,
+                                  copied ? styles.badgeTextHidden : null,
+                                ]}
+                              >
+                                {`Invite: ${family.invite_code}`}
+                              </Typography.Label>
+                              {copied ? (
+                                <Animated.View
+                                  entering={FadeIn.duration(COPY_FEEDBACK_ANIMATION_MS)}
+                                  exiting={FadeOut.duration(COPY_FEEDBACK_ANIMATION_MS)}
+                                  style={styles.badgeTextOverlay}
+                                >
+                                  <Typography.Label
+                                    style={[styles.badgeText, styles.badgeTextSuccess]}
+                                  >
+                                    Copied
+                                  </Typography.Label>
+                                </Animated.View>
+                              ) : null}
+                            </View>
                           </Pressable>
                         )}
                       </View>
@@ -881,6 +909,11 @@ const styles = StyleSheet.create({
   inviteBadgePressed: {
     opacity: 0.8,
   },
+  inviteBadgeLabel: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   badgeIcon: {
     width: 14,
     height: 14,
@@ -889,6 +922,18 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: theme.colors.primary.DEFAULT,
     fontWeight: '700',
+  },
+  badgeTextHidden: {
+    opacity: 0,
+  },
+  badgeTextOverlay: {
+    position: 'absolute',
+    top: theme.spacing.none,
+    right: theme.spacing.none,
+    bottom: theme.spacing.none,
+    left: theme.spacing.none,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   badgeTextSuccess: {
     color: theme.colors.status.success,
