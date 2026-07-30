@@ -312,6 +312,12 @@ Use CSS `boxShadow` style prop. NEVER use legacy React Native shadow or elevatio
 - Add `selectable` prop to `<Text/>` displaying important data or errors
 - Counters should use `{ fontVariant: 'tabular-nums' }` for alignment
 
+### Loading States
+
+- **Always use layout-matched skeleton loaders for screen and content loading states**
+- Match the skeleton structure to the content that will replace it to reduce perceived waiting and layout shift
+- Reserve `ActivityIndicator` for compact, in-place operations such as button submissions, file downloads, and attachment actions
+
 ### Navigation
 
 ```tsx

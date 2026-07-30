@@ -1,4 +1,5 @@
 import { AlertCard } from '@/components/alerts/AlertCard';
+import { AlertsSkeleton } from '@/components/alerts/AlertsSkeleton';
 import { Button } from '@/components/ui/Button';
 import { Icon, IconName } from '@/components/ui/Icon';
 import { Typography } from '@/components/ui/Typography';
@@ -8,7 +9,6 @@ import { useAlerts } from '@/src/features/alerts/useAlerts';
 import { FlashList } from '@shopify/flash-list';
 import React, { useCallback } from 'react';
 import {
-  ActivityIndicator,
   RefreshControl,
   StyleSheet,
   View,
@@ -41,17 +41,7 @@ export const AlertsScreen = (): React.JSX.Element => {
   const keyExtractor = useCallback((item: AlertItem): string => item.id, []);
 
   if (isLoading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator
-          size="large"
-          color={theme.colors.primary.DEFAULT}
-        />
-        <Typography.Paragraph style={styles.loadingText}>
-          Loading alerts…
-        </Typography.Paragraph>
-      </View>
-    );
+    return <AlertsSkeleton />;
   }
 
   if (error) {
@@ -146,9 +136,6 @@ const styles = StyleSheet.create({
     gap: theme.spacing.md,
     padding: theme.spacing.lg,
     backgroundColor: theme.colors.background.default,
-  },
-  loadingText: {
-    color: theme.colors.text.secondary,
   },
   errorText: {
     color: theme.colors.text.error,
