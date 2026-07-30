@@ -26,14 +26,14 @@ When working on this codebase:
 
 ---
 
-## 🏗️ Architecture Overview (Updated 2026-06-12 - SDK 56)
+## 🏗️ Architecture Overview (Updated 2026-07-29 - SDK 57)
 
 ### Tech Stack
-- **Expo SDK**: 56
+- **Expo SDK**: 57
 - **React**: 19.2.3 (with React Compiler enabled)
-- **React Native**: 0.85.3
+- **React Native**: 0.86.2
 - **JavaScript Engine**: Hermes V1 (opt-in)
-- **Expo Router**: 56.2.10
+- **Expo Router**: 57.0.9
 
 ### State Management
 - **Context Providers** - Use React 19 syntax for contexts.
@@ -485,7 +485,7 @@ const handlePress = useCallback((id: string) => {
 
 // ✅ Do use FlashList
 import { FlashList } from '@shopify/flash-list';
-<FlashList data={data} renderItem={...} estimatedItemSize={80} />
+<FlashList data={data} renderItem={...} />
 ```
 
 ---
@@ -869,7 +869,6 @@ import { FlashList } from '@shopify/flash-list';
   data={items}
   keyExtractor={(item) => item.id}
   renderItem={({ item }) => <Item {...item} />}
-  estimatedItemSize={50}
 />
 ```
 
