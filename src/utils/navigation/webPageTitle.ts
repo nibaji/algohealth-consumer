@@ -13,6 +13,7 @@ const PAGE_TITLES: Readonly<Record<string, string>> = {
   'medicalRecords/[id]': 'Record Details',
   profile: 'My Profile',
   settings: 'App Settings',
+  'how-to-use': 'How to Use the App?',
   alerts: 'Alerts',
   consults: 'Consults',
   'consults/index': 'Consults',

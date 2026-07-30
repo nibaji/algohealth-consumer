@@ -290,6 +290,10 @@ export default function Index() {
     router.push('/settings');
   }, [router]);
 
+  const handleNavigateHowToUse = useCallback((): void => {
+    router.push('/how-to-use' as Href);
+  }, [router]);
+
   const handleNavigateAlerts = useCallback((): void => {
     router.push('/alerts' as Href);
   }, [router]);
@@ -378,8 +382,29 @@ export default function Index() {
             ) : null}
           </Pressable>
 
+          {/* How-to guide icon */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="How to Use the App?"
+            accessibilityHint="Opens the app guide"
+            onPress={handleNavigateHowToUse}
+            style={({ pressed }) => [
+              styles.headerActionButton,
+              pressed ? styles.headerActionButtonPressed : null,
+              { borderCurve: 'continuous' }
+            ]}
+          >
+            <Icon
+              name={IconName.QuestionmarkCircleFill}
+              size={20}
+              tintColor={theme.colors.primary.DEFAULT}
+            />
+          </Pressable>
+
           {/* Settings icon */}
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="App Settings"
             onPress={handleNavigateSettings}
             style={({ pressed }) => [
               styles.headerActionButton,
@@ -396,6 +421,8 @@ export default function Index() {
 
           {/* Profile icon */}
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="My Profile"
             onPress={handleNavigateProfile}
             style={({ pressed }) => [
               styles.headerActionButton,
@@ -665,6 +692,7 @@ const styles = StyleSheet.create({
   },
   headerLeft: {
     flex: 1,
+    minWidth: theme.spacing.none,
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.sm,
@@ -675,6 +703,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md,
   },
   headerTitle: {
+    flexShrink: 1,
     fontWeight: '700',
     color: theme.colors.primary.DEFAULT,
   },

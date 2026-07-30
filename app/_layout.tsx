@@ -98,6 +98,10 @@ function InitialLayout() {
       <Stack.Screen name="profile" />
       <Stack.Screen name="settings" />
       <Stack.Screen
+        name="how-to-use"
+        options={{ headerShown: true, title: 'How to Use the App?' }}
+      />
+      <Stack.Screen
         name="alerts"
         options={{ headerShown: true, title: 'Alerts' }}
       />

@@ -8,6 +8,7 @@ This is an [Expo](https://expo.dev) SDK 57 project using React Native 0.86.2 and
 - **Onboarding Invite Flows**: Automatically detect invitations with options to Accept, Reject, or Decide Later.
 - **Pending Invites Widget**: Dashboard notification badge and modal to accept or reject pending invites at any time.
 - **Alerts and Push Notifications**: Android and iOS users receive Expo push notifications, see foreground notifications in-app, and can open Alerts from a push or the dashboard bell. Web users can review and mark clinical, reminder, and system alerts without any push registration.
+- **In-app How-to Guide**: Open “How to Use the App?” from the question-mark button in the home header for current guidance on accounts, families, records, summaries, Ask, Consults, alerts, and sharing.
 - **Route-aware Web Titles**: Browser tab titles reflect the current page while native navigation remains unchanged.
 - **AI Health Consultant**: Start a saved consult from an individual family member, or use the Consults entry above the member list to browse and resume earlier sessions. The history screen includes an All/family-member horizontal filter. Member filters, consult lists, and consult history use layout-matched skeleton loading states. Consult chats support text, voice notes, and document attachments.
 - **Ask**: Open an ephemeral general health query from the global Ask button beside Consults. Ask supports the full chat input, playback, formatting, copy, and text-to-speech experience, but messages are not saved and are discarded when the modal closes.
@@ -45,6 +46,10 @@ The Alerts screen includes loading, empty, error, success, pull-to-refresh, and 
 Remote push notifications require an EAS development or production build with valid APNs and FCM credentials. Android remote push notifications are not available in Expo Go; local/foreground notification behavior can still be developed there where supported.
 
 Android builds select their Firebase client configuration through `APP_ENV`. The development profile uses `google-services.dev.json` with `com.algohealthplus.consumer.dev`; preview and production use `google-services.prod.json` with `com.algohealthplus.consumer`. After installing a development build, start its matching Metro server with `bun run start:dev`.
+
+### In-app how-to guide
+
+Authenticated users can open **How to Use the App?** from the question-mark button immediately before Settings in the home header. The guide adapts the product requirement document to the features currently available in the app and clarifies where mobile and web behavior differs.
 
 1. Install dependencies
 
