@@ -2,6 +2,7 @@ import { EditMemberModal } from '@/components/medicalRecords/EditMemberModal';
 import { InvitesModal } from '@/components/medicalRecords/InvitesModal';
 import { MemberAccordion } from '@/components/medicalRecords/MemberAccordion';
 import { AskBenishModal } from '@/components/consults/AskBenishModal';
+import { HomeHeaderMenu } from '@/components/navigation/HomeHeaderMenu';
 import { Icon, IconName } from '@/components/ui/Icon';
 import { Typography } from '@/components/ui/Typography';
 import { theme, shadows } from '@/constants/theme';
@@ -24,6 +25,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HomeSkeleton } from '@/components/ui/Skeleton';
 
 const COPY_FEEDBACK_ANIMATION_MS = 160;
+const HEADER_HEIGHT = theme.spacing['4xl'];
 
 export default function Index() {
   const { user, refreshProfile, isFamilyPending, clearFamilyId } = useAuth();
@@ -48,6 +50,9 @@ export default function Index() {
 
   // Invites modal states
   const [isInvitesVisible, setIsInvitesVisible] = useState(false);
+
+  // Header menu state
+  const [isHeaderMenuVisible, setIsHeaderMenuVisible] = useState(false);
 
   // Ephemeral Ask Benish modal state
   const [isAskVisible, setIsAskVisible] = useState(false);
@@ -293,6 +298,14 @@ export default function Index() {
     router.push('/settings');
   }, [router]);
 
+  const handleToggleHeaderMenu = useCallback((): void => {
+    setIsHeaderMenuVisible((visible) => !visible);
+  }, []);
+
+  const handleDismissHeaderMenu = useCallback((): void => {
+    setIsHeaderMenuVisible(false);
+  }, []);
+
   const handleNavigateHowToUse = useCallback((): void => {
     router.push('/how-to-use' as Href);
   }, [router]);
@@ -327,7 +340,12 @@ export default function Index() {
   return (
     <View style={styles.container}>
       {/* Header bar */}
-      <View style={[styles.headerBar, { paddingTop: insets.top, height: 56 + insets.top }]}>
+      <View
+        style={[
+          styles.headerBar,
+          { paddingTop: insets.top, height: HEADER_HEIGHT + insets.top },
+        ]}
+      >
         <View style={styles.headerLeft}>
           <Image
             source={require('@/assets/images/android-icon-foreground.png')}
@@ -340,24 +358,6 @@ export default function Index() {
         </View>
  
         <View style={styles.headerActions}>
-          {isFamilyPending ? (
-            <Pressable
-              onPress={handleOpenInvites}
-              style={({ pressed }) => [
-                styles.invitesButton,
-                pressed ? styles.invitesButtonPressed : null,
-                { borderCurve: 'continuous' }
-              ]}
-            >
-              <Icon
-                name={IconName.EnvelopeFill}
-                size={20}
-                tintColor={theme.colors.primary.DEFAULT}
-              />
-              <View style={styles.badgeDot} />
-            </Pressable>
-          ) : null}
-
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={
@@ -385,12 +385,12 @@ export default function Index() {
             ) : null}
           </Pressable>
 
-          {/* How-to guide icon */}
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="How to Use the App?"
-            accessibilityHint="Opens the app guide"
-            onPress={handleNavigateHowToUse}
+            accessibilityLabel="Open menu"
+            accessibilityHint="Shows profile, app guide, and settings"
+            accessibilityState={{ expanded: isHeaderMenuVisible }}
+            onPress={handleToggleHeaderMenu}
             style={({ pressed }) => [
               styles.headerActionButton,
               pressed ? styles.headerActionButtonPressed : null,
@@ -398,49 +398,22 @@ export default function Index() {
             ]}
           >
             <Icon
-              name={IconName.QuestionmarkCircleFill}
-              size={20}
-              tintColor={theme.colors.primary.DEFAULT}
-            />
-          </Pressable>
-
-          {/* Settings icon */}
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="App Settings"
-            onPress={handleNavigateSettings}
-            style={({ pressed }) => [
-              styles.headerActionButton,
-              pressed ? styles.headerActionButtonPressed : null,
-              { borderCurve: 'continuous' }
-            ]}
-          >
-            <Icon
-              name={IconName.GearshapeFill}
-              size={20}
-              tintColor={theme.colors.primary.DEFAULT}
-            />
-          </Pressable>
-
-          {/* Profile icon */}
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="My Profile"
-            onPress={handleNavigateProfile}
-            style={({ pressed }) => [
-              styles.headerActionButton,
-              pressed ? styles.headerActionButtonPressed : null,
-              { borderCurve: 'continuous' }
-            ]}
-          >
-            <Icon
-              name={IconName.PersonCropCircleFill}
+              name={IconName.Line3Horizontal}
               size={20}
               tintColor={theme.colors.primary.DEFAULT}
             />
           </Pressable>
         </View>
       </View>
+
+      <HomeHeaderMenu
+        visible={isHeaderMenuVisible}
+        topOffset={HEADER_HEIGHT + insets.top}
+        onDismiss={handleDismissHeaderMenu}
+        onProfile={handleNavigateProfile}
+        onHowToUse={handleNavigateHowToUse}
+        onSettings={handleNavigateSettings}
+      />
 
       <ScrollView
         style={styles.scrollView}
@@ -709,7 +682,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background.default,
   },
   headerBar: {
-    height: 56,
+    height: HEADER_HEIGHT,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -741,31 +714,6 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm,
     flexShrink: 0,
   },
-  invitesButton: {
-    width: 36,
-    height: 36,
-    backgroundColor: theme.colors.background.default,
-    borderRadius: theme.radius.full,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  invitesButtonPressed: {
-    opacity: 0.7,
-  },
-  badgeDot: {
-    position: 'absolute',
-    top: 2,
-    right: 2,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: theme.colors.status.error,
-    borderWidth: 1.5,
-    borderColor: theme.colors.background.surface,
-  },
   alertBadge: {
     position: 'absolute',
     top: -theme.spacing.xs,
@@ -788,12 +736,8 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
   headerActionButton: {
-    width: 36,
-    height: 36,
-    backgroundColor: theme.colors.background.default,
-    borderRadius: theme.radius.full,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
+    width: theme.spacing['2xl'],
+    height: theme.spacing['2xl'],
     justifyContent: 'center',
     alignItems: 'center',
   },

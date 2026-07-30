@@ -48,6 +48,7 @@ const MATERIAL_MAP: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   'gearshape.fill': 'settings',
   'bell.fill': 'notifications',
   'questionmark.circle.fill': 'help',
+  'line.3.horizontal': 'menu',
 };
 
 export enum IconName {
@@ -89,6 +90,7 @@ export enum IconName {
   GearshapeFill = 'gearshape.fill',
   BellFill = 'bell.fill',
   QuestionmarkCircleFill = 'questionmark.circle.fill',
+  Line3Horizontal = 'line.3.horizontal',
 }
 
 interface IconProps {
