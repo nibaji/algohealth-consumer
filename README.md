@@ -20,11 +20,13 @@ This is an [Expo](https://expo.dev) SDK 57 project using React Native 0.86.2 and
 ### Consultation API flow
 
 - `GET /consultation-chats/sessions` loads the newest consult sessions.
+- `GET /consultation-chats/sessions?family_member_id={family_member_id}` loads sessions for one member. Because the current session-list response does not expose ownership, the Consults screen uses these filtered results to associate rows with members, power the member chips, and carry member context into reopened chats.
 - `GET /consultation-chats/sessions/{session_id}` loads a session's full message history.
-- `POST /consultation-chats/chat` starts or continues a chat. Omit `session_id` for the first message, then reuse the returned `session_id` for later turns.
+- `POST /consultation-chats/chat` starts or continues a chat. The multipart `family_member_id` is the selected member's `id`, sourced from `GET /families/me` and cross-matched against `GET /family-members/`; it is not the member's `user_id` or the family owner's ID. Omit `session_id` for the first message, then reuse the returned `session_id` for later turns.
+- Consult sends fail closed when the member ID is unavailable, preventing the API from silently using another family member's health context.
 - Chat screens render only user and assistant messages supplied by these endpoints; new consults start empty without a synthetic greeting. Successful sends adopt the response's `message_id`, `question_time`, and `answer_time` so the live thread matches its persisted history.
 - Session rows display `title` when present and fall back to the session ID.
-- When session list items include `family_member_id`, the Consults screen can filter history by the selected family member. Sessions without the field remain visible under All for backward compatibility.
+- Every consult row displays its resolved family member. Sessions whose ownership cannot be resolved remain visible under All as `Member unavailable` and cannot send new messages until reopened with member context.
 
 ### Ask API flow
 

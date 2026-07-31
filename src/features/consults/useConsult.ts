@@ -220,6 +220,20 @@ export const useConsult = ({
   ) => {
     if (isProcessing) return;
 
+    // A consult must never fall back to the authenticated user's context. If
+    // session ownership cannot be resolved, fail closed before calling chat.
+    if (!familyMemberId) {
+      const contextErrorMessage: ChatMessage = {
+        id: `error-${Date.now()}`,
+        text: 'This consult is missing its family member. Reopen it from the member\'s Consult filter and try again.',
+        sender: 'bot',
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, contextErrorMessage]);
+      scrollToBottom();
+      return;
+    }
+
     // Create user message
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,

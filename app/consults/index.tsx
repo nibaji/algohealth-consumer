@@ -1,7 +1,7 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
-import { Href, Stack, useFocusEffect, useRouter } from 'expo-router';
+import { Href, Stack, useRouter } from 'expo-router';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 import {
@@ -13,9 +13,7 @@ import { ConsultsListSkeleton, MemberChipsSkeleton } from '@/components/ui/Skele
 import { Typography } from '@/components/ui/Typography';
 import { theme } from '@/constants/theme';
 import { ConsultationSession } from '@/src/features/consults/consultTypes';
-import { FamilyMemberResponse } from '@/src/features/family/familyTypes';
-import { consultService } from '@/src/services/consults/consultService';
-import { familyService } from '@/src/services/family/familyService';
+import { useConsultSessions } from '@/src/features/consults/useConsultSessions';
 
 const formatCreatedAt = (value: string): string => new Intl.DateTimeFormat(undefined, {
   dateStyle: 'medium',
@@ -24,68 +22,26 @@ const formatCreatedAt = (value: string): string => new Intl.DateTimeFormat(undef
 
 export default function ConsultsScreen(): React.JSX.Element {
   const router = useRouter();
-  const [sessions, setSessions] = useState<ConsultationSession[]>([]);
-  const [familyMembers, setFamilyMembers] = useState<FamilyMemberResponse[]>([]);
-  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadSessions = useCallback(async (refresh = false): Promise<void> => {
-    if (refresh) {
-      setIsRefreshing(true);
-    } else {
-      setIsLoading(true);
-    }
-    setError(null);
-    try {
-      const [nextSessions, nextFamilyMembers] = await Promise.all([
-        consultService.listSessions(),
-        familyService.getFamilyMembers(),
-      ]);
-      setSessions(nextSessions);
-      setFamilyMembers(nextFamilyMembers);
-      setSelectedMemberId((current) => (
-        current && nextFamilyMembers.some((member) => member.id === current) ? current : null
-      ));
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to load consults');
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  }, []);
-
-  useFocusEffect(useCallback((): void => {
-    loadSessions();
-  }, [loadSessions]));
-
-  const memberNameById = useMemo(
-    () => new Map(familyMembers.map((member) => [member.id, member.name])),
-    [familyMembers]
-  );
+  const {
+    visibleSessions,
+    familyMembers,
+    memberNameById,
+    selectedMemberId,
+    selectedMemberName,
+    isLoading,
+    isRefreshing,
+    error,
+    selectMember,
+    refresh,
+  } = useConsultSessions();
   const filterOptions = useMemo<ConsultMemberFilterOption[]>(() => [
     { id: null, label: 'All' },
     ...familyMembers.map((member) => ({ id: member.id, label: member.name })),
   ], [familyMembers]);
-  const filteredSessions = useMemo(
-    () => selectedMemberId
-      ? sessions.filter((session) => session.family_member_id === selectedMemberId)
-      : sessions,
-    [selectedMemberId, sessions]
-  );
-  const selectedMemberName = selectedMemberId ? memberNameById.get(selectedMemberId) ?? null : null;
-
-  const handleSelectMember = useCallback((memberId: string | null): void => {
-    setSelectedMemberId(memberId);
-  }, []);
-
-  const handleRefresh = useCallback((): void => {
-    loadSessions(true);
-  }, [loadSessions]);
 
   const renderSession = useCallback(({ item }: { item: ConsultationSession }): React.JSX.Element => {
     const memberName = item.family_member_id ? memberNameById.get(item.family_member_id) : null;
+    const memberLabel = memberName ?? 'Member unavailable';
     const handlePress = (): void => router.push({
       pathname: '/consults/[sessionId]',
       params: {
@@ -107,7 +63,7 @@ export default function ConsultsScreen(): React.JSX.Element {
             {item.title || item.id}
           </Typography.Paragraph>
           <Typography.Label style={styles.sessionMeta}>
-            {`${memberName ? `${memberName} · ` : ''}${item.message_count} ${item.message_count === 1 ? 'message' : 'messages'} · ${formatCreatedAt(item.created_at)}`}
+            {`${memberLabel} · ${item.message_count} ${item.message_count === 1 ? 'message' : 'messages'} · ${formatCreatedAt(item.created_at)}`}
           </Typography.Label>
         </View>
         <Icon name={IconName.ChevronRight} size={18} tintColor={theme.colors.text.tertiary} />
@@ -124,7 +80,7 @@ export default function ConsultsScreen(): React.JSX.Element {
         <ConsultMemberFilter
           options={filterOptions}
           selectedId={selectedMemberId}
-          onSelect={handleSelectMember}
+          onSelect={selectMember}
         />
       ) : null}
       {isLoading ? (
@@ -141,7 +97,7 @@ export default function ConsultsScreen(): React.JSX.Element {
       ) : (
         <Animated.View entering={FadeIn.duration(200)} style={styles.list}>
           <FlashList
-            data={filteredSessions}
+            data={visibleSessions}
             renderItem={renderSession}
             keyExtractor={keyExtractor}
             contentInsetAdjustmentBehavior="automatic"
@@ -150,7 +106,7 @@ export default function ConsultsScreen(): React.JSX.Element {
             refreshControl={
               <RefreshControl
                 refreshing={isRefreshing}
-                onRefresh={handleRefresh}
+                onRefresh={refresh}
                 tintColor={theme.colors.primary.DEFAULT}
                 colors={[theme.colors.primary.DEFAULT]}
               />
