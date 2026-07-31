@@ -20,7 +20,7 @@ This is an [Expo](https://expo.dev) SDK 57 project using React Native 0.86.2 and
 ### Consultation API flow
 
 - `GET /consultation-chats/sessions` loads the newest consult sessions.
-- `GET /consultation-chats/sessions?family_member_id={family_member_id}` loads sessions for one member. Because the current session-list response does not expose ownership, the Consults screen uses these filtered results to associate rows with members, power the member chips, and carry member context into reopened chats.
+- `GET /consultation-chats/sessions?family_member_id={family_member_id}` loads sessions for one member. The Consults screen requests this endpoint only after a member filter is tapped, shows a list-matched skeleton while loading, and tags the returned sessions with that member for labels and reopened-chat context. Tapping the same member again performs a fresh request; returning to All reuses the All result loaded on entry.
 - `GET /consultation-chats/sessions/{session_id}` loads a session's full message history.
 - `POST /consultation-chats/chat` starts or continues a chat. The multipart `family_member_id` is the selected member's `id`, sourced from `GET /families/me` and cross-matched against `GET /family-members/`; it is not the member's `user_id` or the family owner's ID. Omit `session_id` for the first message, then reuse the returned `session_id` for later turns.
 - Consult sends fail closed when the member ID is unavailable, preventing the API from silently using another family member's health context.

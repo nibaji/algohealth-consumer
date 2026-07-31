@@ -1,15 +1,10 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 
 import { ConsultationSession } from '@/src/features/consults/consultTypes';
 import { FamilyMemberResponse } from '@/src/features/family/familyTypes';
 import { consultService } from '@/src/services/consults/consultService';
 import { familyService } from '@/src/services/family/familyService';
-
-interface MemberSessionResult {
-  familyMemberId: string;
-  sessions: ConsultationSession[];
-}
 
 interface UseConsultSessionsReturn {
   visibleSessions: ConsultationSession[];
@@ -18,33 +13,36 @@ interface UseConsultSessionsReturn {
   selectedMemberId: string | null;
   selectedMemberName: string | null;
   isLoading: boolean;
+  isFilterLoading: boolean;
   isRefreshing: boolean;
   error: string | null;
   selectMember: (memberId: string | null) => void;
   refresh: () => void;
 }
 
-const loadMemberSessions = async (
-  familyMembers: FamilyMemberResponse[]
-): Promise<MemberSessionResult[]> => Promise.all(familyMembers.map(
-  async (member): Promise<MemberSessionResult> => ({
-    familyMemberId: member.id,
-    sessions: await consultService.listSessions({ familyMemberId: member.id }),
-  })
-));
+const attributeSessions = (
+  sessions: ConsultationSession[],
+  familyMemberId: string
+): ConsultationSession[] => sessions.map((session): ConsultationSession => ({
+  ...session,
+  family_member_id: familyMemberId,
+}));
 
 export const useConsultSessions = (): UseConsultSessionsReturn => {
-  const [sessions, setSessions] = useState<ConsultationSession[]>([]);
-  const [sessionsByMemberId, setSessionsByMemberId] = useState<
-    ReadonlyMap<string, ConsultationSession[]>
-  >(() => new Map());
+  const [allSessions, setAllSessions] = useState<ConsultationSession[]>([]);
+  const [visibleSessions, setVisibleSessions] = useState<ConsultationSession[]>([]);
   const [familyMembers, setFamilyMembers] = useState<FamilyMemberResponse[]>([]);
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFilterLoading, setIsFilterLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const requestVersionRef = useRef(0);
 
-  const loadSessions = useCallback(async (refresh = false): Promise<void> => {
+  const loadAllSessions = useCallback(async (refresh = false): Promise<void> => {
+    const requestVersion = ++requestVersionRef.current;
+    setSelectedMemberId(null);
+    setIsFilterLoading(false);
     if (refresh) {
       setIsRefreshing(true);
     } else {
@@ -57,43 +55,52 @@ export const useConsultSessions = (): UseConsultSessionsReturn => {
         consultService.listSessions(),
         familyService.getFamilyMembers(),
       ]);
-      const memberSessionResults = await loadMemberSessions(nextFamilyMembers);
-      const nextSessionsByMemberId = new Map<string, ConsultationSession[]>();
-      const familyMemberIdBySessionId = new Map<string, string>();
-
-      memberSessionResults.forEach(({ familyMemberId, sessions: memberSessions }): void => {
-        const attributedSessions = memberSessions.map((session): ConsultationSession => ({
-          ...session,
-          family_member_id: familyMemberId,
-        }));
-        nextSessionsByMemberId.set(familyMemberId, attributedSessions);
-        attributedSessions.forEach((session): void => {
-          familyMemberIdBySessionId.set(session.id, familyMemberId);
-        });
-      });
-
-      setSessions(nextSessions.map((session): ConsultationSession => ({
-        ...session,
-        family_member_id: familyMemberIdBySessionId.get(session.id)
-          ?? session.family_member_id
-          ?? null,
-      })));
-      setSessionsByMemberId(nextSessionsByMemberId);
+      if (requestVersion !== requestVersionRef.current) return;
+      setAllSessions(nextSessions);
+      setVisibleSessions(nextSessions);
       setFamilyMembers(nextFamilyMembers);
-      setSelectedMemberId((current): string | null => (
-        current && nextFamilyMembers.some((member) => member.id === current) ? current : null
-      ));
     } catch (err: unknown) {
+      if (requestVersion !== requestVersionRef.current) return;
       setError(err instanceof Error ? err.message : 'Failed to load consults');
     } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
+      if (requestVersion === requestVersionRef.current) {
+        setIsLoading(false);
+        setIsRefreshing(false);
+      }
     }
   }, []);
 
-  useFocusEffect(useCallback((): void => {
-    loadSessions();
-  }, [loadSessions]));
+  const loadMemberSessions = useCallback(async (
+    familyMemberId: string,
+    refresh = false
+  ): Promise<void> => {
+    const requestVersion = ++requestVersionRef.current;
+    setSelectedMemberId(familyMemberId);
+    setError(null);
+    setIsFilterLoading(!refresh);
+    setIsRefreshing(refresh);
+
+    try {
+      const sessions = await consultService.listSessions({ familyMemberId });
+      if (requestVersion !== requestVersionRef.current) return;
+      setVisibleSessions(attributeSessions(sessions, familyMemberId));
+    } catch (err: unknown) {
+      if (requestVersion !== requestVersionRef.current) return;
+      setError(err instanceof Error ? err.message : 'Failed to load consults');
+    } finally {
+      if (requestVersion === requestVersionRef.current) {
+        setIsFilterLoading(false);
+        setIsRefreshing(false);
+      }
+    }
+  }, []);
+
+  useFocusEffect(useCallback((): (() => void) => {
+    loadAllSessions();
+    return (): void => {
+      requestVersionRef.current += 1;
+    };
+  }, [loadAllSessions]));
 
   const memberNameById = useMemo<ReadonlyMap<string, string>>(
     (): ReadonlyMap<string, string> => new Map(familyMembers.map(
@@ -101,23 +108,30 @@ export const useConsultSessions = (): UseConsultSessionsReturn => {
     )),
     [familyMembers]
   );
-  const visibleSessions = useMemo<ConsultationSession[]>(
-    (): ConsultationSession[] => (
-      selectedMemberId ? sessionsByMemberId.get(selectedMemberId) ?? [] : sessions
-    ),
-    [selectedMemberId, sessions, sessionsByMemberId]
-  );
   const selectedMemberName = selectedMemberId
     ? memberNameById.get(selectedMemberId) ?? null
     : null;
 
   const selectMember = useCallback((memberId: string | null): void => {
-    setSelectedMemberId(memberId);
-  }, []);
+    if (memberId) {
+      loadMemberSessions(memberId);
+      return;
+    }
+    requestVersionRef.current += 1;
+    setSelectedMemberId(null);
+    setVisibleSessions(allSessions);
+    setIsFilterLoading(false);
+    setIsRefreshing(false);
+    setError(null);
+  }, [allSessions, loadMemberSessions]);
 
   const refresh = useCallback((): void => {
-    loadSessions(true);
-  }, [loadSessions]);
+    if (selectedMemberId) {
+      loadMemberSessions(selectedMemberId, true);
+      return;
+    }
+    loadAllSessions(true);
+  }, [loadAllSessions, loadMemberSessions, selectedMemberId]);
 
   return {
     visibleSessions,
@@ -126,6 +140,7 @@ export const useConsultSessions = (): UseConsultSessionsReturn => {
     selectedMemberId,
     selectedMemberName,
     isLoading,
+    isFilterLoading,
     isRefreshing,
     error,
     selectMember,

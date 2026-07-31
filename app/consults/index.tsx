@@ -29,6 +29,7 @@ export default function ConsultsScreen(): React.JSX.Element {
     selectedMemberId,
     selectedMemberName,
     isLoading,
+    isFilterLoading,
     isRefreshing,
     error,
     selectMember,
@@ -76,7 +77,7 @@ export default function ConsultsScreen(): React.JSX.Element {
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: true, title: 'Consults' }} />
-      {!isLoading && !error ? (
+      {!isLoading ? (
         <ConsultMemberFilter
           options={filterOptions}
           selectedId={selectedMemberId}
@@ -88,6 +89,10 @@ export default function ConsultsScreen(): React.JSX.Element {
           <View style={styles.memberChipsSkeleton}>
             <MemberChipsSkeleton />
           </View>
+          <ConsultsListSkeleton />
+        </View>
+      ) : isFilterLoading ? (
+        <View style={styles.loadingSkeleton}>
           <ConsultsListSkeleton />
         </View>
       ) : error ? (
