@@ -1,7 +1,7 @@
 {
   "name": "algohealth-consumer",
   "main": "expo-router/entry",
-  "version": "20260718.2",
+  "version": "20260731.1",
   "scripts": {
     "start": "expo start",
     "start:dev": "APP_ENV=development expo start",
